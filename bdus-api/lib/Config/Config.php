@@ -303,6 +303,35 @@ class Config
         return true;
     }
 
+    /**
+     * Sets the order of the fields of one table. $sort must list every field
+     * of the table exactly once; anything else is refused (returns false).
+     */
+    public function sortFields(string $tb, array $sort): bool
+    {
+        $current = array_keys($this->cfg['tables'][$tb]['fields'] ?? []);
+        $sort    = array_values($sort);
+        $order   = array_map('strval', $sort);
+        $a = $current;
+        $b = $order;
+        sort($a);
+        sort($b);
+        if (!$current || $a !== $b) {
+            return false;
+        }
+
+        $fields = $this->cfg['tables'][$tb]['fields'];
+        // array_merge keeps the key order of the first array and the values of the second.
+        $this->cfg['tables'][$tb]['fields'] = array_merge(array_flip($order), $fields);
+
+        if ($this->useDb) {
+            ToDB::sortFields($this->db, $tb, $order);
+        } else {
+            $this->writeAllFiles();
+        }
+        return true;
+    }
+
     // ── Diagnostics ───────────────────────────────────────────────────────────
 
     public function getErrors(): array

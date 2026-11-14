@@ -17,15 +17,17 @@
     <div v-if="!loading" class="cfg-fld-shell" :class="{ 'cfg-fld-shell--detail': selectedFld || addingNew }">
 
       <!-- ── Left: field list ──────────────────────────────────────── -->
-      <div class="cfg-fld-list">
+      <div class="cfg-fld-list" ref="listEl">
         <div v-if="fields.length === 0" class="cfg-fld-empty">{{ t('no_fields') }}</div>
         <div
           v-for="fld in fields"
           :key="fld.name"
           class="cfg-fld-item"
           :class="{ active: selectedFld?.name === fld.name }"
+          :data-name="fld.name"
           @click="selectField(fld)"
         >
+          <BarsOutlined v-if="!isView" class="cfg-fld-drag" :title="t('drag_to_sort')" @click.stop />
           <div class="cfg-fld-item-main">
             <span class="cfg-fld-name">{{ fld.name }}</span>
             <span class="cfg-fld-label">{{ fld.label }}</span>
@@ -101,8 +103,9 @@
 </template>
 
 <script setup>
-import { ArrowLeftOutlined, CheckOutlined, DeleteOutlined, EditOutlined, LoadingOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
-import { ref, computed, onMounted, watch } from 'vue'
+import { ArrowLeftOutlined, BarsOutlined, CheckOutlined, DeleteOutlined, EditOutlined, LoadingOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import Sortable from 'sortablejs'
 import { useConfigStore } from '@/stores/config'
 import { Button as AButton, Modal as AModal, Input as AInput, Alert as AAlert } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
@@ -171,6 +174,51 @@ watch(() => props.tb, () => {
   addingNew.value   = false
   load()
 })
+
+// ── Drag-to-sort (SortableJS: mouse and touch) ─────────────────────────────
+const listEl = ref(null)
+let sortable = null
+
+function initSortable() {
+  if (!listEl.value || isView.value) return
+  sortable = Sortable.create(listEl.value, {
+    handle:    '.cfg-fld-drag',
+    draggable: '.cfg-fld-item',
+    animation: 150,
+    onEnd: async (evt) => {
+      const { oldIndex, newIndex, item, from } = evt
+      if (oldIndex === newIndex || oldIndex == null || newIndex == null) return
+
+      // Put the DOM back where Vue expects it: Vue re-renders from `fields`
+      from.removeChild(item)
+      from.insertBefore(item, from.children[oldIndex] || null)
+
+      const previous  = fields.value
+      const reordered = [...previous]
+      const [moved]   = reordered.splice(oldIndex, 1)
+      reordered.splice(newIndex, 0, moved)
+      fields.value = reordered
+
+      try {
+        const res = await api.post(`/api/config/table/${props.tb}/fields/sort`, {
+          sort: reordered.map(f => f.name),
+        })
+        if (res?.status === 'error') throw new Error(res.code)
+      } catch {
+        fields.value = previous
+        toast.add({ severity: 'error', summary: t('error_sort_update'), life: 4000 })
+      }
+    },
+  })
+}
+
+// The list exists only while not loading (v-if): follow its element.
+watch([listEl, isView], () => {
+  sortable?.destroy()
+  sortable = null
+  initSortable()
+})
+onBeforeUnmount(() => { sortable?.destroy(); sortable = null })
 
 // ── Field selection ────────────────────────────────────────────────────────
 
@@ -316,6 +364,15 @@ onMounted(load)
 }
 
 .cfg-fld-back { display: none; }
+.cfg-fld-drag {
+  color: var(--p-text-muted-color);
+  cursor: grab;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  touch-action: none;   /* SortableJS owns the touch drag on the handle */
+  padding: 0.6rem 0.5rem;
+  margin: -0.6rem 0 -0.6rem -0.4rem;
+}
 
 /* Phones: list and editor take turns instead of sharing a 230px + clipped split */
 @media (max-width: 767px) {

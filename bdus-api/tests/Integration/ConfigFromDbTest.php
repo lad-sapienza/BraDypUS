@@ -230,6 +230,33 @@ class ConfigFromDbTest extends TestCase
         $this->assertNotEmpty($new);
     }
 
+    public function testSortFieldsPersistsOrderAndRejectsBadLists(): void
+    {
+        static::$cfgDb->setFld('items', 'sort_a', ['name' => 'sort_a', 'type' => 'text']);
+        static::$cfgDb->setFld('items', 'sort_b', ['name' => 'sort_b', 'type' => 'text']);
+        static::$cfgDb->setFld('items', 'sort_c', ['name' => 'sort_c', 'type' => 'text']);
+
+        $names = array_keys(static::$cfgDb->get('tables.items.fields'));
+        $rev   = array_reverse($names);
+
+        $this->assertTrue(static::$cfgDb->sortFields('items', $rev));
+        $this->assertSame($rev, array_keys(static::$cfgDb->get('tables.items.fields')));
+
+        // Persisted: a fresh Config reads the same order from the DB
+        $fresh = new Config(new Dot(), __DIR__ . '/../fixtures/cfg/', static::$db);
+        $this->assertSame($rev, array_keys($fresh->get('tables.items.fields')));
+
+        // Field data survives the reorder
+        $this->assertSame('text', $fresh->get('tables.items.fields.sort_a.type'));
+
+        // Missing, extra, duplicated names: refused, order unchanged
+        $this->assertFalse(static::$cfgDb->sortFields('items', array_slice($names, 1)));
+        $this->assertFalse(static::$cfgDb->sortFields('items', [...$names, 'nope']));
+        $this->assertFalse(static::$cfgDb->sortFields('items', [...array_slice($names, 1), $names[1]]));
+        $this->assertFalse(static::$cfgDb->sortFields('no_such_table', $names));
+        $this->assertSame($rev, array_keys(static::$cfgDb->get('tables.items.fields')));
+    }
+
     // ── Relations (link config) ───────────────────────────────────────────────
 
     public function testSetTableWithLinkStoresInCfgRelations(): void

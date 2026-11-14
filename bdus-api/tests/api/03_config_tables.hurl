@@ -250,6 +250,16 @@ HTTP 200
 jsonpath "$.status" == "error"
 jsonpath "$.code"   == "fld_already_available"
 
+# 3e-sort-neg. Field order must list every field once (full reorder is in PHPUnit)
+POST {{base_url}}/{{app_name}}/api/config/table/us/fields/sort
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "sort": ["sigla"] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "error_sort_update"
+
 POST {{base_url}}/{{app_name}}/api/config/table/us/field
 Authorization: Bearer {{jwt}}
 Content-Type: application/json

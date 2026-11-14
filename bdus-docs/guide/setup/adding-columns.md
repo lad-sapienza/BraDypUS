@@ -96,8 +96,13 @@ This is the recommended way to avoid data duplication across tables.
 
 ## Reordering fields
 
-Drag rows in the field list to change the column order. This order is reflected in
-RecordView, in all export headers and in the record list columns.
+Drag the handle (the three bars) at the left of a field to change its position; it
+works with mouse and touch, and the new order is saved at once. The order must
+include every field of the table. It is the order in which RecordView shows the
+fields when the table has **no template** (a template decides its own order), and
+it is reflected in export headers and record list columns. The order of the columns
+in the database table itself does not change. Fields of SQL views cannot be
+reordered.
 
 ## Renaming a field
 

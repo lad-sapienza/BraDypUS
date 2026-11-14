@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Config: fields can be reordered**. The field list had no way to change the order (documented,
+  never implemented). A handle on each field (mouse and touch) now reorders them; the order is what
+  RecordView uses when a table has no template. New `POST /api/config/table/{tb}/fields/sort`
+  (`sort` must list every field once). Not available for SQL views.
 - **Config: tables can be reordered on touch devices** (#76). The sidebar list used native HTML5
   drag and drop, which touch screens do not fire; it now uses SortableJS (mouse and touch), with a
   larger drag handle.

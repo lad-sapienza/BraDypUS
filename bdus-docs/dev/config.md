@@ -128,6 +128,7 @@ Returns `false` if the key does not exist.
 | `renameTb(string $old, string $new)` | Rename a table |
 | `deleteTb(string $tb)` | Delete a table |
 | `sortTables(array $order)` | Reorder tables by name array |
+| `sortFields(string $tb, array $order)` | Reorder the fields of one table; `$order` must list every field once, else `false` |
 | `save()` | Flush full in-memory state to the storage backend |
 
 Table attributes that are not columns of `bdus_cfg_tables` live in its `extra` JSON and come

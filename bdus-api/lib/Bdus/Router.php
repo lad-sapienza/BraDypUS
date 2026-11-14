@@ -538,6 +538,7 @@ class Router
             $r->addRoute('GET',    '/api/config/field-structure', ['Bdus\\Controllers\\Config', 'getFldStructure']);
             $r->addRoute('GET',    '/api/config/table/{tb}/fields',              ['Bdus\\Controllers\\Config', 'getFldList']);
             $r->addRoute('POST',   '/api/config/table/{tb}/field',               ['Bdus\\Controllers\\Config', 'add_new_fld']);
+            $r->addRoute('POST',   '/api/config/table/{tb}/fields/sort',         ['Bdus\\Controllers\\Config', 'sortFields']);
             $r->addRoute('PUT',    '/api/config/table/{tb}/field/{fld}',         ['Bdus\\Controllers\\Config', 'save_fld_properties']);
             $r->addRoute('DELETE', '/api/config/table/{tb}/field/{fld}',         ['Bdus\\Controllers\\Config', 'delete_column']);
             $r->addRoute('PATCH',  '/api/config/table/{tb}/field/{fld}',         ['Bdus\\Controllers\\Config', 'rename_column']);

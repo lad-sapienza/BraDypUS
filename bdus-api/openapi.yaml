@@ -3066,6 +3066,38 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/config/table/{tb}/fields/sort:
+    post:
+      operationId: postConfigTableFieldsSort
+      tags: [config]
+      summary: Set the order of the fields of a table
+      description: |
+        `sort` must list every field of the table exactly once; otherwise the
+        request is refused with `error_sort_update` and nothing changes.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sort]
+              properties:
+                sort:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Order updated (`ok_sort_update`) or refused (`error_sort_update`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /api/config/table/{tb}/field:
     post:
       operationId: postConfigTableFieldByTb

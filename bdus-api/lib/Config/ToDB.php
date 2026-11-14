@@ -317,6 +317,20 @@ class ToDB
         }
     }
 
+    /**
+     * Sets the sort order of the fields of one table at once (first = sort 0).
+     */
+    public static function sortFields(DBInterface $db, string $tableName, array $sortedNames): void
+    {
+        foreach ($sortedNames as $i => $name) {
+            $db->query(
+                'UPDATE bdus_cfg_fields SET sort=? WHERE table_name=? AND name=?',
+                [$i, $tableName, $name],
+                'boolean'
+            );
+        }
+    }
+
     // ── Field operations ─────────────────────────────────────────────────────
 
     /**

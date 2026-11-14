@@ -9,8 +9,8 @@ by the order of tables in **Config → Tables**.
 
 ## Reordering
 
-In the Tables panel, drag rows up or down to change their position.
-Click **Save order** to persist the change.
+In the Tables panel, drag the handle at the left of a row up or down to change its
+position (mouse or touch). The order is saved at once.
 
 The new order is immediately reflected in:
 - The sidebar navigation

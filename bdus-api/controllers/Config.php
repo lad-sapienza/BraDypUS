@@ -824,6 +824,23 @@ class Config extends \Bdus\Controller
     }
   }
 
+  /** POST /api/config/table/{tb}/fields/sort — body {sort: [field names]}, every field once. */
+  public function sortFields()
+  {
+    if (!$this->requireSuperAdmin()) return;
+    $tb   = $this->get['tb'] ?? '';
+    $sort = $this->post['sort'] ?? [];
+    if (!is_array($sort) || !$this->cfg->get("tables.$tb")) {
+      $this->returnJson(['status' => 'error', 'code' => 'error_sort_update']);
+      return;
+    }
+    if ($this->cfg->sortFields($tb, $sort)) {
+      $this->returnJson(['status' => 'success', 'code' => 'ok_sort_update']);
+    } else {
+      $this->returnJson(['status' => 'error', 'code' => 'error_sort_update']);
+    }
+  }
+
   /**
    * Activates the fuzzy-date plugin for a table.
    * Adds the five chrono_* columns to the core table if they do not yet exist,

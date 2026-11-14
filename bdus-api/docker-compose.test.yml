@@ -21,6 +21,13 @@ services:
       - BRADYPUS_DEBUG=1
       - BRADYPUS_ALLOW_NEW_APP=1
       - BRADYPUS_CORS_ORIGIN=http://localhost:5173
+      # The suite makes hundreds of API-key calls from one address within a minute:
+      # rate limits (Auth\RateLimiter) are covered by PHPUnit, off here.
+      - BRADYPUS_RATE_KEY_WRITE=0
+      - BRADYPUS_RATE_KEY_READ=0
+      - BRADYPUS_RATE_KEY_IP=0
+      - BRADYPUS_RATE_BAD_KEY_IP=0
+      - BRADYPUS_RATE_LOGIN_IP=0
     volumes:
       - bdus_test_projects:/var/www/html/projects
 

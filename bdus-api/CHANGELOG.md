@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.22.2] - 2026-11-14
+
 ## [5.22.1] - 2026-11-14
 
 ### Fixed
@@ -15,6 +17,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   release without migrations (5.22.0) every app kept the tag and the command answered `up-to-date`
   without clearing it (a login did, once per app). Now such an app is `pending (0)` in a dry run and
   `upgraded (0)` after a real run, which stamps the version; `Upgrader::apply()` does the same.
+
+## [Unreleased]
+
+### Fixed
+
+- **Record view: the "Auto" column choice is remembered.** Choosing 2, 3 or 4 columns was saved in the
+  browser, but Auto removed the saved value, so the next visit fell back to 3. Auto is now stored too.
+- **Config: fields can be reordered**. The field list had no way to change the order (documented,
+  never implemented). A handle on each field (mouse and touch) now reorders them; the order is what
+  RecordView uses when a table has no template. New `POST /api/config/table/{tb}/fields/sort`
+  (`sort` must list every field once). Not available for SQL views.
+- **Config: tables can be reordered on touch devices** (#76). The sidebar list used native HTML5
+  drag and drop, which touch screens do not fire; it now uses SortableJS (mouse and touch), with a
+  larger drag handle.
+- **Config: field editor usable on phones.** The field list and the field form shared a split that
+  clipped the form (Save was off-screen). Below 768px they now take turns: tap a field to edit it,
+  Back/Cancel returns to the list; row actions stay visible without hover.
 
 ## [5.22.0] - 2026-11-14
 

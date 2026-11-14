@@ -140,7 +140,23 @@ class Login extends \Bdus\Controller
 	public function auth(): void
 	{
 		try {
-			$user = $this->authenticate($this->post['email'], $this->post['password']);
+			// Failed logins are also counted per client address (on top of the
+			// per-account lockout): one address cannot try many accounts.
+			$ip = \Auth\ClientIp::get();
+			if ($wait = \Auth\RateLimiter::blocked('LOGIN_IP', $ip)) {
+				http_response_code(429);
+				header('Retry-After: ' . $wait);
+				$this->returnJson(['status' => 'error', 'code' => 'too_many_requests']);
+				return;
+			}
+			try {
+				$user = $this->authenticate($this->post['email'], $this->post['password']);
+			} catch (\Exception $failed) {
+				if ($failed->getMessage() === 'login_data_not_valid') {
+					\Auth\RateLimiter::hit('LOGIN_IP', $ip);
+				}
+				throw $failed;
+			}
 
 			$pending = \DB\System\Migrate::listPending($this->db);
 

@@ -27,6 +27,14 @@ class Dispatcher
         private readonly Logger  $log,
     ) {}
 
+    private function tooManyRequests(int $retryAfter): void
+    {
+        http_response_code(429);
+        header('Retry-After: ' . $retryAfter);
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'code' => 'too_many_requests'], JSON_UNESCAPED_UNICODE);
+    }
+
     public function dispatch(array $get, array $post, array $request): void
     {
         $obj    = $get['obj']    ?? 'home_ctrl';
@@ -61,7 +69,28 @@ class Dispatcher
 
             if ($required !== 'none') {
                 if (!\Auth\CurrentUser::isAuthenticated() && $this->db) {
-                    \Auth\ApiKeyAuth::attempt($this->db);
+                    $ip = \Auth\ClientIp::get();
+                    // An address that keeps presenting bad credentials is refused
+                    // before any key lookup.
+                    if ($wait = \Auth\RateLimiter::blocked('BAD_KEY_IP', $ip)) {
+                        $this->tooManyRequests($wait);
+                        return;
+                    }
+                    if (!\Auth\ApiKeyAuth::attempt($this->db) && \Auth\ApiKeyAuth::hasCredential()) {
+                        \Auth\RateLimiter::hit('BAD_KEY_IP', $ip);
+                    }
+                }
+
+                // API-key traffic only: people signed in with a JWT are never limited.
+                if (\Auth\CurrentUser::isApiKey()) {
+                    $isWrite = !in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET', 'HEAD', 'OPTIONS'], true);
+                    $keyId   = (int) \Auth\CurrentUser::get('key_id');
+                    $wait    = \Auth\RateLimiter::hit($isWrite ? 'KEY_WRITE' : 'KEY_READ', (string) $keyId)
+                            ?: \Auth\RateLimiter::hit('KEY_IP', \Auth\ClientIp::get());
+                    if ($wait) {
+                        $this->tooManyRequests($wait);
+                        return;
+                    }
                 }
 
                 if (!\Auth\CurrentUser::isAuthenticated()) {

@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **API keys are no longer accepted in the query string (`?api_key=`).** The key ended up in web
   server and proxy access logs. Send `Authorization: Bearer <key>`. A client still using the query
   form now gets 401.
+- **Rate limits on API-key traffic and failed logins.** Per key (writes 60/min, reads 300/min), per
+  client address (120/min for API-key requests, 60/min for rejected credentials, 30 failed logins per
+  15 min on top of the per-account lockout). Over the limit: HTTP 429, `Retry-After`, code
+  `too_many_requests`. People signed in with a JWT are not limited. Tune with `BRADYPUS_RATE_*`
+  (`0` = off); behind a reverse proxy set `BRADYPUS_TRUSTED_PROXIES` so clients are told apart by
+  `X-Forwarded-For`, otherwise every request shares the proxy's address. Counters are small files in
+  `cache/ratelimit/`: no migration. Guide: *Deploy → Environment variables*.
 
 ## [5.21.0] - 2026-11-08
 

@@ -89,6 +89,7 @@ class ApiKeyAuth
         CurrentUser::set([
             'id'         => 0,
             'name'       => 'API Key: ' . ($row['label'] ?? 'unknown'),
+            'key_id'     => (int) $row['id'],
             'privilege'  => $privilege,
             'is_api_key' => true,
             // Group whose rules scope this key (bdus_group_rules); null = tier only.
@@ -116,5 +117,11 @@ class ApiKeyAuth
         }
 
         return null;
+    }
+
+    /** Did the request present a credential (a Bearer token) at all? */
+    public static function hasCredential(): bool
+    {
+        return self::extractKey() !== null;
     }
 }

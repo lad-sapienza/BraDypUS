@@ -45,6 +45,10 @@ method. See `bdus-docs/dev/architecture.md` for the full trace.
 - **Privilege tiers:** `Router::ROUTE_PRIVILEGE` (`'Bdus\\Controllers\\X::method'`
   → `none | read | edit | admin | super_admin`). A route not listed defaults to
   `super_admin`. Always add the entry when adding a route.
+- **Rate limits:** `Auth\RateLimiter` (fixed-window counters in `cache/ratelimit/`, fail open) is applied
+  in `Dispatcher` to API-key requests and in `Login::auth` to failed logins; `Auth\ClientIp` gives the
+  client address (`X-Forwarded-For` only from `BRADYPUS_TRUSTED_PROXIES`). Over the limit: HTTP 429 +
+  `Retry-After` + `too_many_requests`. Limits: `BRADYPUS_RATE_*` env vars, `0` = off.
 - **Auth:** `Authorization: Bearer <JWT>` (per-app secret in
   `projects/{app}/.jwt_secret`) or an API key (hash in `bdus_api_keys`; `Authorization: Bearer` header only, never the query string). The
   Dispatcher re-reads `privilege` and `token_version` from `bdus_users`, so the

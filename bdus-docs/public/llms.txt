@@ -31,7 +31,7 @@ only as far as the task needs.
 
 - [User guide (HTML)](https://docs.bdus.lad-sapienza.it/guide/): every feature, with screenshots
 - [System plugins](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-docs/guide/system-plugins/index.md): geodata, Harris matrix, fuzzy dates, radiocarbon, osteology, Zotero, Pleiades
-- [REST API](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-api/openapi.yaml): OpenAPI 3 contract (the same endpoints the app uses); API keys go only in `Authorization: Bearer <key>`, never in the URL
+- [REST API](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/bdus-api/openapi.yaml): OpenAPI 3 contract (the same endpoints the app uses); API keys go only in `Authorization: Bearer <key>`, never in the URL; API-key traffic and failed logins are rate-limited (HTTP 429 + `Retry-After`; env `BRADYPUS_RATE_*`, `BRADYPUS_TRUSTED_PROXIES` behind a proxy)
 - [Developer documentation](https://docs.bdus.lad-sapienza.it/dev/): architecture, database, record lifecycle
 - [Changelog](https://raw.githubusercontent.com/lad-sapienza/BraDypUS/v5/CHANGELOG.md)
 - Source: https://github.com/lad-sapienza/BraDypUS

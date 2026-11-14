@@ -41,6 +41,7 @@
   "not_enough_data": "Non ci sono abbastanza dati per continuare",
   "login_data_not_valid": "Errore. E-mail e/o password non validi!",
   "account_locked": "Troppi tentativi di accesso falliti. Questo account è temporaneamente bloccato — riprova tra qualche minuto",
+  "too_many_requests": "Troppe richieste. Attendi un momento e riprova",
   "app_not_found": "L'applicazione selezionata non è stata trovata su questo server",
   "email_not_configured": "Questa funzione non è disponibile su questa installazione — contatta l'amministratore",
   "registration_not_available": "La registrazione non è abilitata per questa applicazione — contatta l'amministratore",

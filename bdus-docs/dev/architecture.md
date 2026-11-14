@@ -83,7 +83,8 @@ index.php
               ├── major-upgrade gate → 409 major_upgrade_required
               ├── auth gate
               │     ├── 'none' → skip
-              │     ├── no JWT user → try API key (Bearer {key}) → else 401
+              │     ├── no JWT user → try API key (Bearer {key} only) → else 401
+              │     │     (BAD_KEY_IP limit → 429; Auth\RateLimiter, per key/address → 429)
               │     ├── human user: token_version + privilege re-read from DB
               │     │     (revoked token → 401 token_invalidated)
               │     └── API key below required tier → 403 not_enough_privilege
@@ -278,6 +279,8 @@ Leave it unset when frontend and backend share the same origin.
 | `BRADYPUS_DEBUG` | `0` | `1` enables verbose errors and file logging (`logs/error.log`) |
 | `BRADYPUS_CORS_ORIGIN` | `''` | Space-separated list of allowed origins |
 | `BRADYPUS_ALLOW_NEW_APP` | `0` | `1` enables the "Create new application" wizard |
+| `BRADYPUS_TRUSTED_PROXIES` | `''` | Comma-separated IPs / IPv4 CIDRs of reverse proxies; only then `X-Forwarded-For` is read (`Auth\ClientIp`) |
+| `BRADYPUS_RATE_KEY_WRITE`, `_KEY_READ`, `_KEY_IP`, `_BAD_KEY_IP`, `_LOGIN_IP` | `60`, `300`, `120`, `60`, `30` | Limits per minute (login: per 15 min); `0` switches one off. See `Auth\RateLimiter::DEFAULTS` |
 
 Set them in `docker-compose.yml`'s `environment:` block, or via `SetEnv`
 (Apache) / `fastcgi_param` (Nginx) when running without Docker.

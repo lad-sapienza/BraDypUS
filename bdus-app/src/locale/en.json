@@ -41,6 +41,7 @@
   "not_enough_data": "Not enaugh data to continue",
   "login_data_not_valid": "Error. Not valid email address and/or password",
   "account_locked": "Too many failed login attempts. This account is temporarily locked — please try again in a few minutes",
+  "too_many_requests": "Too many requests. Please wait a moment and try again",
   "app_not_found": "The selected application was not found on this server",
   "email_not_configured": "This feature isn't available on this installation — please contact your administrator",
   "registration_not_available": "Self-registration isn't enabled for this application — please contact your administrator",

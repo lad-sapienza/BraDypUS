@@ -44,6 +44,12 @@ Set these in `docker-compose.prod.yml` or via a `.env` file:
 | `BRADYPUS_DEBUG` | `0` | Set to `1` only for debugging |
 | `BRADYPUS_ALLOW_NEW_APP` | `0` | Set to `1` temporarily to create the first app |
 | `BRADYPUS_CORS_ORIGIN` | — | Space-separated allowed origins for cross-origin API access |
+| `BRADYPUS_TRUSTED_PROXIES` | — | Comma-separated IPs/IPv4 CIDRs of your reverse proxies. Only then `X-Forwarded-For` is read, to tell clients apart for rate limits |
+| `BRADYPUS_RATE_KEY_WRITE` | `60` | API-key writes per key per minute (`0` = off) |
+| `BRADYPUS_RATE_KEY_READ` | `300` | API-key reads per key per minute |
+| `BRADYPUS_RATE_KEY_IP` | `120` | API-key requests per client address per minute |
+| `BRADYPUS_RATE_BAD_KEY_IP` | `60` | Rejected credentials per client address per minute |
+| `BRADYPUS_RATE_LOGIN_IP` | `30` | Failed logins per client address per 15 minutes |
 | `RESEND_API_KEY` | — | API key for [Resend](https://resend.com), used to send password-reset and self-registration emails. One key covers every application on this instance. Leave unset to keep those features reported as unavailable instead of failing silently — see [Login & authentication](/guide/usage/authentication). |
 | `MAIL_FROM_ADDRESS` | — | Sender address for those emails. Must be on a domain verified in your Resend account. |
 | `MAIL_FROM_NAME` | `BraDypUS` | Sender display name. |
@@ -107,9 +113,18 @@ server {
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;
         proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
     }
 }
 ```
+
+**Rate limits and client addresses.** BraDypUS limits API-key requests and failed
+logins per client address. Behind a proxy the address seen by PHP is the proxy's,
+so list your proxies in `BRADYPUS_TRUSTED_PROXIES` (for example
+`192.168.3.186` or `172.18.0.0/16`): only then `X-Forwarded-For` is read, from the
+right, skipping the trusted proxies, so an address forged by a client is never
+believed. A public form that posts to the API is best also limited in nginx
+(`limit_req_zone`, `client_max_body_size`), which stops abuse before PHP.
 
 ## Data persistence
 

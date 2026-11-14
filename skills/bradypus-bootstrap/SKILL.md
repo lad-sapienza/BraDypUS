@@ -130,6 +130,9 @@ do not handle their password if you can avoid it):
 POST {base}/{app}/api/auth/login      {"email": "...", "password": "..."}   → {"token": "..."}
 ```
 
+Failed logins are limited per client address: after 30 in 15 minutes the API answers HTTP `429`
+(`too_many_requests`, `Retry-After`). Do not retry in a loop with a wrong password; stop and ask the user.
+
 **Preview, then apply.** Both need the super-admin token (`Authorization: Bearer …`):
 
 ```

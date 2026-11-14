@@ -26,6 +26,18 @@ The header is the **only** way to send a key. A `?api_key=` query parameter is n
 accepted (it answers `401`): a key in a URL ends up in web server, proxy and
 browser logs.
 
+#### Request limits <Badge type="tip" text="new" />
+
+API-key traffic is rate-limited (people signed in with a user account are not).
+Defaults: 60 writes and 300 reads per minute for each key, 120 requests per
+minute from one client address, 60 rejected credentials per minute from one
+address. Over the limit the API answers HTTP `429` with a `Retry-After` header
+(seconds) and `{"status": "error", "code": "too_many_requests"}`: wait and retry.
+Failed logins are limited per address too (30 per 15 minutes), on top of the
+per-account lockout. Administrators tune the limits with `BRADYPUS_RATE_*`
+([deploy guide](../deploy/#environment-variables)); a public site that calls the
+API from its own server should keep its key there and apply its own limit per visitor.
+
 Each key has a privilege level: 30 (reader) keys can only read data, 25 keys can
 also create and write, 10 keys are admin keys. A key can also belong to a
 [group](../setup/groups) — see below.

@@ -40,6 +40,10 @@ info:
     `?api_key=` query parameter is ignored (the request gets `401`), so that keys
     do not end up in access logs.
 
+    API-key requests and failed logins are rate-limited (per key, per client
+    address); beyond the limit the answer is HTTP `429` with `Retry-After`
+    (see the `TooManyRequests` response). JWT users are not limited.
+
     ## Common response envelope
     Every response carries a top-level `status` field (`"success"` | `"error"`).
     Error responses additionally carry a `code` string (i18n key) and an
@@ -237,6 +241,8 @@ paths:
                   - $ref: '#/components/schemas/Error'
         '404':
           $ref: '#/components/responses/WrongPathShape'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 
   /api/auth/refresh:
     get:
@@ -6904,6 +6910,20 @@ components:
       description: >-
         Missing, invalid or expired token (`unauthenticated`), or a token revoked by
         a password change / explicit revocation (`token_invalidated`).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: >-
+        Too many requests from this API key or client address, or too many failed
+        logins from this address: HTTP `429` with a `Retry-After` header (seconds) and
+        `{ status: "error", code: "too_many_requests" }`.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying
+          schema:
+            type: integer
       content:
         application/json:
           schema:

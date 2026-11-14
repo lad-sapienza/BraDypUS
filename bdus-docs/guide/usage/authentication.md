@@ -95,3 +95,10 @@ minutes — the login form shows a message instead of attempting the password
 check. This is per-account, not per-IP, and resets on the next successful
 login (or password reset). It's a second line of defense in addition to any
 rate-limiting configured on your reverse proxy.
+
+Failed logins are also counted **per client address**: after 30 failures in 15
+minutes from the same address, further login attempts get HTTP `429`
+(`too_many_requests`, with a `Retry-After` header) until the window ends. Behind a
+reverse proxy, set `BRADYPUS_TRUSTED_PROXIES` (see the
+[deploy guide](../deploy/#environment-variables)); otherwise every visitor shares
+the proxy's address and counts towards the same limit.

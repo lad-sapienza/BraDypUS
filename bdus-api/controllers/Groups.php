@@ -608,7 +608,7 @@ class Groups extends \Bdus\Controller
             if (!is_array($enforce) || array_is_list($enforce)) {
                 return ['code' => 'invalid_enforce', 'detail' => "{$table} {$action}"];
             }
-            if (($why = Access::checkEnforce($this->cfg, $table, $enforce)) !== null) {
+            if (($why = Access::checkEnforce($this->cfg, $table, $enforce, $action)) !== null) {
                 return ['code' => 'invalid_enforce', 'detail' => "{$table} {$action}: {$why}"];
             }
             $enforce = json_encode($enforce, JSON_UNESCAPED_UNICODE);

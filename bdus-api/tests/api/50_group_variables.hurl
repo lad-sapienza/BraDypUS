@@ -194,6 +194,85 @@ jsonpath "$.status" == "error"
 jsonpath "$.code"   == "not_enough_privilege"
 
 
+# ── 50e-bis. Server stamps: the key that created a record, and when (#73) ──
+POST {{base_url}}/{{app_name}}/api/groups
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "name": "g50 Stamps" }
+HTTP 200
+[Captures]
+g50_stamp_group: jsonpath "$.id"
+
+
+# Stamps are for new records only
+PUT {{base_url}}/{{app_name}}/api/group/{{g50_stamp_group}}/rules
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "rules": [ { "table": "crud_test", "action": "update", "enforce": { "tipo": "$KEY_ID" } } ] }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "invalid_enforce"
+
+
+PUT {{base_url}}/{{app_name}}/api/group/{{g50_stamp_group}}/rules
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "rules": [ { "table": "crud_test", "action": "create", "enforce": { "tipo": "$KEY_ID", "periodo": "$TODAY", "descrizione": "$NOW" } } ] }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "rules_saved"
+
+
+POST {{base_url}}/{{app_name}}/api/api-keys
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "label": "g50 stamp key", "privilege": 39, "group_id": {{g50_stamp_group}} }
+HTTP 200
+[Captures]
+g50_stamp_key: jsonpath "$.key"
+g50_stamp_key_id: jsonpath "$.id"
+
+
+# The client may not choose a stamped value
+POST {{base_url}}/{{app_name}}/api/record/crud_test
+Authorization: Bearer {{g50_stamp_key}}
+Content-Type: application/json
+{ "core": { "sigla": "K5001", "descrizione": "1999-01-01 00:00:00" } }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "value_not_allowed"
+
+
+POST {{base_url}}/{{app_name}}/api/record/crud_test
+Authorization: Bearer {{g50_stamp_key}}
+Content-Type: application/json
+{ "core": { "sigla": "K5002" } }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+rec_stamped: jsonpath "$.id"
+
+
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{rec_stamped}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.core.tipo.val" == "{{g50_stamp_key_id}}"
+jsonpath "$.core.descrizione.val" matches /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/
+jsonpath "$.core.periodo.val" matches /^\d{4}-\d{2}-\d{2}$/
+
+
+DELETE {{base_url}}/{{app_name}}/api/record/crud_test/{{rec_stamped}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+
+
+DELETE {{base_url}}/{{app_name}}/api/group/{{g50_stamp_group}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+
+
 # ── 50f. Cleanup ────────────────────────────────────────────────────
 DELETE {{base_url}}/{{app_name}}/api/group/{{g50_group}}
 Authorization: Bearer {{jwt}}

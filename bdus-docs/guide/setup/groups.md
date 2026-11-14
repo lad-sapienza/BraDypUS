@@ -130,6 +130,37 @@ Details worth knowing:
   grants nothing (a typo never opens access).
 - Values can be literals too (`status` = `draft`), or a list.
 
+#### Values the server fills in <Badge type="tip" text="new" />
+
+On a **Create** rule three more values can be pinned. The server computes them, so
+the client can neither forget nor forge them:
+
+| Value | What the field gets |
+|---|---|
+| `$NOW` | the date and time of the request, `2026-11-14 08:15:30` |
+| `$TODAY` | the date, `2026-11-14` |
+| `$KEY_ID` | the id of the API key that made the request (see Config → API Keys) |
+
+For a public form that writes through an API key this records *when* a record
+arrived and *which key* sent it, in fields you choose, without trusting the form.
+A value sent by the client for such a field is refused, like any other pinned value.
+`$KEY_ID` needs an API key: a person logged in has none, so a rule that uses it
+grants nothing to people. None of the three can be used on Update (the form sends the
+stored value back) or in a filter.
+
+#### Keep a record with its owner
+
+A rule that shows only "my records" (`owner` is exactly `$CURRENT_USER`) does **not**
+stop a member from handing a record over: on **Update** they can write somebody
+else's id into `owner`, and the record leaves their view. If that is not wanted,
+pin the field on the Update rule too: field `owner`, value `$CURRENT_USER`. A change
+of `owner` to any other value is then refused (*This value is not allowed for your
+group*), while edits to the other fields of their own records go through. The same
+works on Create, to stop a new record from being assigned to somebody else.
+
+Pin only what must not change; an administrator, who is not restricted, can still
+reassign records.
+
 ### Default groups
 
 Three groups come with every application and can be used instead of a level for the

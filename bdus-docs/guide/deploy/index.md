@@ -129,6 +129,36 @@ proxy's address if it is outside those ranges. Without the variable (running the
 API on its own, with no Compose file) every client behind a proxy shares one address. A public form that posts to the API is best also limited in nginx
 (`limit_req_zone`, `client_max_body_size`), which stops abuse before PHP.
 
+## Deleting old records (retention) <Badge type="tip" text="new" />
+
+Deleting a record in the interface keeps a full copy of it in the version history,
+and every edit adds another: contact data would stay in the database after the
+record is gone. To delete or anonymise records after a time, with their history, run
+`bin/purge-records.php`. "Older than" is measured on a **date field** of the table
+(records have no creation date of their own, so give the table a date field such as
+the date of the request):
+
+```bash
+# 1. look: counts, writes nothing
+docker compose exec -u www-data api php bin/purge-records.php \
+  --app edr --table richieste --date-field data_richiesta --older-than 365
+
+# 2. keep the records but blank the personal fields (and purge the history that holds them)
+docker compose exec -u www-data api php bin/purge-records.php \
+  --app edr --table richieste --date-field data_richiesta --older-than 365 \
+  --anonymize-fields email,telefono --yes
+
+# or delete them altogether
+docker compose exec -u www-data api php bin/purge-records.php \
+  --app edr --table richieste --date-field data_richiesta --older-than 730 --yes
+```
+
+Deleting removes the record's plugin rows, links, stratigraphic relations and map
+data too; files attached to it are unlinked but stay on disk. A purge **cannot be
+undone**: take a backup first (`bdus backup` with bdus-ops). Run again, an
+anonymisation finds nothing left to do, so it can be scheduled (cron) as is. The
+log keeps only the counts.
+
 ## Data persistence
 
 All application data (SQLite databases, uploaded files, configuration, backups) lives

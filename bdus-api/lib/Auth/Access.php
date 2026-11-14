@@ -67,6 +67,14 @@ class Access
 
     private const VARIABLE_RE = '/^\$(CURRENT_USER|CURRENT_GROUPS|GROUP\.([A-Za-z0-9_]+))$/';
 
+    /**
+     * Values the server stamps on a new record; only in the `enforce` map of a
+     * create rule, never in filters: `$NOW` (Y-m-d H:i:s), `$TODAY` (Y-m-d) and
+     * `$KEY_ID` (id of the API key making the request; a person has none, so a
+     * rule using it grants nothing to people).
+     */
+    public const STAMPS = ['$NOW', '$TODAY', '$KEY_ID'];
+
     /** @var array<string, array<string, list<array{filter: ?array, enforce: ?array}>>>|null  table => action => rules */
     private ?array $enforceRules = null;
 
@@ -91,7 +99,8 @@ class Access
         private readonly Config $cfg,
         private readonly int $tier,
         private readonly int $userId,
-        private array|\Closure $groupIds = []
+        private array|\Closure $groupIds = [],
+        private readonly ?int $keyId = null
     ) {}
 
     /**
@@ -114,7 +123,9 @@ class Access
             $groupIds = fn(): array => self::loadUserGroups($db, $userId);
         }
 
-        return new self($db, $cfg, $tier, $userId, $groupIds);
+        $keyId = CurrentUser::isApiKey() && CurrentUser::get('key_id') ? (int) CurrentUser::get('key_id') : null;
+
+        return new self($db, $cfg, $tier, $userId, $groupIds, $keyId);
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
@@ -412,6 +423,9 @@ class Access
         }
 
         $ctx = ['user' => $this->userId, 'groups' => $this->groupIds(), 'attrs' => $this->groupAttrs()];
+        if ($action === 'create') {
+            $ctx['stamps'] = ['now' => time(), 'key' => $this->keyId];
+        }
 
         foreach ($candidates as $rule) {
             if ($action === 'update' && !$this->ruleMatchesRecord($table, $rule['filter'], (int) $recordId)) {
@@ -573,7 +587,7 @@ class Access
      *
      * @return string|null  null when valid, else why it is not
      */
-    public static function checkEnforce(Config $cfg, string $table, array $enforce): ?string
+    public static function checkEnforce(Config $cfg, string $table, array $enforce, string $action = 'create'): ?string
     {
         $fields = $cfg->get("tables.{$table}.fields") ?? [];
         $names  = array_column(is_array($fields) ? $fields : [], 'name');
@@ -585,7 +599,11 @@ class Access
                 return "field '{$field}' cannot be enforced";
             }
             try {
-                self::expand($value, ['user' => 0, 'groups' => [0], 'attrs' => null]);
+                self::expand($value, [
+                    'user' => 0, 'groups' => [0], 'attrs' => null,
+                    // server stamps make sense on a new record only: on update the form sends the stored value back
+                    'stamps' => $action === 'create' ? ['now' => 0, 'key' => 0] : null,
+                ]);
             } catch (\Throwable $e) {
                 return "{$field}: " . $e->getMessage();
             }
@@ -599,11 +617,24 @@ class Access
      * a known one, or a group attribute nobody sets, throws (fails closed).
      *
      * @param  array{user: int, groups: int[], attrs: ?array} $ctx  attrs null = validation only
-     * @return int|array|null
+     * @return int|string|array|null
      * @throws \InvalidArgumentException
      */
-    private static function variableValue(string $s, array $ctx): int|array|null
+    private static function variableValue(string $s, array $ctx): int|string|array|null
     {
+        if (in_array($s, self::STAMPS, true)) {
+            $st = $ctx['stamps'] ?? null;
+            if ($st === null) {
+                throw new \InvalidArgumentException("{$s} is only available when creating a record");
+            }
+            if ($s === '$KEY_ID') {
+                if (empty($st['key']) && $ctx['attrs'] !== null) {
+                    throw new \InvalidArgumentException('$KEY_ID needs an API key');
+                }
+                return $st['key'] ?: 0;
+            }
+            return date($s === '$NOW' ? 'Y-m-d H:i:s' : 'Y-m-d', $st['now']);
+        }
         if (!str_starts_with($s, '$CURRENT_') && !str_starts_with($s, '$GROUP')) {
             return null;
         }

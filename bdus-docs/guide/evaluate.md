@@ -58,6 +58,10 @@ versions of every record, files, maps and print templates on top of them.
   Note that uploaded files, and their derived sizes, are served **without authentication**
   and reachable by sequential id: material that must stay private does not belong there
   (access control for files is not available yet).
+  A public form can **write** through an API key restricted to creating rows in one table
+  (the key sees nothing back, the server can stamp the date and the key used, and the API limits
+  requests per key and per address); personal data collected that way can be deleted or anonymised
+  after a time with the retention command, history included ([Deploy](/guide/deploy/#deleting-old-records-retention)).
 - You need **permissions per field** or a **workflow engine** with notifications:
   BraDypUS's own permission engine works per table and per row (a rule can use group
   attributes, e.g. "the records of my site", and pin the value a field may take when

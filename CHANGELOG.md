@@ -5,8 +5,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Server-side values on create: `$NOW`, `$TODAY`, `$KEY_ID`** (#73). A Create rule of a group can pin a
+  field to the date and time of the request, to its date, or to the id of the API key that made it: the
+  server fills the field and refuses a different client value. For a public form that writes through an API
+  key this records when a record arrived and which key sent it, without trusting the form. Not available on
+  Update or in filters; `$KEY_ID` grants nothing to people (they have no key). Guide: *Groups → Values the
+  server fills in*.
+- **Retention: `bin/purge-records.php`** (#72). Deletes, or anonymises (blanks chosen fields), the records of a
+  table dated before today − N days, **and their version history**, which otherwise keeps every old value
+  (a deleted record stays whole in `bdus_versions`). A date field of the table is the age reference; plugin
+  rows, links, relations and map data go with a deleted record; files are unlinked, not removed from disk.
+  Dry run unless `--yes`; idempotent, so it can be scheduled. Guide: *Deploy → Deleting old records*.
+
 ### Fixed
 
+- **Docs (#74):** the groups guide now explains that a "my records" rule does not stop a member from handing a
+  record over, and how to pin the owner field on Update.
 - **`POST /api/record/{tb}` checks the payload before writing** (#67–#71):
   a required (`not_empty`) field left out of a **new** record is refused, not stored empty (#67);
   a body that is not valid JSON, or a new record with an empty `core`, is refused instead of creating

@@ -22,6 +22,7 @@ without going through a lib/ abstraction.
 | `Auth\CurrentUser` | `lib/Auth/CurrentUser.php` | Request-scoped authenticated user |
 | `Auth\ApiKeyAuth` | `lib/Auth/ApiKeyAuth.php` | API key authentication |
 | `Auth\RateLimiter`, `Auth\ClientIp` | `lib/Auth/RateLimiter.php`, `lib/Auth/ClientIp.php` | Request limits for API keys and failed logins; client address behind a trusted proxy |
+| `Record\Purge` | `lib/Record/Purge.php` | Retention: delete or anonymise old records and their version history (`bin/purge-records.php`) |
 | `Auth\Authorization` | `lib/Auth/Authorization.php` | Privilege check helpers |
 | `Auth\Access` | `lib/Auth/Access.php` | Table- and row-level access: group rules and locks ([Groups & permissions](./groups-permissions)) |
 | `Auth\Password` | `lib/Auth/Password.php` | bcrypt hash / verify |

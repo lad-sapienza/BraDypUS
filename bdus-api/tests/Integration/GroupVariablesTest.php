@@ -202,6 +202,50 @@ class GroupVariablesTest extends BdusTestCase
         $this->assertNotNull($ok(['status' => ['_eq' => '$GROUP_oops']]));
     }
 
+    // ── server stamps: $NOW, $TODAY, $KEY_ID (#73) ────────────────────────────
+
+    private function accessWithKey(array $groupIds, ?int $keyId): Access
+    {
+        return new Access(static::$db, static::$cfg, 39, 0, $groupIds, $keyId);
+    }
+
+    public function testCreateStampsNowTodayAndKeyId(): void
+    {
+        $g = $this->group(null, [$this->createRule(['description' => '$NOW', 'status' => '$TODAY', 'category' => '$KEY_ID'])]);
+        $out = $this->accessWithKey([$g], 7)->enforceValues('create', 'items', ['name' => 'x']);
+
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $out['description']);
+        $this->assertSame(date('Y-m-d'), $out['status']);
+        $this->assertSame(7, $out['category']);
+    }
+
+    public function testCreateRefusesAClientValueForAStampedField(): void
+    {
+        $g = $this->group(null, [$this->createRule(['description' => '$NOW'])]);
+        $a = $this->accessWithKey([$g], 7);
+
+        $this->assertNull($a->enforceValues('create', 'items', ['name' => 'x', 'description' => '1999-01-01 00:00:00']));
+    }
+
+    public function testKeyIdStampGrantsNothingToAPerson(): void
+    {
+        $g = $this->group(null, [$this->createRule(['category' => '$KEY_ID'])]);
+
+        $this->assertNull($this->accessWithKey([$g], null)->enforceValues('create', 'items', ['name' => 'x']));
+    }
+
+    public function testStampsAreNotAllowedOnUpdateRulesOrInFilters(): void
+    {
+        $this->assertNotNull(Access::checkEnforce(static::$cfg, 'items', ['description' => '$NOW'], 'update'));
+        $this->assertNull(Access::checkEnforce(static::$cfg, 'items', ['description' => '$NOW'], 'create'));
+        $this->assertNotNull(Access::checkFilter(static::$db, static::$cfg, 'items', ['status' => ['_eq' => '$TODAY']]));
+    }
+
+    public function testUnknownDollarWordStaysAnUnknownVariable(): void
+    {
+        $this->assertNotNull(Access::checkEnforce(static::$cfg, 'items', ['description' => '$CURRENT_TIME'], 'create'));
+    }
+
     // ── enforce on create ─────────────────────────────────────────────────────
 
     private function createRule(array $enforce = ['status' => '$GROUP.st']): array

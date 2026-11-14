@@ -66,6 +66,13 @@ level. The grid keeps the rules it has no row for (`*`) when it saves.
 
 ### Enforced values (#51)
 
+Server stamps (#73): besides group variables an `enforce` value can be `$NOW`
+(`Y-m-d H:i:s`), `$TODAY` (`Y-m-d`) or `$KEY_ID` (`Access::STAMPS`). They are
+evaluated per request, only on `create` rules (`checkEnforce(..., $action)` refuses them
+on update; filters never accept them), and `$KEY_ID` needs an API key (`Access`
+gets `$keyId` from `CurrentUser::get('key_id')`, set by `ApiKeyAuth`): for a person the
+rule grants nothing, like any unresolvable variable.
+
 `create` and `update` rules have an optional `enforce` column (JSON `{field: value|variable|list}`).
 `Access::enforceValues($action, $table, $values, $recordId, $coerce)` is called by
 `Record::saveRecord`, `Record::duplicateRecord` (`$coerce`: a copy's value outside the allowed

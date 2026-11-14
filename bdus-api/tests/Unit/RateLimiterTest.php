@@ -13,8 +13,14 @@ class RateLimiterTest extends TestCase
 {
     private string $dir;
 
+    /** @var array<string,string|false> env values to put back (the test container sets them to 0) */
+    private array $savedEnv = [];
+
     protected function setUp(): void
     {
+        foreach (['KEY_WRITE', 'KEY_READ', 'KEY_IP', 'BAD_KEY_IP', 'LOGIN_IP'] as $n) {
+            $this->savedEnv['BRADYPUS_RATE_' . $n] = getenv('BRADYPUS_RATE_' . $n);
+        }
         $this->dir = sys_get_temp_dir() . '/bdus_rl_' . bin2hex(random_bytes(4)) . '/';
         RateLimiter::setDir($this->dir);
         putenv('BRADYPUS_RATE_KEY_WRITE=3');
@@ -22,8 +28,11 @@ class RateLimiterTest extends TestCase
 
     protected function tearDown(): void
     {
-        putenv('BRADYPUS_RATE_KEY_WRITE');
-        putenv('BRADYPUS_RATE_LOGIN_IP');
+        // Restore, never unset: unsetting would switch the limits back on for the
+        // tests that run after this one (LoginCtrlTest counts real failed logins).
+        foreach ($this->savedEnv as $k => $v) {
+            putenv($v === false ? $k : "$k=$v");
+        }
         foreach (glob($this->dir . '*') ?: [] as $f) {
             unlink($f);
         }

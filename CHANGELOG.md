@@ -15,7 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   15 min on top of the per-account lockout). Over the limit: HTTP 429, `Retry-After`, code
   `too_many_requests`. People signed in with a JWT are not limited. Tune with `BRADYPUS_RATE_*`
   (`0` = off); behind a reverse proxy set `BRADYPUS_TRUSTED_PROXIES` so clients are told apart by
-  `X-Forwarded-For`, otherwise every request shares the proxy's address. Counters are small files in
+  `X-Forwarded-For`, otherwise every request shares the proxy's address (the Compose files already
+  trust the private ranges, which covers the bundled frontend container). Counters are small files in
   `cache/ratelimit/`: no migration. Guide: *Deploy → Environment variables*.
 
 ## [5.21.0] - 2026-11-08

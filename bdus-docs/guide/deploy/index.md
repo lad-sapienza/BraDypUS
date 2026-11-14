@@ -44,7 +44,7 @@ Set these in `docker-compose.prod.yml` or via a `.env` file:
 | `BRADYPUS_DEBUG` | `0` | Set to `1` only for debugging |
 | `BRADYPUS_ALLOW_NEW_APP` | `0` | Set to `1` temporarily to create the first app |
 | `BRADYPUS_CORS_ORIGIN` | — | Space-separated allowed origins for cross-origin API access |
-| `BRADYPUS_TRUSTED_PROXIES` | — | Comma-separated IPs/IPv4 CIDRs of your reverse proxies. Only then `X-Forwarded-For` is read, to tell clients apart for rate limits |
+| `BRADYPUS_TRUSTED_PROXIES` | private ranges in the Compose files (`10.0.0.0/8,172.16.0.0/12,192.168.0.0/16`); unset otherwise | Comma-separated IPs/IPv4 CIDRs of the proxies in front of the API. Only then `X-Forwarded-For` is read, to tell clients apart for rate limits |
 | `BRADYPUS_RATE_KEY_WRITE` | `60` | API-key writes per key per minute (`0` = off) |
 | `BRADYPUS_RATE_KEY_READ` | `300` | API-key reads per key per minute |
 | `BRADYPUS_RATE_KEY_IP` | `120` | API-key requests per client address per minute |
@@ -119,11 +119,14 @@ server {
 ```
 
 **Rate limits and client addresses.** BraDypUS limits API-key requests and failed
-logins per client address. Behind a proxy the address seen by PHP is the proxy's,
-so list your proxies in `BRADYPUS_TRUSTED_PROXIES` (for example
-`192.168.3.186` or `172.18.0.0/16`): only then `X-Forwarded-For` is read, from the
-right, skipping the trusted proxies, so an address forged by a client is never
-believed. A public form that posts to the API is best also limited in nginx
+logins per client address. The address PHP sees is that of the proxy in front of
+it: with the bundled `frontend` container, always the container's own. The Compose
+files therefore set `BRADYPUS_TRUSTED_PROXIES` to the private ranges
+(`10.0.0.0/8,172.16.0.0/12,192.168.0.0/16`), which covers the frontend container and
+an outer proxy on your LAN; `X-Forwarded-For` is then read from the right, skipping
+trusted proxies, so an address forged by a client is never believed. Add the
+proxy's address if it is outside those ranges. Without the variable (running the
+API on its own, with no Compose file) every client behind a proxy shares one address. A public form that posts to the API is best also limited in nginx
 (`limit_req_zone`, `client_max_body_size`), which stops abuse before PHP.
 
 ## Data persistence

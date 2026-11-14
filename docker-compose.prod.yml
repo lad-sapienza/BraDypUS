@@ -32,6 +32,10 @@ services:
     environment:
       - BRADYPUS_DEBUG=${BRADYPUS_DEBUG:-0}
       - BRADYPUS_ALLOW_NEW_APP=${BRADYPUS_ALLOW_NEW_APP:-0}
+      # The bundled frontend container proxies every request to the API, so PHP
+      # always sees a private address; trust private ranges to read X-Forwarded-For
+      # (rate limits are per client address).
+      - BRADYPUS_TRUSTED_PROXIES=${BRADYPUS_TRUSTED_PROXIES:-10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
       - RESEND_API_KEY=${RESEND_API_KEY:-}
       - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-}
       - MAIL_FROM_NAME=${MAIL_FROM_NAME:-BraDypUS}

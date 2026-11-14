@@ -5,6 +5,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.22.3] - 2026-11-14
+
+### Changed
+
+- **Record view: the full-screen image viewer steps through the record's images.** Opening an image from a
+  record with several now shows previous/next arrows (and the ← → keys), instead of having to close it and
+  open the next one. Works in read and edit mode.
+- **Dependency maintenance** — routine minor/patch bumps, no behaviour change:
+  - `bdus-api`: `intervention/image` 4.4.0 → 4.4.1 (`composer.lock` only; fixes media-type detection in
+    the GD driver).
+  - `bdus-app`: `cytoscape` 3.34.4 → 3.35.0, `cytoscape-dagre` 4.0.1 → 4.1.0, `maplibre-gl` 6.16 → 6.17,
+    `marked` 18.1.2 → 18.2.0, `vue` 3.5.44 → 3.5.45, `vue-router` 5.4 → 5.5, `vite` 8.3.5 → 8.3.8 (and
+    their transitive dependencies). Unit tests and build pass; the map and the graphs were not checked by hand.
+
 ## [5.22.2] - 2026-11-14
 
 ### Fixed

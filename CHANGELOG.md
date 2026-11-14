@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.22.3] - 2026-11-14
+
 ### Changed
 
 - **Record view: the full-screen image viewer steps through the record's images.** Opening an image from a

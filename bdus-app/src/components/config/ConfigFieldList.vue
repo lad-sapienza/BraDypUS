@@ -14,7 +14,7 @@
     <AAlert v-if="loadError" type="error" :message="loadError" :closable="false" show-icon />
     <AAlert v-if="isView" type="info" :message="t('view_fields_note')" :closable="false" show-icon class="cfg-view-note" />
 
-    <div v-if="!loading" class="cfg-fld-shell">
+    <div v-if="!loading" class="cfg-fld-shell" :class="{ 'cfg-fld-shell--detail': selectedFld || addingNew }">
 
       <!-- ── Left: field list ──────────────────────────────────────── -->
       <div class="cfg-fld-list">
@@ -59,6 +59,9 @@
 
         <template v-else>
           <div class="cfg-fld-editor-head">
+            <button class="cfg-icon-btn cfg-fld-back" :title="t('back')" @click="closeEditor">
+              <ArrowLeftOutlined />
+            </button>
             <div class="cfg-fld-editor-title">
               {{ addingNew ? t('new_field') : selectedFld?.name }}
             </div>
@@ -181,8 +184,17 @@ function addNew() {
   addingNew.value   = true
 }
 
+// Narrow screens show list OR editor (master/detail): Cancel goes back to the list
+const isNarrow = () => window.matchMedia('(max-width: 767px)').matches
+
+function closeEditor() {
+  selectedFld.value = null
+  addingNew.value   = false
+}
+
 function onCancelled() {
   addingNew.value = false
+  if (isNarrow()) closeEditor()
 }
 
 async function onSaved(fieldName) {
@@ -301,6 +313,19 @@ onMounted(load)
   display: flex;
   min-height: 0;
   overflow: hidden;
+}
+
+.cfg-fld-back { display: none; }
+
+/* Phones: list and editor take turns instead of sharing a 230px + clipped split */
+@media (max-width: 767px) {
+  .cfg-fld-list { width: 100%; border-right: none; }
+  .cfg-fld-shell--detail .cfg-fld-list { display: none; }
+  .cfg-fld-shell:not(.cfg-fld-shell--detail) .cfg-fld-editor { display: none; }
+  .cfg-fld-back { display: inline-flex; }
+  /* no hover on touch: keep the row actions visible */
+  .cfg-fld-item .cfg-fld-item-actions { opacity: 1; }
+  .cfg-fld-item { padding-top: 0.6rem; padding-bottom: 0.6rem; }
 }
 
 /* ── Left pane ──────────────── */

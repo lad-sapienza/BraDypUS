@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Config: tables can be reordered on touch devices** (#76). The sidebar list used native HTML5
   drag and drop, which touch screens do not fire; it now uses SortableJS (mouse and touch), with a
   larger drag handle.
+- **Config: field editor usable on phones.** The field list and the field form shared a split that
+  clipped the form (Save was off-screen). Below 768px they now take turns: tap a field to edit it,
+  Back/Cancel returns to the list; row actions stay visible without hover.
 
 ## [5.22.0] - 2026-11-14
 

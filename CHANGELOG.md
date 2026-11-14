@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Record view: the full-screen image viewer steps through the record's images.** Opening an image from a
+  record with several now shows previous/next arrows (and the ← → keys), instead of having to close it and
+  open the next one. Works in read and edit mode.
+
 - **Dependency maintenance** — routine minor/patch bumps, no behaviour change:
   - `bdus-api`: `intervention/image` 4.4.0 → 4.4.1 (`composer.lock` only; fixes media-type detection in
     the GD driver).

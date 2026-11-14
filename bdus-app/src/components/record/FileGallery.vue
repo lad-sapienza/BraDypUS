@@ -3,6 +3,7 @@
 
     <!-- ── Edit mode: unified sortable list ──────────────────────── -->
     <template v-if="editMode">
+      <AImagePreviewGroup>
       <div ref="sortableEl" class="sortable-list">
         <div
           v-for="f in localFiles"
@@ -52,6 +53,7 @@
           </button>
         </div>
       </div>
+      </AImagePreviewGroup>
 
       <!-- sort feedback -->
       <div v-if="sortSaving" class="sort-saving">
@@ -133,7 +135,8 @@
     <!-- ── View mode: split images / docs ────────────────────────── -->
     <template v-else>
       <!-- Image thumbnails -->
-      <div v-if="images.length" class="images-grid">
+      <AImagePreviewGroup v-if="images.length">
+      <div class="images-grid">
         <div v-for="f in images" :key="f.id" class="img-thumb">
           <AImage
             :src="thumbUrl(f, fileUrl(f))"
@@ -153,6 +156,7 @@
           </div>
         </div>
       </div>
+      </AImagePreviewGroup>
 
       <!-- Document list -->
       <ul v-if="docs.length" class="docs-list">
@@ -184,6 +188,9 @@ import { useToast, useConfirm } from '@/composables/useNotify'
 import { api, assetUrl } from '@/api'
 import { useI18n }       from '@/i18n'
 import { useAuthStore }  from '@/stores/auth'
+
+// Wraps the thumbnails so the full-screen viewer can step through them (arrows, ← →)
+const AImagePreviewGroup = AImage.PreviewGroup
 
 const { t }   = useI18n()
 const toast   = useToast()

@@ -104,7 +104,8 @@ In RecordView (read mode), the file gallery panel shows all files attached to
 the record. Clicking any **thumbnail or filename** opens an in-app preview
 without leaving the page:
 
-- **Images** — displayed in a fullscreen lightbox overlay.
+- **Images** — displayed in a fullscreen lightbox overlay. When the record has more than one
+  image, use the arrows (or the ← → keys) to step through them without closing the viewer.
 - **Documents** (PDF, etc.) — displayed in an inline viewer panel.
 
 ### Managing files (edit mode)

@@ -197,6 +197,25 @@ Rules:
 - Without `fields` nothing changes. `fields` replaces `columns` when both are sent.
 - `POST` accepts `fields` as a string or an array of tokens.
 
+### Differences from Directus
+
+The record list follows Directus where it can, so a client written for Directus needs few changes:
+
+| Directus | BraDypUS |
+|---|---|
+| Relation key = the field name of the relation (`summary_of_finds`) | Name the table, and give the key yourself with an alias: `summary_of_finds:finds_in_complexes.*` |
+| A relation without `.*` returns the related ids | It returns nothing: ask for `rel.*` or `rel.column` |
+| `fields=a.b.c` (any depth) | One level only |
+| `deep[rel][_filter]` on the nested rows | Not available; filter the main table, or query the related table |
+| `multi_select` fields come back as arrays | They come back as the stored text, comma-separated (`"Ven,Ott"`) |
+| `sort=lookup` sorts by the id | It sorts by the label shown on screen |
+| Only the fields you ask for | A lookup column in `fields` also comes with its label under `@field` (e.g. `@sites_id`), unless the lookup is expanded |
+| Nested rows carry the foreign key (`complexes_id`) | Plugin rows carry `id_link`; rows of an inverse relation carry the pointing column |
+| Geometry is a field of the item | Geometries are in a system table: ask for `geodata` |
+
+The response keeps its own envelope (`status`, `total`, `fields`, `data`), and `data` is the array of rows,
+so `response.data` works unchanged. Errors are `{ "status": "error", "code": … }` with HTTP 200.
+
 ## Filtering records
 
 Use the Directus-style `filter` parameter. It accepts either bracket notation

@@ -5,6 +5,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`POST /api/record/{tb}` checks the payload before writing** (#67–#71):
+  a required (`not_empty`) field left out of a **new** record is refused, not stored empty (#67);
+  a body that is not valid JSON, or a new record with an empty `core`, is refused instead of creating
+  an empty row (`invalid_json`, `parameter_missing`; the hurl phase 09 insert that sent no `core` was
+  one of these) (#68); a lookup (`id_from_tb`) id that does not exist in the target table is refused
+  (`fk_not_found`; an old record that already holds a dangling id can still be saved while the field is
+  unchanged) (#69); an array or object where a plain value is expected is refused (`invalid_type`) instead
+  of being stored as the text "Array" (#70); when a later step fails on create (plugin rows), the new
+  record is removed again instead of staying behind (#71). The names the client uses for fields and
+  plugin tables must be those of the table (`unknown_field`, `unknown_plugin`), and a new plugin row is
+  always linked to the record being saved (a client-sent `id_link` is ignored).
+
 ### Security
 
 - **API keys are no longer accepted in the query string (`?api_key=`).** The key ended up in web

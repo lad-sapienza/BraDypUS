@@ -969,7 +969,12 @@ class Record extends \Bdus\Controller
     $core = $this->post['core'] ?? [];
     $plgs = $this->post['plugins'] ?? [];
 
-    if (!$tb) {
+    if ($this->invalidJsonBody) {
+      $this->returnJson(['status' => 'error', 'code' => 'invalid_json']);
+      return;
+    }
+
+    if (!$tb || !is_string($tb) || !in_array($tb, $this->cfg->get('tables.*.name') ?: [], true)) {
       $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
       return;
     }
@@ -1015,6 +1020,15 @@ class Record extends \Bdus\Controller
         $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
         return;
       }
+    }
+
+    // The payload may only name fields of this table and plugin tables of this
+    // table, with plain values: those names end up in SQL, and a value that is
+    // an array would be stored as the text "Array". Before any write.
+    $shape = $this->payloadShapeErrors($tb, $id, $core, $plgs);
+    if ($shape !== null) {
+      $this->returnJson($shape);
+      return;
     }
 
     // Group rules may pin the value of some fields (`enforce`, #51): refuse a value
@@ -1205,6 +1219,65 @@ class Record extends \Bdus\Controller
   // ── Validation helpers ────────────────────────────────────────────────────
 
   /**
+   * Shape of a saveRecord payload: what the client may name and with which
+   * kind of values. Cleans $plgs in place (a new plugin row never carries its
+   * own `id_link`: the server links it to the record being saved).
+   *
+   * @param  mixed $core
+   * @param  mixed $plgs
+   * @return array|null  an error envelope, or null when the shape is fine
+   */
+  private function payloadShapeErrors(string $tb, ?int $id, mixed &$core, mixed &$plgs): ?array
+  {
+    if (!is_array($core) || !is_array($plgs)) {
+      return ['status' => 'error', 'code' => 'invalid_payload'];
+    }
+    if (!$id && $core === []) {
+      return ['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'core'];
+    }
+
+    $errors = [];
+    $names  = fn(string $t): array => array_column($this->cfg->get("tables.{$t}.fields") ?: [], 'name');
+
+    // `id` and `creator` are system fields the server sets itself (a client value is dropped).
+    $coreNames = array_merge($names($tb), ['id', 'creator']);
+    foreach ($core as $fld => $val) {
+      if (!is_string($fld) || !in_array($fld, $coreNames, true)) {
+        $errors[] = ['field' => (string) $fld, 'label' => (string) $fld, 'rule' => 'unknown_field'];
+      } elseif (is_array($val) || is_object($val)) {
+        $errors[] = ['field' => $fld, 'label' => $fld, 'rule' => 'invalid_type'];
+      }
+    }
+
+    $plugins = $this->cfg->get("tables.{$tb}.plugin") ?: [];
+    foreach ($plgs as $plgTb => $rows) {
+      if (!is_string($plgTb) || !in_array($plgTb, $plugins, true) || !is_array($rows)) {
+        $errors[] = ['field' => (string) $plgTb, 'label' => (string) $plgTb, 'rule' => 'unknown_plugin'];
+        continue;
+      }
+      $plgNames = $names($plgTb);
+      foreach ($rows as $i => $row) {
+        if (!is_array($row) || !is_array($row['fields'] ?? [])) {
+          $errors[] = ['field' => $plgTb, 'label' => $plgTb, 'rule' => 'invalid_type'];
+          continue;
+        }
+        if (empty($row['id'])) {
+          unset($plgs[$plgTb][$i]['fields']['id_link']);
+        }
+        foreach ($plgs[$plgTb][$i]['fields'] ?? [] as $fld => $val) {
+          if (!is_string($fld) || !in_array($fld, $plgNames, true)) {
+            $errors[] = ['field' => $plgTb . '.' . $fld, 'label' => $plgTb . '.' . $fld, 'rule' => 'unknown_field'];
+          } elseif (is_array($val) || is_object($val)) {
+            $errors[] = ['field' => $plgTb . '.' . $fld, 'label' => $fld, 'rule' => 'invalid_type'];
+          }
+        }
+      }
+    }
+
+    return $errors ? ['status' => 'error', 'code' => 'validation_failed', 'errors' => $errors] : null;
+  }
+
+  /**
    * Validates core and plugin fields before saving.
    * Returns an array of error objects, empty if everything is valid.
    *
@@ -1234,6 +1307,12 @@ class Record extends \Bdus\Controller
       );
     }
 
+    // A new record must carry every required field: one that is left out of the
+    // payload is as empty as one sent empty. (On update a field left out stays as it is.)
+    if (!$id) {
+      $errors = array_merge($errors, $this->missingRequired($fieldMap, $core));
+    }
+
     // Plugin fields
     foreach ($plgs as $plgTb => $rows) {
       $plgMap = [];
@@ -1253,10 +1332,52 @@ class Record extends \Bdus\Controller
             $this->validateFieldValue($fldName, $value, $plgMap[$fldName], $plgTb, null)
           );
         }
+        // A new plugin row is held to the same rule (never `id_link`: the server sets it).
+        if (empty($row['id'])) {
+          $errors = array_merge($errors, $this->missingRequired($plgMap, $row['fields'] ?? [], $plgTb));
+        }
       }
     }
 
     return $errors;
+  }
+
+  /**
+   * Required (`required` / `not_empty`) fields that a payload leaves out altogether.
+   * System columns the server fills in itself are never asked of the client.
+   *
+   * @param  array<string,array> $fieldMap  field name => field config
+   * @param  array               $values    the payload's field => value
+   * @return array  error objects, like validateFieldValue()
+   */
+  private function missingRequired(array $fieldMap, array $values, string $prefix = ''): array
+  {
+    $errors = [];
+    foreach ($fieldMap as $name => $cfg) {
+      if (in_array($name, ['id', 'creator', 'id_link'], true) || array_key_exists($name, $values)) {
+        continue;
+      }
+      $check = $cfg['check'] ?? [];
+      $check = is_string($check) ? array_filter(array_map('trim', explode(' ', $check))) : (array) $check;
+      if (in_array('required', $check, true) || in_array('not_empty', $check, true)) {
+        $errors[] = ['field' => ($prefix !== '' ? $prefix . '.' : '') . $name, 'label' => $cfg['label'] ?? $name, 'rule' => 'required'];
+      }
+    }
+    return $errors;
+  }
+
+  /**
+   * Does record $value exist in the table a lookup field (`id_from_tb`) points to?
+   */
+  private function lookupExists(string $target, mixed $value): bool
+  {
+    if (!in_array($target, $this->cfg->get('tables.*.name') ?: [], true) || !is_scalar($value)) {
+      return false;
+    }
+    if (!preg_match('/^\d+$/', (string) $value)) {
+      return false;
+    }
+    return !empty($this->db->query("SELECT 1 FROM {$target} WHERE id = ? LIMIT 1", [(int) $value], 'read'));
   }
 
   /**
@@ -1292,6 +1413,19 @@ class Record extends \Bdus\Controller
     // No further checks on empty values
     if ($isEmpty) {
       return $errors;
+    }
+
+    // lookup (`id_from_tb`): the id must exist in the target table. On update only
+    // when the value changes, so an old record with a dangling reference stays savable.
+    if (!empty($cfg['id_from_tb']) && !$this->lookupExists((string) $cfg['id_from_tb'], $value)) {
+      $unchanged = false;
+      if ($excludeId) {
+        $cur = $this->db->query("SELECT {$fldName} AS v FROM {$tb} WHERE id = ?", [$excludeId], 'read');
+        $unchanged = isset($cur[0]) && (string) $cur[0]['v'] === (string) $value;
+      }
+      if (!$unchanged) {
+        $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'fk_not_found'];
+      }
     }
 
     // int — must be a whole number

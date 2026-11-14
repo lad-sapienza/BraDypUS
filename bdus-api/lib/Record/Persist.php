@@ -77,11 +77,36 @@ class Persist
         // After core, sync the id back into the instance so sub-sections can use it.
         // persistCore() already updates $this->id internally.
 
-        $result['plugins']     = $instance->persistPlugins();
-        $result['manualLinks'] = $instance->persistManualLinks();
-        $result['rs']          = $instance->persistRs();
+        // Each section has its own transaction, so when a later one fails the core
+        // row of a record that was just created would stay behind on its own: take
+        // it (and what was linked to it) away again.
+        try {
+            $result['plugins']     = $instance->persistPlugins();
+            $result['manualLinks'] = $instance->persistManualLinks();
+            $result['rs']          = $instance->persistRs();
+        } catch (\Throwable $e) {
+            if (empty($model['metadata']['rec_id']) && !empty($result['core']['id'])) {
+                $instance->discardNewRecord((int) $result['core']['id']);
+            }
+            throw $e;
+        }
 
         return $result;
+    }
+
+    /** Best effort: remove a record created by this call, and the plugin rows already linked to it. */
+    private function discardNewRecord(int $id): void
+    {
+        foreach (array_keys($this->model['plugins'] ?? []) as $plg) {
+            try {
+                $this->db->query("DELETE FROM {$plg} WHERE id_link = ?", [$id], 'boolean');
+            } catch (\Throwable $ignored) {
+            }
+        }
+        try {
+            $this->db->query("DELETE FROM {$this->tb} WHERE id = ?", [$id], 'boolean');
+        } catch (\Throwable $ignored) {
+        }
     }
 
     // ── Public single-section methods ────────────────────────────────────────

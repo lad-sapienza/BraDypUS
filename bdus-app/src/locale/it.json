@@ -1541,6 +1541,8 @@
   "grp_enforce_add": "Aggiungi campo",
   "grp_enforce_incomplete": "Ogni riga richiede un campo e un valore.",
   "value_not_allowed": "Questo valore non è consentito per il tuo gruppo",
+  "invalid_json": "Il corpo della richiesta non è un JSON valido",
+  "invalid_payload": "La richiesta non è valida",
   "invalid_enforce": "Valori imposti non validi",
   "invalid_attrs": "Attributi del gruppo non validi",
   "grp_all_tables_rules": "Questo gruppo ha anche regole per tutte le tabelle: %s. Vengono mantenute quando salvi.",

@@ -20,6 +20,9 @@ abstract class Controller
     protected ?Logger      $log = null;
     protected ?Config      $cfg = null;
 
+    /** True when the request said it was JSON but the body could not be parsed as a JSON object. */
+    protected bool $invalidJsonBody = false;
+
     public function __construct(array $get, array $post, array $request)
     {
         $this->get = $get;
@@ -28,8 +31,13 @@ abstract class Controller
         // for requests sent with Content-Type: application/json.
         $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
         if (str_contains($contentType, 'application/json')) {
-            $json = json_decode(file_get_contents('php://input'), true);
+            $raw  = (string) file_get_contents('php://input');
+            $json = json_decode($raw, true);
             $post = is_array($json) ? array_merge($post, $json) : $post;
+            // A body that is not valid JSON (or not a JSON object) is told apart
+            // from an empty one, so a write endpoint can refuse it instead of
+            // acting on "nothing".
+            $this->invalidJsonBody = trim($raw) !== '' && !is_array($json);
         }
 
         $this->post    = $post;

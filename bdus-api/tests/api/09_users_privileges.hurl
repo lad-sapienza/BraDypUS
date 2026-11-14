@@ -226,7 +226,7 @@ jsonpath "$.status" == "success"
 POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{writer_jwt}}
 Content-Type: application/json
-{ "sigla": "W999", "descrizione": "Inserted by writer" }
+{ "core": { "sigla": "W999", "descrizione": "Inserted by writer" } }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"

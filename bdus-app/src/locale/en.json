@@ -1541,6 +1541,8 @@
   "grp_enforce_add": "Add field",
   "grp_enforce_incomplete": "Each row needs a field and a value.",
   "value_not_allowed": "This value is not allowed for your group",
+  "invalid_json": "The request body is not valid JSON",
+  "invalid_payload": "The request is not valid",
   "invalid_enforce": "Invalid pinned values",
   "invalid_attrs": "Invalid group attributes",
   "grp_all_tables_rules": "This group also has rules for all tables: %s. They are kept when you save.",

@@ -1085,6 +1085,18 @@ paths:
         Omit `id` to create; include `id` to update. Error `value_not_allowed`:
         a group rule pins the value of a field (`enforce`) and the value sent is
         not an allowed one (also returned by the duplicate and import endpoints).
+
+        The payload is checked before anything is written. `invalid_json`: the body
+        is not a JSON object. `parameter_missing` (detail `core`): a new record
+        with an empty `core`. `validation_failed` with `errors` (`field`, `label`,
+        `rule`): a field that is not a field of the table (`unknown_field`), a
+        plugin table that is not a plugin of the table (`unknown_plugin`), a value
+        that is not a plain value (`invalid_type`), a lookup id that does not exist
+        in the table it points to (`fk_not_found`), and, **on create**, a required
+        field (`required` / `not_empty`) left out altogether, plugin rows included.
+        A new plugin row is always linked to the record being saved: an `id_link`
+        sent by the client is ignored. If a step after the record itself fails on
+        create, the record is removed again.
       parameters:
         - $ref: '#/components/parameters/tb'
       requestBody:

@@ -136,6 +136,43 @@ class UpgradeAppCliTest extends BdusTestCase
         $this->assertStringContainsString("{$app}: up-to-date", $out2);
     }
 
+    private function setStoredVersion(string $app, string $version): void
+    {
+        $cfgFile = $this->root() . "/projects/{$app}/config.json";
+        $cfg = json_decode((string) file_get_contents($cfgFile), true);
+        $cfg['bdus_version'] = $version;
+        file_put_contents($cfgFile, json_encode($cfg));
+    }
+
+    private function storedVersion(string $app): ?string
+    {
+        $cfg = json_decode((string) file_get_contents($this->root() . "/projects/{$app}/config.json"), true);
+        return $cfg['bdus_version'] ?? null;
+    }
+
+    public function testReleaseWithoutMigrationsStillRecordsTheNewVersion(): void
+    {
+        $app = $this->makeApp();
+        $this->setStoredVersion($app, '5.0.0');   // stamped by an older release, nothing pending
+        $current = Migrate::readCurrentVersion();
+
+        // Dry run: reported as pending (no migrations), nothing written.
+        [$rc, $out] = $this->upgrade('--app', $app, '--dry-run');
+        $this->assertSame(0, $rc, $out);
+        $this->assertStringContainsString("{$app}: pending (0)", $out);
+        $this->assertSame('5.0.0', $this->storedVersion($app), 'dry run must not write');
+
+        // Real run: upgraded, version recorded (this is what clears the login badge).
+        [$rc, $out] = $this->upgrade('--app', $app);
+        $this->assertSame(0, $rc, $out);
+        $this->assertStringContainsString("{$app}: upgraded (0)", $out);
+        $this->assertSame($current, $this->storedVersion($app));
+
+        // And now there is nothing to do.
+        [, $out] = $this->upgrade('--app', $app);
+        $this->assertStringContainsString("{$app}: up-to-date", $out);
+    }
+
     public function testNeverRunsAMajorUpgrade(): void
     {
         $app = $this->makeApp();

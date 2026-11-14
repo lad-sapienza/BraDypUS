@@ -183,7 +183,18 @@ try {
     if ($pending === null) {
         $result['state'] = 'needs-major';
     } elseif ($pending === []) {
-        $result['state'] = 'up-to-date';
+        // No migration left. If the app still carries the version of an older release
+        // (a release without migrations), the upgrade is just recording the new one:
+        // dry run reports it as pending (0 migrations), a real run as upgraded (0).
+        if (!\DB\System\Migrate::isVersionStale()) {
+            $result['state'] = 'up-to-date';
+        } elseif ($dry) {
+            $result['state'] = 'pending';
+        } else {
+            \DB\System\Migrate::syncProjectVersion($db, $log);
+            $log->info('Minor upgrade applied from the command line: version recorded, no migrations');
+            $result['state'] = 'upgraded';
+        }
     } elseif ($dry) {
         $result['state']      = 'pending';
         $result['migrations'] = $pending;

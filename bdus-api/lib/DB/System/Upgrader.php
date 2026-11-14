@@ -51,6 +51,9 @@ final class Upgrader
             throw new \RuntimeException('major_upgrade_required');
         }
         if ($pending === []) {
+            // No migration, but the app may still carry the version of an older
+            // release: record the running one (this is what clears the login badge).
+            Migrate::syncProjectVersion($db, $log);
             return [];
         }
 

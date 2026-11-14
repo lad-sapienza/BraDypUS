@@ -64,7 +64,10 @@ docker compose exec -u www-data api php bin/upgrade-app.php --all             # 
 - It does the same as the administrator's confirmation, and nothing else. It
   does **not** take a backup: [make one first](/guide/usage/backup).
 - One line per app: `up-to-date`, `upgraded (n)`, `pending (n)` (dry run),
-  `needs-major` or `failed: <reason>`. An app that fails does not stop the others,
+  `needs-major` or `failed: <reason>`. After a release **without** migrations an
+  app still carries the previous version: it is listed as `pending (0)` in a dry
+  run and `upgraded (0)` in a real one, which records the new version and clears
+  the "update available" tag on the login page. An app that fails does not stop the others,
   and the failure is also written to that app's own log.
 - It never runs the **v4 → v5** upgrade: an app that needs it is reported as
   `needs-major` and is upgraded by its super administrator at login, with the

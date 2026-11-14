@@ -881,6 +881,46 @@ class Migrate
     }
 
     /**
+     * Version recorded in the app's config.json (what the login page compares), or
+     * null when the file or the key is missing (a v4 app has no key).
+     */
+    public static function storedVersion(): ?string
+    {
+        if (!defined('PROJ_DIR') || !file_exists(PROJ_DIR . 'config.json')) {
+            return null;
+        }
+        $config = json_decode((string) file_get_contents(PROJ_DIR . 'config.json'), true);
+        $v = is_array($config) ? ($config['bdus_version'] ?? null) : null;
+        return $v === null ? null : (string) $v;
+    }
+
+    /**
+     * True when the app was last stamped by an older release than the running code.
+     * Says nothing about migrations: a release without any leaves every app stale,
+     * and the login page then shows "update available" for it.
+     */
+    public static function isVersionStale(): bool
+    {
+        $current = self::readCurrentVersion();
+        $stored  = self::storedVersion();
+        return $current !== null && $stored !== null && version_compare($stored, $current, '<');
+    }
+
+    /**
+     * Brings the recorded version up to the running one when nothing else is left
+     * to do (no pending migration). Migrate::run() does this itself, but it only
+     * runs when a migration is pending. Returns true when the version was changed.
+     */
+    public static function syncProjectVersion(DBInterface $db, ?Logger $log = null): bool
+    {
+        if (!self::isVersionStale()) {
+            return false;
+        }
+        self::writeProjectVersion($db, $log);
+        return true;
+    }
+
+    /**
      * Writes the running application version (from composer.json) to
      * bdus_cfg_app.bdus_version.  Silently skips if the table or column
      * is not yet available (pre-M031 apps on their first upgrade run).

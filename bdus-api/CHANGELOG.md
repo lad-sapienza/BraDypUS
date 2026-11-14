@@ -5,6 +5,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.22.0] - 2026-11-14
+
+### Added
+
+- **Server-side values on create: `$NOW`, `$TODAY`, `$KEY_ID`** (#73). A Create rule of a group can pin a
+  field to the date and time of the request, to its date, or to the id of the API key that made it: the
+  server fills the field and refuses a different client value. For a public form that writes through an API
+  key this records when a record arrived and which key sent it, without trusting the form. Not available on
+  Update or in filters; `$KEY_ID` grants nothing to people (they have no key). Guide: *Groups → Values the
+  server fills in*.
+- **Retention: `bin/purge-records.php`** (#72). Deletes, or anonymises (blanks chosen fields), the records of a
+  table dated before today − N days, **and their version history**, which otherwise keeps every old value
+  (a deleted record stays whole in `bdus_versions`). A date field of the table is the age reference; plugin
+  rows, links, relations and map data go with a deleted record; files are unlinked, not removed from disk.
+  Dry run unless `--yes`; idempotent, so it can be scheduled. Guide: *Deploy → Deleting old records*.
+
+### Fixed
+
+- **Docs (#74):** the groups guide now explains that a "my records" rule does not stop a member from handing a
+  record over, and how to pin the owner field on Update.
+- **`POST /api/record/{tb}` checks the payload before writing** (#67–#71):
+  a required (`not_empty`) field left out of a **new** record is refused, not stored empty (#67);
+  a body that is not valid JSON, or a new record with an empty `core`, is refused instead of creating
+  an empty row (`invalid_json`, `parameter_missing`; the hurl phase 09 insert that sent no `core` was
+  one of these) (#68); a lookup (`id_from_tb`) id that does not exist in the target table is refused
+  (`fk_not_found`; an old record that already holds a dangling id can still be saved while the field is
+  unchanged) (#69); an array or object where a plain value is expected is refused (`invalid_type`) instead
+  of being stored as the text "Array" (#70); when a later step fails on create (plugin rows), the new
+  record is removed again instead of staying behind (#71). The names the client uses for fields and
+  plugin tables must be those of the table (`unknown_field`, `unknown_plugin`), and a new plugin row is
+  always linked to the record being saved (a client-sent `id_link` is ignored).
+
+### Security
+
+- **API keys are no longer accepted in the query string (`?api_key=`).** The key ended up in web
+  server and proxy access logs. Send `Authorization: Bearer <key>`. A client still using the query
+  form now gets 401.
+- **Rate limits on API-key traffic and failed logins.** Per key (writes 60/min, reads 300/min), per
+  client address (120/min for API-key requests, 60/min for rejected credentials, 30 failed logins per
+  15 min on top of the per-account lockout). Over the limit: HTTP 429, `Retry-After`, code
+  `too_many_requests`. People signed in with a JWT are not limited. Tune with `BRADYPUS_RATE_*`
+  (`0` = off); behind a reverse proxy set `BRADYPUS_TRUSTED_PROXIES` so clients are told apart by
+  `X-Forwarded-For`, otherwise every request shares the proxy's address (the Compose files already
+  trust the private ranges, which covers the bundled frontend container). Counters are small files in
+  `cache/ratelimit/`: no migration. Guide: *Deploy → Environment variables*.
+
 ## [5.21.0] - 2026-11-08
 
 ### Added

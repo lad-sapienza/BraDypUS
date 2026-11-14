@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.22.0] - 2026-11-14
+
 ### Added
 
 - **Server-side values on create: `$NOW`, `$TODAY`, `$KEY_ID`** (#73). A Create rule of a group can pin a

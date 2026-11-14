@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Record view: the "Auto" column choice is remembered.** Choosing 2, 3 or 4 columns was saved in the
+  browser, but Auto removed the saved value, so the next visit fell back to 3. Auto is now stored too.
 - **Config: fields can be reordered**. The field list had no way to change the order (documented,
   never implemented). A handle on each field (mouse and touch) now reorders them; the order is what
   RecordView uses when a table has no template. New `POST /api/config/table/{tb}/fields/sort`

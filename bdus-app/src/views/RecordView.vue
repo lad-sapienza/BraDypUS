@@ -644,11 +644,8 @@ function loadColsPreference() {
 
 function onColsChange(val) {
   selectedCols.value = val
-  if (val === null) {
-    appStorage.remove(colsStorageKey(tb.value))
-  } else {
-    appStorage.set(colsStorageKey(tb.value), String(val))
-  }
+  // Auto is stored as 'null': removing the key would make it fall back to the default (3)
+  appStorage.set(colsStorageKey(tb.value), String(val))
 }
 
 // ── Template selection ────────────────────────────────────────────

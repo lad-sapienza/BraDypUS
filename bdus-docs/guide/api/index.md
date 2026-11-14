@@ -116,6 +116,26 @@ Returns a paginated JSON response:
 | `sort_field` | — | Column to sort by |
 | `sort_dir` | `asc` | `asc` or `desc` |
 
+### Directus-style parameters <Badge type="tip" text="v5.23.0" />
+
+These are optional and sit next to the ones above, which keep working unchanged.
+
+| Parameter | Meaning |
+|---|---|
+| `limit` | Rows per page, when `per_page` is absent. Up to the cap; **`limit=-1` means everything, up to the cap** |
+| `offset` | Rows to skip; replaces `page` |
+| `sort` | `sort=status,-name`: several fields, `-` = descending. Used when `sort_field` is absent. A lookup field sorts on its label (not on its id as in Directus); unknown fields are ignored |
+| `search` | On its own (no `search_type`), a fast text search |
+| `meta` | `total_count`, `filter_count` or `*`: adds `meta: {…}` to the response. `filter_count` equals `total`; `total_count` is the whole table, limited to the rows you may read |
+
+The **cap** is 5000 rows per response (`per_page` stays at 200). The administrator can change it with the
+environment variable `BRADYPUS_API_MAX_ROWS`. When `limit=-1` (or a `limit` above the cap) matches more rows than
+the cap, the response has `truncated: true`: page with `offset`. Memory grows with rows and nested rows
+(see `fields`), so prefer narrowing the `filter` to raising the cap.
+
+The response keeps its shape (`status`, `total`, `fields`, `data`, …): `data` is already the array of rows, so a
+client that reads `response.data` works as it is.
+
 ## Related rows in a list <Badge type="tip" text="v5.23.0" />
 
 `fields` chooses the columns **and nests related rows** in each row, so a list and its

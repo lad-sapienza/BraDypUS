@@ -1286,10 +1286,45 @@ paths:
             default: 1
         - name: per_page
           in: query
+          description: Rows per page. Wins over `limit` when both are sent.
           schema:
             type: integer
             default: 30
             maximum: 200
+        - name: limit
+          in: query
+          description: |
+            Directus-style rows per page, used when `per_page` is absent. Up to the cap
+            (default 5000, env `BRADYPUS_API_MAX_ROWS`); `-1` means everything up to the
+            cap. When the cap cuts the result the response carries `truncated: true`.
+            Anything that is not a positive number or `-1` is ignored.
+          schema:
+            type: integer
+            minimum: -1
+        - name: offset
+          in: query
+          description: Rows to skip. Replaces `page` when present.
+          schema:
+            type: integer
+            minimum: 0
+        - name: sort
+          in: query
+          description: |
+            Directus-style sort: comma-separated fields, `-` in front = descending
+            (`sort=status,-name`). A lookup field sorts on its label. Unknown fields are
+            ignored; `id` is always sortable. Ignored when `sort_field` is present.
+          schema:
+            type: string
+          example: 'status,-name'
+        - name: meta
+          in: query
+          description: |
+            Comma-separated, or `*`: `filter_count` (= `total`) and `total_count` (the whole
+            table, limited to the rows the user may read). Adds a `meta` object to the
+            response only when asked.
+          schema:
+            type: string
+          example: 'total_count,filter_count'
         - name: sort_field
           in: query
           schema:
@@ -1308,9 +1343,12 @@ paths:
             enum: [all, fast, sqlExpert]
           description: |
             Search mode. See description for details. Ignored when `filter` is present.
+            Absent with a non-empty `search` it is `fast`.
         - name: search
           in: query
-          description: Full-text search string. Required when `search_type=fast`.
+          description: |
+            Full-text search string. Required when `search_type=fast`; on its own
+            (no `search_type`) it is a fast search.
           schema:
             type: string
         - name: querytext
@@ -1468,6 +1506,21 @@ paths:
                     - type: array
                       items:
                         type: string
+                limit:
+                  type: integer
+                  description: See `GET /api/records/{tb}` (`-1` = everything up to the cap).
+                offset:
+                  type: integer
+                sort:
+                  description: Fields, `-` = descending (string `a,-b` or array of tokens).
+                  oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+                meta:
+                  type: string
+                  description: '`total_count`, `filter_count` or `*`'
                 ids_only:
                   type: integer
                   enum: [0, 1]
@@ -7392,12 +7445,22 @@ components:
                   id:
                     type: integer
                 additionalProperties: true
-            tb:
-              type: string
-            page:
-              type: integer
-            limit:
-              type: integer
+            fields:
+              type: array
+              description: The columns of `data` (name and label)
+              items:
+                type: object
+            truncated:
+              type: boolean
+              description: Only with `limit=-1` or a `limit` above the cap — true when more rows match than were returned
+            meta:
+              type: object
+              description: Only when `meta=` was sent
+              properties:
+                total_count:
+                  type: integer
+                filter_count:
+                  type: integer
             can_add:
               type: boolean
               description: May the user create records in this table

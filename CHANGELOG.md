@@ -20,6 +20,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   references are not offered). When a table points at this one through several columns, name one:
   `complessi~sito_id.*`. Only the rows the user or key may read are listed; the key is left out when the table
   is not readable. A table's relation with itself (children of a record) is not offered yet.
+- **API: Directus-style paging, sort and counts on the record list.** `limit` (with `-1` = everything, up
+  to a cap of 5000 rows, `BRADYPUS_API_MAX_ROWS`; `truncated: true` when it cuts), `offset`, `sort=a,-b`
+  (several fields, `-` = descending), `search` on its own as a fast search, and `meta=total_count,filter_count`
+  (a `meta` object, only when asked). `per_page` (max 200), `page`, `sort_field`/`sort_dir` are unchanged and win
+  when both forms are sent.
+
+### Changed
+
+- **API: `search` without `search_type` now searches.** It used to be ignored (the list came back unfiltered);
+  the app always sends `search_type`, so only a script that sent a bare `search` sees a difference.
+- **API: `sort_field=id` works on tables that do not list `id` among their fields** (migrated tables); it was
+  silently replaced by the default order.
+
+### Fixed
+
+- **OpenAPI: the record list response described `tb`, `page` and `limit` keys that were never sent**; it now
+  lists the real ones (`fields`, `truncated`, `meta`).
+- **Skill `bradypus-bootstrap`: `?limit=500` read 500 ids but the API returned 30** (it ignored `limit`); it works now.
 
 ## [5.22.3] - 2026-11-14
 

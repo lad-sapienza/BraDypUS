@@ -124,6 +124,7 @@ class QueryFromRequest
       if (
         $fld
         && !preg_match('/[.(]/', (string) $fld)
+        && $fld !== 'id'
         && !isset($this->knownFields()[$fld])
       ) {
         $fld = false;
@@ -156,6 +157,47 @@ class QueryFromRequest
       if (preg_match('/ORDER/', $this->where)) {
         $this->where = preg_replace('/order\sby\s([a-z_\.]+)\s?(?:asc|desc)?/i', '', $this->where);
       }
+    }
+    return $this;
+  }
+
+  /**
+   * Orders by several columns: [[field, 'asc'|'desc'], ...], most significant first.
+   *
+   * Unknown fields (and repeated ones) are ignored, as in setOrder(); when none
+   * is left the default order applies. A lookup column sorts on its resolved
+   * label, as in setOrder(). The primary key breaks ties in the direction of the
+   * first key, so pages never overlap.
+   */
+  public function setOrderBy(array $pairs): ?QueryFromRequest
+  {
+    if (preg_match('/(LIMIT)/', $this->where)) {
+      return $this;
+    }
+
+    $parts = [];
+    $seen  = [];
+    $first = null;
+    foreach ($pairs as [$fld, $dir]) {
+      if (isset($seen[$fld]) || ($fld !== 'id' && !isset($this->knownFields()[$fld]))) {
+        continue;
+      }
+      $seen[$fld] = true;
+      $dir        = (is_string($dir) && strtolower($dir) === 'desc') ? 'desc' : 'asc';
+      $first    ??= $dir;
+      $parts[]    = ($this->fkOrderBy[$fld] ?? ($this->tb . '.' . $fld)) . ' ' . $dir;
+    }
+
+    if (!$parts) {
+      return $this->setOrder();
+    }
+    if (!isset($seen['id'])) {
+      $parts[] = "{$this->tb}.id {$first}";
+    }
+    $this->order = ' ORDER BY ' . implode(', ', $parts) . ' ';
+
+    if (preg_match('/ORDER/', $this->where)) {
+      $this->where = preg_replace('/order\sby\s([a-z_\.]+)\s?(?:asc|desc)?/i', '', $this->where);
     }
     return $this;
   }

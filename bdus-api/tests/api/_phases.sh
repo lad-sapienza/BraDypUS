@@ -484,6 +484,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "54"; then
+    header "Phase 54 — Directus-style list parameters"
+    run_phase "List params" "54_list_params.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

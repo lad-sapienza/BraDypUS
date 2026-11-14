@@ -15,6 +15,16 @@ class Record extends \Bdus\Controller
   /** Max ids returned by getRecords(ids_only=1). */
   private const IDS_ONLY_CAP = 5000;
 
+  /** Default cap of getRecords(limit=…), `limit=-1` included; env BRADYPUS_API_MAX_ROWS overrides it. */
+  private const DEFAULT_MAX_ROWS = 5000;
+
+  /** Rows a single getRecords(limit=…) may return: BRADYPUS_API_MAX_ROWS, else 5000. */
+  private function maxRows(): int
+  {
+    $env = getenv('BRADYPUS_API_MAX_ROWS');
+    return ($env !== false && ctype_digit($env) && (int) $env > 0) ? (int) $env : self::DEFAULT_MAX_ROWS;
+  }
+
   /**
    * Returns a paginated JSON list of records for a given table.
    * Used by the Vue data module.
@@ -57,6 +67,47 @@ class Record extends \Bdus\Controller
     $sortFld    = $this->get['sort_field'] ?? $this->post['sort_field'] ?? null;
     $sortDir    = (($this->get['sort_dir'] ?? $this->post['sort_dir'] ?? 'asc') === 'desc') ? 'desc' : 'asc';
     $searchType = $this->get['search_type'] ?? $this->post['search_type'] ?? null;
+
+    // Directus-style paging: `limit` (-1 = everything, up to the cap) stands in for
+    // `per_page` when that is absent; `offset` replaces `page`. Past the cap the page
+    // is cut and the response says `truncated`.
+    $capped   = false;
+    $limitRaw = $this->get['limit'] ?? $this->post['limit'] ?? null;
+    if (!isset($this->get['per_page']) && !isset($this->post['per_page'])
+        && $limitRaw !== null && is_numeric($limitRaw)) {
+      $limit = (int) $limitRaw;
+      if ($limit === -1 || $limit > $this->maxRows()) {
+        $perPage = $this->maxRows();
+        $capped  = true;
+      } elseif ($limit >= 1) {
+        $perPage = $limit;
+      }
+    }
+    $offsetRaw = $this->get['offset'] ?? $this->post['offset'] ?? null;
+    $offset    = ($offsetRaw !== null && is_numeric($offsetRaw))
+      ? max(0, (int) $offsetRaw)
+      : ($page - 1) * $perPage;
+
+    // Directus-style `sort=a,-b` (or an array of tokens); `sort_field`/`sort_dir` win when given.
+    $sortList = [];
+    if ($sortFld) {
+      $sortList[] = [$sortFld, $sortDir];
+    } else {
+      $sortRaw = $this->get['sort'] ?? $this->post['sort'] ?? null;
+      foreach (is_array($sortRaw) ? $sortRaw : explode(',', (string) $sortRaw) as $tok) {
+        $tok = trim((string) $tok);
+        $dir = str_starts_with($tok, '-') ? 'desc' : 'asc';
+        $tok = preg_replace('/[^a-zA-Z0-9_]/', '', $tok);
+        if ($tok !== '') {
+          $sortList[] = [$tok, $dir];
+        }
+      }
+    }
+
+    // `search` alone means a fast search.
+    if ($searchType === null && trim((string) ($this->get['search'] ?? $this->post['search'] ?? '')) !== '') {
+      $searchType = 'fast';
+    }
 
     // Build QueryFromRequest-compatible request array.
     // Auto-detect search type when search_type is not provided explicitly.
@@ -170,16 +221,22 @@ class Record extends \Bdus\Controller
         $fields[] = ['name' => $fldName, 'label' => $fldLabel ?: $fldName];
       }
 
-      // Ignore an unknown sort column (e.g. a stale client-side preference from
-      // another database) — QueryFromRequest::setOrder() guards too, this keeps
-      // the intent explicit and logged.
-      if ($sortFld) {
-        $knownFields = $this->cfg->get("tables.{$tb}.fields.*.name") ?: [];
-        if (isset($knownFields[$sortFld])) {
-          $qObj->setOrder($sortFld, $sortDir);
+      // Ignore unknown sort columns (e.g. a stale client-side preference from
+      // another database) — QueryFromRequest guards too, this keeps the intent
+      // explicit and logged.
+      $knownFields = $this->cfg->get("tables.{$tb}.fields.*.name") ?: [];
+      $sortPairs   = [];
+      foreach ($sortList as [$f, $d]) {
+        if ($f === 'id' || isset($knownFields[$f])) {
+          $sortPairs[] = [$f, $d];
         } else {
-          $this->log->debug("getRecords: ignoring unknown sort_field '{$sortFld}' for table '{$tb}'");
+          $this->log->debug("getRecords: ignoring unknown sort field '{$f}' for table '{$tb}'");
         }
+      }
+      if (count($sortPairs) === 1) {
+        $qObj->setOrder($sortPairs[0][0], $sortPairs[0][1]);
+      } elseif ($sortPairs) {
+        $qObj->setOrderBy($sortPairs);
       }
 
       // ids_only: the ordered id list of the WHOLE result set (not one page),
@@ -204,7 +261,7 @@ class Record extends \Bdus\Controller
         return;
       }
 
-      $qObj->setLimit(($page - 1) * $perPage, $perPage);
+      $qObj->setLimit($offset, $perPage);
 
       $data = $qObj->getResults();
       if ($expand) {
@@ -216,14 +273,37 @@ class Record extends \Bdus\Controller
         }
       }
 
-      $this->returnJson([
+      $response = [
         "status"  => "success",
         'total'   => $total,
         'fields'  => $fields,
         'data'    => $data,
         'can_add' => \Auth\Authorization::can('add_new', table: $tb),
         'can'     => \Auth\Authorization::tableAbilities($tb),
-      ]);
+      ];
+      if ($capped) {
+        $response['truncated'] = $total > $offset + $perPage;
+      }
+
+      // Directus-style `meta=total_count,filter_count`: counts of the whole table and of the filter
+      // (both limited to the rows the principal may read). Only added when asked for.
+      $metaRaw = $this->get['meta'] ?? $this->post['meta'] ?? null;
+      if ($metaRaw !== null) {
+        $want = array_map('trim', is_array($metaRaw) ? $metaRaw : explode(',', (string) $metaRaw));
+        $all  = in_array('*', $want, true);
+        $meta = [];
+        if ($all || in_array('total_count', $want, true)) {
+          $meta['total_count'] = (new \SQL\QueryFromRequest($this->db, $this->cfg, ['tb' => $tb, 'type' => 'all']))->getTotal();
+        }
+        if ($all || in_array('filter_count', $want, true)) {
+          $meta['filter_count'] = $total;
+        }
+        if ($meta) {
+          $response['meta'] = $meta;
+        }
+      }
+
+      $this->returnJson($response);
 
     } catch (\Throwable $e) {
       $this->log->error($e);

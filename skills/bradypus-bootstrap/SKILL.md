@@ -149,7 +149,7 @@ what was created.
 Load **parents before children**: vocabularies exist already; load `sites` before
 `finds`, because a link stores the target's `id`. To fill a link column from a CSV that
 only knows the parent's code, load the parent first, read its ids back
-(`GET {base}/{app}/api/records/{tb}?limit=500` → `data[].id` and the identifier field),
+(`GET {base}/{app}/api/records/{tb}?limit=-1` → `data[].id` and the identifier field; up to 5000 rows per call, `truncated: true` means page on with `offset`),
 and write a copy of the child CSV where the code is replaced by the id. Keep that copy:
 it is the file you load, and re-running the import is safe.
 

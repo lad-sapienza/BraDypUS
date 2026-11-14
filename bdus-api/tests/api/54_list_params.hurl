@@ -73,22 +73,16 @@ HTTP 200
 jsonpath "$.data[0].sigla" == "P5403"
 jsonpath "$.data[2].sigla" == "P5401"
 
-# ── search alone is a fast search (siti: no fuzzy-date columns) ──────
-POST {{base_url}}/{{app_name}}/api/record/siti
-Authorization: Bearer {{jwt}}
-Content-Type: application/json
-{ "core": { "nome": "Sito F54 Zeta" }, "plugins": {} }
-HTTP 200
-[Captures]
-f54_site: jsonpath "$.id"
-
-GET {{base_url}}/{{app_name}}/api/records/siti?search=F54+Zeta
+# ── search alone is a fast search ────────────────────────────────────
+# crud_test has the fuzzy-date columns (phase 20): on PostgreSQL the search used to
+# fail on its INTEGER chrono_from / chrono_to.
+GET {{base_url}}/{{app_name}}/api/records/crud_test?search=P5402
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 jsonpath "$.total" == 1
-jsonpath "$.data[0].nome" == "Sito F54 Zeta"
+jsonpath "$.data[0].sigla" == "P5402"
 
 # ── meta ─────────────────────────────────────────────────────────────
 GET {{base_url}}/{{app_name}}/api/records/crud_test?filter[tipo][_eq]=f54&meta=total_count,filter_count&limit=1
@@ -123,9 +117,5 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 
 DELETE {{base_url}}/{{app_name}}/api/record/crud_test/{{f54_3}}
-Authorization: Bearer {{jwt}}
-HTTP 200
-
-DELETE {{base_url}}/{{app_name}}/api/record/siti/{{f54_site}}
 Authorization: Bearer {{jwt}}
 HTTP 200

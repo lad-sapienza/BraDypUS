@@ -417,7 +417,10 @@ class QueryFromRequest
     $like   = \SQL\Like::operator($this->db->getEngine());
     $array_query_core = [];
     foreach ($fields_to_search_in as $field => $label) {
-      if (!$this->isTextualDbType($db_types[$field] ?? 'TEXT')) {
+      // The chrono_* columns of the fuzzy-date plugin are INTEGER whatever the config says
+      // (older apps stored their field definitions without a db_type): LIKE on them fails on PostgreSQL.
+      $dbType = $db_types[$field] ?? (\Config\FuzzyDate::COLUMNS[$field] ?? 'TEXT');
+      if (!$this->isTextualDbType($dbType)) {
         continue;
       }
       $array_query_core[] = $this->tb . '.' . $field . ' ' . $like . ' ?';

@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Fast search failed on PostgreSQL for tables with the fuzzy-date plugin.** The search tried `ILIKE` on the
+  INTEGER columns `chrono_from` / `chrono_to` (`operator does not exist: integer ~~* unknown`), because their
+  field definitions had no `db_type`. The search now skips the INTEGER chrono columns whatever the stored
+  config says, so apps activated earlier are fixed without a migration; new activations declare the type.
+  SQLite and MySQL were not affected.
 - **OpenAPI: the record list response described `tb`, `page` and `limit` keys that were never sent**; it now
   lists the real ones (`fields`, `truncated`, `meta`).
 - **Skill `bradypus-bootstrap`: `?limit=500` read 500 ids but the API returned 30** (it ignored `limit`); it works now.

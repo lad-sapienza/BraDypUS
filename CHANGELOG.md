@@ -13,8 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   One query per relation, one level, at most 50000 nested rows per response (`too_many_nested_rows`).
   Permissions never widen: plugin rows follow the readable records, a lookup is expanded only when the
   referenced table and row are readable (otherwise the raw id stays). Optional parameter, so responses
-  without `fields` are unchanged. First step of the Directus-style query work (relations inverse FK,
-  `limit`/`sort`/`offset`, geometry follow); see `guide/api`.
+  without `fields` are unchanged. First steps of the Directus-style query work (`limit`/`sort`/`offset`
+  and geometry follow); see `guide/api`.
+- **API: `fields` also nests the inverse of a lookup.** `fields=nome,complessi.nome` on `siti` returns, for each
+  site, the `complessi` rows whose `sito_id` points at it (a declared relation; plugin tables and composite
+  references are not offered). When a table points at this one through several columns, name one:
+  `complessi~sito_id.*`. Only the rows the user or key may read are listed; the key is left out when the table
+  is not readable. A table's relation with itself (children of a record) is not offered yet.
 
 ## [5.22.3] - 2026-11-14
 

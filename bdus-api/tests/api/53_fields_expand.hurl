@@ -4,8 +4,10 @@
 # GET|POST /api/records/{tb}?fields=col,rel.*,alias:rel.col
 #   plugin table      → list of rows under the key
 #   id_from_tb field  → the referenced row replaces the id
+#   inverse relation → rows of another table that point at this one
+#                      (siti ← complessi.sito_id), list under the table name
 # Without `fields` the list is exactly as before. Checked on crud_test
-# (plugin crud_test_plg, self lookup parent_id).
+# (plugin crud_test_plg, self lookup parent_id) and on siti / complessi.
 # ════════════════════════════════════════════════════════════════════
 
 POST {{base_url}}/{{app_name}}/api/record/crud_test
@@ -73,6 +75,53 @@ HTTP 200
 [Asserts]
 jsonpath "$.data[0].crud_test_plg" not exists
 
+# ── inverse relation: the complexes of a site ────────────────────────
+POST {{base_url}}/{{app_name}}/api/record/siti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "nome": "Sito F53" }, "plugins": {} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+[Captures]
+f53_site: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/complessi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "nome": "Complesso F53 A", "sito_id": {{f53_site}} }, "plugins": {} }
+HTTP 200
+[Captures]
+f53_cplx_a: jsonpath "$.id"
+
+POST {{base_url}}/{{app_name}}/api/record/complessi
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "nome": "Complesso F53 B", "sito_id": {{f53_site}} }, "plugins": {} }
+HTTP 200
+[Captures]
+f53_cplx_b: jsonpath "$.id"
+
+GET {{base_url}}/{{app_name}}/api/records/siti?filter[nome][_eq]=Sito+F53&fields=nome,complessi.nome
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.data[0].complessi" count == 2
+jsonpath "$.data[0].complessi[0].nome" == "Complesso F53 A"
+jsonpath "$.data[0].complessi[1].nome" == "Complesso F53 B"
+jsonpath "$.data[0].complessi[0].sito_id" not exists
+
+POST {{base_url}}/{{app_name}}/api/records/siti
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "filter": { "nome": { "_eq": "Sito F53" } }, "fields": "nome,found:complessi.*" }
+HTTP 200
+[Asserts]
+jsonpath "$.data[0].found" count == 2
+jsonpath "$.data[0].found[0].sito_id" == {{f53_site}}
+jsonpath "$.data[0].complessi" not exists
+
 # ── bad requests are refused, not guessed ────────────────────────────
 GET {{base_url}}/{{app_name}}/api/records/crud_test?fields=nope.*
 Authorization: Bearer {{jwt}}
@@ -93,5 +142,17 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 
 DELETE {{base_url}}/{{app_name}}/api/record/crud_test/{{f53_parent}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+
+DELETE {{base_url}}/{{app_name}}/api/record/complessi/{{f53_cplx_a}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+
+DELETE {{base_url}}/{{app_name}}/api/record/complessi/{{f53_cplx_b}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+
+DELETE {{base_url}}/{{app_name}}/api/record/siti/{{f53_site}}
 Authorization: Bearer {{jwt}}
 HTTP 200

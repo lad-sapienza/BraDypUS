@@ -131,6 +131,108 @@ class RecordCtrlFieldsExpandTest extends BdusTestCase
         $this->assertSame('Ceramics', $rows[1]['cat']['name']);
     }
 
+    // ── inverse relation (rows of another table pointing here) ───────────────
+
+    public function testInverseRelationListsTheRowsPointingAtTheRecord(): void
+    {
+        $rows = $this->byId($this->list(['tb' => 'categories', 'fields' => 'name,items.name']));
+
+        $this->assertSame([[1, 'Alpha item']], array_map(
+            fn($r) => [(int) $r['id'], $r['name']], $rows[1]['items']
+        ));
+        $this->assertSame('Beta item', $rows[2]['items'][0]['name']);
+        $this->assertSame([], $rows[3]['items'], 'nothing points at it: an empty list');
+    }
+
+    public function testInverseRelationWithStarAndAlias(): void
+    {
+        $rows = $this->byId($this->list(['tb' => 'categories', 'fields' => 'name,pieces:items.*']));
+
+        $this->assertArrayNotHasKey('items', $rows[1]);
+        $this->assertEquals(1, $rows[1]['pieces'][0]['cat_ref']);
+        $this->assertSame('active', $rows[1]['pieces'][0]['status']);
+    }
+
+    public function testInverseRelationDoesNotNeedThePointingColumnToBeAsked(): void
+    {
+        $rows = $this->byId($this->list(['tb' => 'categories', 'fields' => 'items.name']));
+
+        $this->assertEqualsCanonicalizing(['id', 'name'], array_keys($rows[1]['items'][0]));
+    }
+
+    public function testInverseRelationColumnCanBeNamed(): void
+    {
+        $rows = $this->byId($this->list(['tb' => 'categories', 'fields' => 'items~cat_ref.name']));
+        $this->assertCount(1, $rows[1]['items']);
+
+        $res = $this->list(['tb' => 'categories', 'fields' => 'items~status.name']);
+        $this->assertSame('invalid_parameters', $res['code']);
+    }
+
+    /** A Config whose `categories` links to `items` are replaced by $pairs. */
+    private function cfgWithLinkPairs(array $pairs, string $other = 'items'): \Config\Config
+    {
+        return new class(static::$cfg, $pairs, $other) extends \Config\Config {
+            public function __construct(private $inner, private array $pairs, private string $other) {}
+            public function get(string $key = '*', string $filter_key = null, string $filter_val = null)
+            {
+                if ($key === 'tables.categories.link') {
+                    return [['other_tb' => $this->other, 'fld' => $this->pairs]];
+                }
+                return $this->inner->get($key, $filter_key, $filter_val);
+            }
+        };
+    }
+
+    public function testSeveralPointingColumnsMustBeNamed(): void
+    {
+        $cfg = $this->cfgWithLinkPairs([
+            ['my' => 'id', 'other' => 'cat_ref'], ['my' => 'id', 'other' => 'category'],
+        ]);
+
+        try {
+            \Record\Expand::parse('items.name', static::$db, $cfg, 'categories');
+            $this->fail('two columns, none named');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('items~cat_ref, items~category', $e->getMessage());
+        }
+
+        $x = \Record\Expand::parse('a:items~cat_ref.name,b:items~category.name', static::$db, $cfg, 'categories');
+        $this->assertSame([], $x->mainColumns());
+    }
+
+    public function testCompositeReferencesAreNotOfferedAsInverseRelations(): void
+    {
+        $cfg = $this->cfgWithLinkPairs([['my' => 'name', 'other' => 'category']]);
+
+        $this->expectExceptionMessage("Unknown relation 'items'");
+        \Record\Expand::parse('items.name', static::$db, $cfg, 'categories');
+    }
+
+    public function testPluginTablesAreNotInverseRelations(): void
+    {
+        // tags is a plugin (of items): reached as a plugin, never as a table pointing here.
+        $cfg = $this->cfgWithLinkPairs([['my' => 'id', 'other' => 'cat_ref']], 'tags');
+
+        $this->expectExceptionMessage("Unknown relation 'tags'");
+        \Record\Expand::parse('tags.label', static::$db, $cfg, 'categories');
+    }
+
+    public function testInverseRelationOmittedWithoutReadAccessAndFilteredByRows(): void
+    {
+        // The group reads categories, and items only when active (1, 3, 5): item 2 (Metal) is hidden.
+        $this->reviewerOf('categories', null);
+        $this->addRule('items', ['status' => ['_eq' => 'active']]);
+
+        $rows = $this->byId($this->list(['tb' => 'categories', 'fields' => 'name,items.name']));
+        $this->assertCount(1, $rows[1]['items']);
+        $this->assertSame([], $rows[2]['items'], 'the only item pointing at Metal is outside the group');
+
+        static::$db->exec("DELETE FROM bdus_group_rules WHERE table_name = 'items'");
+        $rows = $this->byId($this->list(['tb' => 'categories', 'fields' => 'name,items.name']));
+        $this->assertArrayNotHasKey('items', $rows[1], 'items not readable: the key is left out');
+    }
+
     // ── bad requests ──────────────────────────────────────────────────────────
 
     public function testUnknownRelationIsRefused(): void
@@ -171,21 +273,30 @@ class RecordCtrlFieldsExpandTest extends BdusTestCase
 
     // ── permissions ───────────────────────────────────────────────────────────
 
-    private function reviewer(?array $itemsFilter, ?array $categoryFilter = null, bool $categoryRule = false): void
+    private function reviewerOf(string $table, ?array $filter): void
     {
         $this->group = (int) static::$db->query("INSERT INTO bdus_groups (name) VALUES ('Reviewers')", [], 'id');
         static::$db->exec("INSERT INTO bdus_users (id, name, email, password, privilege) VALUES (51, 'rev', 'rev@example.com', 'x', 39)");
         static::$db->exec("INSERT INTO bdus_user_groups (user_id, group_id) VALUES (51, {$this->group})");
-        $rule = fn(string $tb, ?array $f) => static::$db->query(
+        $this->addRule($table, $filter);
+        \Auth\CurrentUser::set(['id' => 51, 'name' => 'rev', 'email' => 'rev@example.com', 'privilege' => 39, 'app' => 'test']);
+    }
+
+    private function addRule(string $table, ?array $filter): void
+    {
+        static::$db->query(
             'INSERT INTO bdus_group_rules (group_id, table_name, action, filter) VALUES (?, ?, ?, ?)',
-            [$this->group, $tb, 'read', $f === null ? null : json_encode($f)],
+            [$this->group, $table, 'read', $filter === null ? null : json_encode($filter)],
             'boolean'
         );
-        $rule('items', $itemsFilter);
+    }
+
+    private function reviewer(?array $itemsFilter, ?array $categoryFilter = null, bool $categoryRule = false): void
+    {
+        $this->reviewerOf('items', $itemsFilter);
         if ($categoryRule) {
-            $rule('categories', $categoryFilter);
+            $this->addRule('categories', $categoryFilter);
         }
-        \Auth\CurrentUser::set(['id' => 51, 'name' => 'rev', 'email' => 'rev@example.com', 'privilege' => 39, 'app' => 'test']);
     }
 
     public function testLookupStaysARawIdWithoutReadAccessToTheReferencedTable(): void

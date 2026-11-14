@@ -147,8 +147,15 @@ GET /{app}/api/records/complexes?fields=id,complex_id,sites_id.name,summary:find
 | `rel.column` | Only that column (repeat the token for more), plus `id` |
 | `alias:rel.*` | The same, under the key `alias` |
 
-`rel` is a **plugin table** of the table (a list, empty when there are no rows) or a **lookup field**
-(`id_from_tb`: the referenced row replaces the id; with an alias the raw id stays too).
+`rel` is one of:
+
+- a **plugin table** of the table: a list, empty when there are no rows;
+- a **lookup field** (`id_from_tb`): the referenced row replaces the id (with an alias the raw id stays too);
+- a **table that points at this one** through a declared relation (the inverse of a lookup): the rows that
+  reference each record, as a list under the table name. `GET …/records/siti?fields=nome,complessi.nome`
+  gives every site with its complexes. If that table points at this one through several columns, name one:
+  `complessi~sito_id.*`; a plain `complessi.*` then answers `invalid_parameters` and lists the choices.
+  A relation of a table with itself (a record's children) is not offered yet.
 
 Rules:
 
@@ -157,7 +164,8 @@ Rules:
 - Related rows are plain values, without the `@field` labels of the main rows.
 - **Permissions never widen.** Plugin rows follow the readable records. A lookup is expanded only when
   the user or key may read the referenced table **and that row**; otherwise the raw id stays, exactly as
-  in a plain list. Group rules apply as they do to a direct request.
+  in a plain list. An inverse relation lists only the rows the user or key may read, and the key is left
+  out when the table is not readable at all. Group rules apply as they do to a direct request.
 - One query per relation (not per row). A response is limited to 50 000 nested rows
   (`too_many_nested_rows`): narrow the filter or page the list.
 - Without `fields` nothing changes. `fields` replaces `columns` when both are sent.

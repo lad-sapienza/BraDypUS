@@ -1378,8 +1378,12 @@ paths:
             `alias:rel.*`. When present it replaces `columns`.
 
             `rel` is a **plugin table** of the table (rows come back as a list under
-            the key, `[]` when there are none) or a **lookup field** (`id_from_tb`:
-            the referenced row replaces the id). `*` is every configured field of the
+            the key, `[]` when there are none), a **lookup field** (`id_from_tb`:
+            the referenced row replaces the id) or a **table that points at this one**
+            through a declared relation (the inverse of a lookup: a list under the table
+            name; when it points through several columns name one, `finds~complex.*`;
+            plugin tables and composite references are not offered; the key is left
+            out when that table is not readable). `*` is every configured field of the
             related table; `id` is always included. `alias:` renames the key (for a
             lookup the raw id then stays under its own name). One level only; an
             unknown relation, a deeper path or an alias that clashes with a column is

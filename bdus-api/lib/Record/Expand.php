@@ -22,9 +22,13 @@ use DB\DBInterface;
  *   rel.column              one column of the related table (+ id); repeatable
  *   alias:rel.*             the same, under the key `alias` in each row
  *
- * `rel` is either
+ * `rel` is one of
  *   - a plugin table of the main table  → list of rows, under the key (alias or name);
- *   - a field with `id_from_tb`          → the referenced row replaces the id.
+ *   - a field with `id_from_tb`          → the referenced row replaces the id;
+ *   - a table whose rows point at this one through a declared relation (the
+ *     inverse of a lookup, e.g. `finds` for `complexes`) → list of those rows.
+ *     When the other table points here through several columns, name one:
+ *     `finds~complex.*`.
  *
  * Only one level of nesting is supported (`rel.sub.col` is refused).
  *
@@ -32,7 +36,9 @@ use DB\DBInterface;
  *   - plugin rows follow their record (same rule as GET /api/record/{tb}/{id});
  *     the main rows are already restricted to the readable ones;
  *   - a lookup is expanded only when the principal may read the referenced table
- *     and that very row; otherwise the raw id stays, as in a plain list.
+ *     and that very row; otherwise the raw id stays, as in a plain list;
+ *   - an inverse relation is omitted when the table is not readable, and lists
+ *     only the rows the principal may read.
  *
  * Cost: one query per relation (IN lists of at most CHUNK ids), never one per row.
  */
@@ -49,7 +55,8 @@ final class Expand
 
     /**
      * key (alias or relation name) =>
-     *   ['kind' => 'plugin'|'fk', 'rel' => table, 'via' => fk column of the main table (fk only),
+     *   ['kind' => 'plugin'|'fk'|'inverse', 'rel' => table,
+     *    'via' => id_link | lookup column of the main table | column of `rel` pointing here,
      *    'cols' => string[] requested columns, 'all' => bool]
      * @var array<string, array>
      */
@@ -102,7 +109,8 @@ final class Expand
             }
 
             [$rel, $sel] = $path;
-            $self->addNode($rel, $sel, $alias ?? $rel, $own);
+            // The key defaults to the table name, without a `~column` selector.
+            $self->addNode($rel, $sel, $alias ?? explode('~', $rel, 2)[0], $own);
         }
 
         // A lookup is replaced in place: its column must be read from the main table.
@@ -138,9 +146,11 @@ final class Expand
         $access = \Auth\Access::forCurrentUser($this->db, $this->cfg);
 
         foreach ($this->nodes as $key => $node) {
-            $rows = $node['kind'] === 'plugin'
-                ? $this->applyPlugin($rows, $key, $node)
-                : $this->applyLookup($rows, $key, $node, $access);
+            $rows = match ($node['kind']) {
+                'plugin'  => $this->applyPlugin($rows, $key, $node),
+                'fk'      => $this->applyLookup($rows, $key, $node, $access),
+                'inverse' => $this->applyInverse($rows, $key, $node, $access),
+            };
         }
         return $rows;
     }
@@ -151,14 +161,34 @@ final class Expand
     {
         $plugins = (array) ($this->cfg->get("tables.{$this->tb}.plugin") ?? []);
 
-        if (in_array($rel, $plugins, true)) {
+        // `table~column` names the pointing column when there are several.
+        $pick = null;
+        if (str_contains($rel, '~')) {
+            [$rel, $pick] = explode('~', $rel, 2);
+        }
+
+        if ($pick === null && in_array($rel, $plugins, true)) {
             $kind = 'plugin';
             $via  = 'id_link';
             $to   = $rel;
-        } elseif (in_array($rel, $own, true) && $this->cfg->get("tables.{$this->tb}.fields.{$rel}.id_from_tb")) {
+        } elseif ($pick === null && in_array($rel, $own, true)
+            && $this->cfg->get("tables.{$this->tb}.fields.{$rel}.id_from_tb")) {
             $kind = 'fk';
             $via  = $rel;
             $to   = $this->cfg->get("tables.{$this->tb}.fields.{$rel}.id_from_tb");
+        } elseif (($cols = $this->inverseColumns()[$rel] ?? []) !== []) {
+            if ($pick === null && count($cols) > 1) {
+                throw new \InvalidArgumentException(
+                    "'{$rel}' points at '{$this->tb}' through several columns; name one: "
+                    . implode(', ', array_map(fn($c) => "{$rel}~{$c}", $cols))
+                );
+            }
+            if ($pick !== null && !in_array($pick, $cols, true)) {
+                throw new \InvalidArgumentException("'{$rel}' has no relation to '{$this->tb}' through '{$pick}'");
+            }
+            $kind = 'inverse';
+            $via  = $pick ?? $cols[0];
+            $to   = $rel;
         } else {
             throw new \InvalidArgumentException("Unknown relation '{$rel}' for table '{$this->tb}'");
         }
@@ -182,6 +212,40 @@ final class Expand
             }
         }
         $this->nodes[$key] = $node;
+    }
+
+    /**
+     * Tables whose rows point at this one: [table => [column, ...]].
+     *
+     * Read from the declared relations (`tables.{tb}.link`, built from
+     * bdus_cfg_relations): single-column references to `id`, never a plugin
+     * table (those are reached as plugins).
+     *
+     * @return array<string, string[]>
+     */
+    private function inverseColumns(): array
+    {
+        $out = [];
+        foreach ((array) ($this->cfg->get("tables.{$this->tb}.link") ?? []) as $link) {
+            $other = $link['other_tb'] ?? null;
+            $pairs = $link['fld'] ?? [];
+            if (!$other || $other === $this->tb || !$pairs || $this->cfg->get("tables.{$other}.is_plugin")) {
+                continue;
+            }
+            // LoadFromDB groups every relation between two tables into one entry, so
+            // several pairs all ending on `id` are several columns, each its own relation.
+            // A pair that does not end on `id` is a composite reference: not handled.
+            if (array_filter($pairs, fn($p) => ($p['my'] ?? null) !== 'id')) {
+                continue;
+            }
+            foreach ($pairs as $p) {
+                $col = $p['other'] ?? null;
+                if ($col && in_array($col, self::fieldNames($this->cfg, $other), true)) {
+                    $out[$other][] = $col;
+                }
+            }
+        }
+        return $out;
     }
 
     /** Configured field names of a table, in config order. */
@@ -234,6 +298,44 @@ final class Expand
             $list = array_map(fn($f) => array_intersect_key($f, array_flip($wanted)), $list);
         }
         unset($list);
+
+        foreach ($rows as &$row) {
+            $row[$key] = $grouped[$this->idOf($row)] ?? [];
+        }
+        unset($row);
+        return $rows;
+    }
+
+    // ── Inverse relation: rows of another table pointing at this one ─────────
+
+    private function applyInverse(array $rows, string $key, array $node, \Auth\Access $access): array
+    {
+        $tb  = $node['rel'];
+        $col = $node['via'];
+
+        // Not readable at all: the key is left out (an empty list would confirm the table exists and is empty).
+        if (!$access->can('read', $tb)) {
+            return $rows;
+        }
+
+        $wanted = $this->selection($node);
+        $select = array_values(array_unique(array_merge($wanted, [$col])));
+        $ids    = array_values(array_unique(array_filter(array_map(fn($r) => $this->idOf($r), $rows))));
+
+        [$cond, $condValues] = $access->rowCondition('read', $tb);
+        $grouped = [];
+        foreach (array_chunk($ids, self::CHUNK) as $chunk) {
+            $marks = implode(',', array_fill(0, count($chunk), '?'));
+            $found = $this->db->query(
+                'SELECT ' . implode(', ', $select) . " FROM {$tb} WHERE {$tb}.{$col} IN ({$marks}) AND ({$cond}) ORDER BY {$tb}.id",
+                array_merge($chunk, $condValues),
+                'read'
+            ) ?: [];
+            $this->count(count($found));
+            foreach ($found as $f) {
+                $grouped[(int) $f[$col]][] = array_intersect_key($f, array_flip($wanted));
+            }
+        }
 
         foreach ($rows as &$row) {
             $row[$key] = $grouped[$this->idOf($row)] ?? [];

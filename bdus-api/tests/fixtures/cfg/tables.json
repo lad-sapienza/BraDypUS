@@ -17,6 +17,14 @@
             "osteology": false,
             "backlinks": [
                 "items:reviews:item_ref"
+            ],
+            "link": [
+                {
+                    "other_tb": "categories",
+                    "fld": [
+                        { "my": "cat_ref", "other": "id" }
+                    ]
+                }
             ]
         },
         {

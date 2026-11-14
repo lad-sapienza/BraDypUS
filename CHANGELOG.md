@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.23.0] - 2026-11-14
+
 ### Added
 
 - **API: `fields` nests related rows in a list (Directus style).** `GET|POST /{app}/api/records/{tb}`

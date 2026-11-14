@@ -5,6 +5,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.23.0] - 2026-11-14
+
+### Added
+
+- **API: `fields` nests related rows in a list (Directus style).** `GET|POST /{app}/api/records/{tb}`
+  accepts `fields=id,name,tags.*,cat_ref.name,alias:tags.label`: a plugin table comes back as a list
+  under its name (or the alias), a lookup field (`id_from_tb`) is replaced by the referenced row.
+  One query per relation, one level, at most 50000 nested rows per response (`too_many_nested_rows`).
+  Permissions never widen: plugin rows follow the readable records, a lookup is expanded only when the
+  referenced table and row are readable (otherwise the raw id stays). Optional parameter, so responses
+  without `fields` are unchanged. First steps of the Directus-style query work (`limit`/`sort`/`offset`
+  and geometry follow); see `guide/api`.
+- **API: `fields` also nests the inverse of a lookup.** `fields=nome,complessi.nome` on `siti` returns, for each
+  site, the `complessi` rows whose `sito_id` points at it (a declared relation; plugin tables and composite
+  references are not offered). When a table points at this one through several columns, name one:
+  `complessi~sito_id.*`. Only the rows the user or key may read are listed; the key is left out when the table
+  is not readable. A table's relation with itself (children of a record) is not offered yet.
+- **API: `fields=geodata` adds the record's geometries.** Each row gets a list of `{id, geometry (WKT),
+  geojson}` read from `bdus_geodata` (one query per page); `geodata.geojson` / `geodata.geometry` return one
+  part, an alias renames the key. Only for tables with geodata enabled (`invalid_parameters` otherwise) and only
+  for the rows the user or key may read.
+- **API: Directus-style paging, sort and counts on the record list.** `limit` (with `-1` = everything, up
+  to a cap of 5000 rows, `BRADYPUS_API_MAX_ROWS`; `truncated: true` when it cuts), `offset`, `sort=a,-b`
+  (several fields, `-` = descending), `search` on its own as a fast search, and `meta=total_count,filter_count`
+  (a `meta` object, only when asked). `per_page` (max 200), `page`, `sort_field`/`sort_dir` are unchanged and win
+  when both forms are sent.
+
+### Changed
+
+- **API: `search` without `search_type` now searches.** It used to be ignored (the list came back unfiltered);
+  the app always sends `search_type`, so only a script that sent a bare `search` sees a difference.
+- **API: `sort_field=id` works on tables that do not list `id` among their fields** (migrated tables); it was
+  silently replaced by the default order.
+
+### Fixed
+
+- **Fast search failed on PostgreSQL for tables with the fuzzy-date plugin.** The search tried `ILIKE` on the
+  INTEGER columns `chrono_from` / `chrono_to` (`operator does not exist: integer ~~* unknown`), because their
+  field definitions had no `db_type`. The search now skips the INTEGER chrono columns whatever the stored
+  config says, so apps activated earlier are fixed without a migration; new activations declare the type.
+  SQLite and MySQL were not affected.
+- **OpenAPI: the record list response described `tb`, `page` and `limit` keys that were never sent**; it now
+  lists the real ones (`fields`, `truncated`, `meta`).
+- **Skill `bradypus-bootstrap`: `?limit=500` read 500 ids but the API returned 30** (it ignored `limit`); it works now.
+
 ## [5.22.3] - 2026-11-14
 
 ### Changed

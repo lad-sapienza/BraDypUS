@@ -6,9 +6,9 @@
  *
  * API key authentication for the unified Bdus\Router surface.
  *
- * Clients pass a plain-text key via:
- *   - Authorization: Bearer {key}   header
- *   - ?api_key={key}                query-string parameter
+ * Clients pass a plain-text key in the `Authorization: Bearer {key}` header.
+ * A `?api_key=` query-string parameter is NOT accepted: URLs end up in web
+ * server, proxy and browser logs, and so would the key.
  *
  * On success, populates CurrentUser with the key's privilege level and sets
  * `is_api_key = true` so the rest of the stack can distinguish key auth from
@@ -102,7 +102,6 @@ class ApiKeyAuth
 
     private static function extractKey(): ?string
     {
-        // 1. Authorization: Bearer {key}
         $auth = $_SERVER['HTTP_AUTHORIZATION']
              ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION']
              ?? '';
@@ -116,7 +115,6 @@ class ApiKeyAuth
             return trim($m[1]);
         }
 
-        // 2. ?api_key= query-string parameter
-        return $_GET['api_key'] ?? null;
+        return null;
     }
 }

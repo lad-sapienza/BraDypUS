@@ -101,7 +101,7 @@ Auth\CurrentUser::isAuthenticated() // bool
 Auth\CurrentUser::isApiKey()        // bool (false for JWT users)
 ```
 
-**`ApiKeyAuth`** handles `Authorization: Bearer {key}` / `?api_key=` auth.
+**`ApiKeyAuth`** handles `Authorization: Bearer {key}` auth (the `?api_key=` query-string form was removed: it ended up in access logs).
 Plain-text keys are never stored — only SHA-256 hashes in `bdus_api_keys`.
 
 ---

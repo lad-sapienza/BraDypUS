@@ -46,7 +46,7 @@ method. See `bdus-docs/dev/architecture.md` for the full trace.
   → `none | read | edit | admin | super_admin`). A route not listed defaults to
   `super_admin`. Always add the entry when adding a route.
 - **Auth:** `Authorization: Bearer <JWT>` (per-app secret in
-  `projects/{app}/.jwt_secret`) or an API key (hash in `bdus_api_keys`). The
+  `projects/{app}/.jwt_secret`) or an API key (hash in `bdus_api_keys`; `Authorization: Bearer` header only, never the query string). The
   Dispatcher re-reads `privilege` and `token_version` from `bdus_users`, so the
   JWT value is never trusted alone. No PHP sessions.
 

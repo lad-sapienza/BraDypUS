@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **API keys are no longer accepted in the query string (`?api_key=`).** The key ended up in web
+  server and proxy access logs. Send `Authorization: Bearer <key>`. A client still using the query
+  form now gets 401.
+
 ## [5.21.0] - 2026-11-08
 
 ### Added

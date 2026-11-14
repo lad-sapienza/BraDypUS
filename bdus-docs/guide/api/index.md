@@ -22,6 +22,10 @@ Pass the key in the `Authorization` header:
 Authorization: Bearer bdus_<key>
 ```
 
+The header is the **only** way to send a key. A `?api_key=` query parameter is not
+accepted (it answers `401`): a key in a URL ends up in web server, proxy and
+browser logs.
+
 Each key has a privilege level: 30 (reader) keys can only read data, 25 keys can
 also create and write, 10 keys are admin keys. A key can also belong to a
 [group](../setup/groups) — see below.

@@ -109,6 +109,20 @@ class Record extends \Bdus\Controller
     // POST requests (advanced/expert search) send columns as a JSON array.
     // Both formats are accepted here.
     $colsRaw = $this->get['columns'] ?? $this->post['columns'] ?? null;
+
+    // Directus-style `fields`: columns plus related rows nested in each row
+    // (see \Record\Expand). When present it takes the place of `columns`.
+    $expand    = null;
+    $fieldsRaw = $this->get['fields'] ?? $this->post['fields'] ?? null;
+    if (is_string($fieldsRaw) ? trim($fieldsRaw) !== '' : (is_array($fieldsRaw) && $fieldsRaw)) {
+      try {
+        $expand  = \Record\Expand::parse($fieldsRaw, $this->db, $this->cfg, $tb);
+        $colsRaw = $expand->mainColumns();
+      } catch (\InvalidArgumentException $e) {
+        $this->returnJson(['status' => 'error', 'code' => 'invalid_parameters', 'detail' => $e->getMessage()]);
+        return;
+      }
+    }
     $customColumns = null;
     if ($colsRaw) {
       if (is_string($colsRaw)) {
@@ -134,6 +148,11 @@ class Record extends \Bdus\Controller
       if ($colMap) {
         $qRequest['fields'] = array_merge(['id' => 'id'], $colMap);
       }
+    }
+
+    // `fields` naming only relations: just the id (plus what they need), not the preview columns.
+    if ($expand && !isset($qRequest['fields'])) {
+      $qRequest['fields'] = ['id' => 'id'];
     }
 
     // use_preview=true unless we are supplying a custom column list
@@ -187,11 +206,21 @@ class Record extends \Bdus\Controller
 
       $qObj->setLimit(($page - 1) * $perPage, $perPage);
 
+      $data = $qObj->getResults();
+      if ($expand) {
+        try {
+          $data = $expand->apply($data);
+        } catch (\LengthException $e) {
+          $this->returnJson(['status' => 'error', 'code' => 'too_many_nested_rows', 'detail' => $e->getMessage()]);
+          return;
+        }
+      }
+
       $this->returnJson([
         "status"  => "success",
         'total'   => $total,
         'fields'  => $fields,
-        'data'    => $qObj->getResults(),
+        'data'    => $data,
         'can_add' => \Auth\Authorization::can('add_new', table: $tb),
         'can'     => \Auth\Authorization::tableAbilities($tb),
       ]);

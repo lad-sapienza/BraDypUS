@@ -116,6 +116,53 @@ Returns a paginated JSON response:
 | `sort_field` | — | Column to sort by |
 | `sort_dir` | `asc` | `asc` or `desc` |
 
+## Related rows in a list <Badge type="tip" text="v5.23.0" />
+
+`fields` chooses the columns **and nests related rows** in each row, so a list and its
+sub-records come in one request (a plugin table has no endpoint of its own):
+
+```
+GET /{app}/api/records/complexes?fields=id,complex_id,sites_id.name,summary:finds_in_complexes.*
+```
+
+```json
+{
+  "status": "success",
+  "total": 137,
+  "data": [
+    {
+      "id": 1,
+      "complex_id": "C-01",
+      "sites_id": { "id": 3, "name": "Çuka e Ajtoit" },
+      "summary": [ { "id": 10, "id_link": 1, "material_or_class": "Fine ware" } ]
+    }
+  ]
+}
+```
+
+| Token | Result |
+|---|---|
+| `column` | A column of the table (unknown names are ignored, as for `columns`) |
+| `rel.*` | Every configured field of the related table, plus `id` |
+| `rel.column` | Only that column (repeat the token for more), plus `id` |
+| `alias:rel.*` | The same, under the key `alias` |
+
+`rel` is a **plugin table** of the table (a list, empty when there are no rows) or a **lookup field**
+(`id_from_tb`: the referenced row replaces the id; with an alias the raw id stays too).
+
+Rules:
+
+- One level of nesting. An unknown relation, a deeper path (`a.b.c`) or an alias that clashes with a
+  column answers `invalid_parameters` (HTTP 200, as every API error).
+- Related rows are plain values, without the `@field` labels of the main rows.
+- **Permissions never widen.** Plugin rows follow the readable records. A lookup is expanded only when
+  the user or key may read the referenced table **and that row**; otherwise the raw id stays, exactly as
+  in a plain list. Group rules apply as they do to a direct request.
+- One query per relation (not per row). A response is limited to 50 000 nested rows
+  (`too_many_nested_rows`): narrow the filter or page the list.
+- Without `fields` nothing changes. `fields` replaces `columns` when both are sent.
+- `POST` accepts `fields` as a string or an array of tokens.
+
 ## Filtering records
 
 Use the Directus-style `filter` parameter. It accepts either bracket notation

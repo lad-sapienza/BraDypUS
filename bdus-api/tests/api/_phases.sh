@@ -478,6 +478,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "53"; then
+    header "Phase 53 — fields: nested related rows"
+    run_phase "Fields expand" "53_fields_expand.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

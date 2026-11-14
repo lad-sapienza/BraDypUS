@@ -1370,6 +1370,28 @@ paths:
           schema:
             type: string
           example: 'id,sigla,periodo'
+        - name: fields
+          in: query
+          description: |
+            Directus-style field list that can also **nest related rows** in each
+            row. Comma-separated tokens: `column`, `rel.*`, `rel.column`,
+            `alias:rel.*`. When present it replaces `columns`.
+
+            `rel` is a **plugin table** of the table (rows come back as a list under
+            the key, `[]` when there are none) or a **lookup field** (`id_from_tb`:
+            the referenced row replaces the id). `*` is every configured field of the
+            related table; `id` is always included. `alias:` renames the key (for a
+            lookup the raw id then stays under its own name). One level only; an
+            unknown relation, a deeper path or an alias that clashes with a column is
+            `invalid_parameters`. Related rows are plain values (no `@label` keys).
+
+            Permissions never widen: plugin rows follow the readable records; a lookup is
+            expanded only when the key/user may read the referenced table and that row,
+            otherwise the raw id stays. One query per relation, not per row. More than
+            50000 nested rows in one response → `too_many_nested_rows`.
+          schema:
+            type: string
+          example: 'id,sigla,crud_test_plg.*,parent_id.sigla'
         - name: ids_only
           in: query
           description: |
@@ -1433,6 +1455,15 @@ paths:
                   description: Column names to include in the response (overrides preview fields)
                   items:
                     type: string
+                fields:
+                  description: |
+                    Columns and nested related rows (string or array of tokens), see
+                    `fields` of `GET /api/records/{tb}`. Replaces `columns`.
+                  oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
                 ids_only:
                   type: integer
                   enum: [0, 1]

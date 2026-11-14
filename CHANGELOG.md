@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **API: `fields` nests related rows in a list (Directus style).** `GET|POST /{app}/api/records/{tb}`
+  accepts `fields=id,name,tags.*,cat_ref.name,alias:tags.label`: a plugin table comes back as a list
+  under its name (or the alias), a lookup field (`id_from_tb`) is replaced by the referenced row.
+  One query per relation, one level, at most 50000 nested rows per response (`too_many_nested_rows`).
+  Permissions never widen: plugin rows follow the readable records, a lookup is expanded only when the
+  referenced table and row are readable (otherwise the raw id stays). Optional parameter, so responses
+  without `fields` are unchanged. First step of the Directus-style query work (relations inverse FK,
+  `limit`/`sort`/`offset`, geometry follow); see `guide/api`.
+
 ## [5.22.3] - 2026-11-14
 
 ### Changed

@@ -71,6 +71,7 @@ without going through a lib/ abstraction.
 | `SQL\Validator` | `lib/SQL/Validator.php` | Field / operator allow-list checks |
 | `SQL\SqlException` | `lib/SQL/SqlException.php` | SQL-layer exception |
 | `Record\Read` | `lib/Record/Read.php` | Fetches record + plugins + links + files |
+| `Record\Expand` | `lib/Record/Expand.php` | `fields=` of the record list: parses `rel.*` tokens, nests plugin rows / lookup rows in batch (one `IN` query per relation, group rules applied) |
 | `Record\Edit` | `lib/Record/Edit.php` | Validates + prepares record edits |
 | `Record\Persist` | `lib/Record/Persist.php` | Low-level persistence (INSERT/UPDATE/DELETE) |
 | `Template\Loader` | `lib/Template/Loader.php` | Loads Twig print templates from DB |

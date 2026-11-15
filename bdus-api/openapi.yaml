@@ -6352,6 +6352,8 @@ paths:
           description: Not enough privilege, or `Origin` not allowed
         '404':
           description: MCP is not enabled for the application, or unknown method (revision 2026-07-28)
+        '413':
+          description: Request body larger than 1 MB (JSON-RPC error body)
         '429':
           description: Rate limit exceeded (`Retry-After` header)
 

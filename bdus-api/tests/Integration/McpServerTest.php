@@ -83,6 +83,21 @@ class McpServerTest extends BdusTestCase
         $this->assertSame(-32700, $body['error']['code']);
     }
 
+    public function testAnOversizedBodyIsRefusedBeforeItIsParsed(): void
+    {
+        $big = json_encode(['jsonrpc' => '2.0', 'id' => 1, 'method' => 'tools/call',
+            'params' => ['name' => 'guide', 'arguments' => ['pad' => str_repeat('x', Server::MAX_BODY)]]]);
+
+        [$status, $body] = $this->server()->handle($big);
+        $this->assertSame(413, $status);
+        $this->assertSame(-32600, $body['error']['code']);
+        $this->assertFalse(Server::isWriteCall($big));
+
+        // just under the limit is served
+        $ok = json_encode(['jsonrpc' => '2.0', 'id' => 1, 'method' => 'ping', 'params' => ['pad' => str_repeat('x', Server::MAX_BODY - 200)]]);
+        $this->assertSame(200, $this->server()->handle($ok)[0]);
+    }
+
     public function testBatchIsRefused(): void
     {
         [$status, $body] = $this->server()->handle('[{"jsonrpc":"2.0","id":1,"method":"ping"}]');
@@ -373,6 +388,35 @@ class McpServerTest extends BdusTestCase
 
         $this->setPrivilege(40);
         $this->assertSame('unknown_table', $this->tool('records_read', ['table' => 'items'])['code']);
+    }
+
+    public function testRecordsReadRefusesABadFilter(): void
+    {
+        foreach ([
+            ['nope' => ['_eq' => 1]],                 // a field the table does not have
+            ['status' => ['_bogus' => 'x']],          // an operator that does not exist
+        ] as $filter) {
+            $res = $this->tool('records_read', ['table' => 'items', 'filter' => $filter]);
+            $this->assertTrue($res['__isError'], json_encode($filter));
+            $this->assertSame('invalid_filter', $res['code'], json_encode($res));
+        }
+        $this->assertSame('invalid_parameters', $this->tool('records_read', ['table' => 'items', 'filter' => 'status'])['code']);
+    }
+
+    public function testRecordsReadRefusesToNestTooManyRows(): void
+    {
+        // More plugin rows than one response may carry: refused, never truncated silently.
+        $max = \Record\Expand::MAX_NESTED_ROWS;
+        static::$db->exec(
+            'INSERT INTO tags (label, id_link) WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x + 1 FROM c WHERE x < ' . ($max + 1) . ") SELECT 'bulk', 1 FROM c"
+        );
+        try {
+            $res = $this->tool('records_read', ['table' => 'items', 'filter' => ['id' => ['_eq' => 1]], 'fields' => ['name', 'tags.*']]);
+            $this->assertTrue($res['__isError']);
+            $this->assertSame('too_many_nested_rows', $res['code'], json_encode($res));
+        } finally {
+            static::$db->exec("DELETE FROM tags WHERE label = 'bulk'");
+        }
     }
 
     public function testRecordsReadLimitIsCapped(): void

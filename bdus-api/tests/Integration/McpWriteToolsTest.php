@@ -257,6 +257,35 @@ class McpWriteToolsTest extends BdusTestCase
         $this->assertSame(7, (int) $ver['key_id']);
     }
 
+    public function testADatabaseFailureMidBatchRollsBackEverything(): void
+    {
+        // A trigger makes the database itself refuse the second record: an exception deep inside
+        // Record\Persist, not a validation error. The first record must not survive, and the
+        // transaction must be really closed (an inner rollback only marks the outer one).
+        static::$db->exec("CREATE TRIGGER mcp_boom BEFORE INSERT ON items WHEN NEW.name = 'mcp-boom' BEGIN SELECT RAISE(ABORT, 'boom'); END");
+        try {
+            $res = $this->validateAndWrite([
+                ['core' => ['name' => 'mcp-before-boom', 'status' => 'active']],
+                ['core' => ['name' => 'mcp-boom', 'status' => 'active']],
+            ]);
+        } finally {
+            static::$db->exec('DROP TRIGGER mcp_boom');
+        }
+
+        $this->assertTrue($res['__isError']);
+        $this->assertSame('write_refused', $res['code']);
+        $this->assertSame(1, $res['detail']['index'] ?? null, json_encode($res));
+        $this->assertStringContainsString('Nothing was written', json_encode($res));
+        $this->assertFalse($this->nameExists('mcp-before-boom'), 'the first record was rolled back');
+        $this->assertFalse(static::$db->inTransaction(), 'no transaction left open');
+
+        // and the connection is usable: the next write goes through and stays
+        $ok = $this->validateAndWrite([['core' => ['name' => 'mcp-after-boom', 'status' => 'active']]]);
+        $this->assertFalse($ok['__isError'], json_encode($ok));
+        $this->assertFalse(static::$db->inTransaction());
+        $this->assertTrue($this->nameExists('mcp-after-boom'));
+    }
+
     // ── records_delete ────────────────────────────────────────────────────────
 
     public function testAKeyHasAnHourlyBudgetOfWrittenRows(): void
@@ -335,6 +364,28 @@ class McpWriteToolsTest extends BdusTestCase
         $res = $this->tool('records_delete', ['table' => 'items', 'ids' => [1]]);
         $this->assertSame('not_enough_privilege', $res['code']);
         $this->assertNotEmpty(static::$db->query('SELECT 1 FROM items WHERE id = 1'));
+    }
+
+    public function testADatabaseFailureMidDeleteRollsBackEverything(): void
+    {
+        $ids = [];
+        foreach (['mcp-deletable', 'mcp-undeletable'] as $name) {
+            $ids[] = (int) static::$db->query("INSERT INTO items (creator, name, status) VALUES ('admin', ?, 'active')", [$name], 'id');
+        }
+        static::$db->exec("CREATE TRIGGER mcp_keep BEFORE DELETE ON items WHEN OLD.name = 'mcp-undeletable' BEGIN SELECT RAISE(ABORT, 'keep'); END");
+        try {
+            $res = $this->tool('records_delete', ['table' => 'items', 'ids' => $ids]);
+        } finally {
+            static::$db->exec('DROP TRIGGER mcp_keep');
+        }
+
+        $this->assertTrue($res['__isError']);
+        $this->assertSame('delete_refused', $res['code']);
+        $this->assertSame('db_error', $res['detail']['code'] ?? null, json_encode($res));
+        $this->assertSame(2, (int) static::$db->query('SELECT COUNT(*) AS n FROM items WHERE id IN (?, ?)', $ids, 'read')[0]['n'], 'nothing was deleted');
+        $this->assertFalse(static::$db->inTransaction());
+
+        static::$db->exec('DELETE FROM items WHERE id IN (' . implode(',', $ids) . ')');
     }
 
     public function testDeleteRefusesBadIds(): void

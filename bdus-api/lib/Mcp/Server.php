@@ -25,6 +25,9 @@ namespace Mcp;
  */
 class Server
 {
+    /** Largest request body served, in bytes: a model has no business sending more (records_write takes 50 records at most). */
+    public const MAX_BODY = 1048576;
+
     public const MODERN = '2026-07-28';
     public const LEGACY = ['2025-11-25', '2025-06-18', '2025-03-26'];
 
@@ -79,6 +82,9 @@ class Server
      */
     public static function isWriteCall(string $raw): bool
     {
+        if (strlen($raw) > self::MAX_BODY) {
+            return false;   // refused by handle(); not worth decoding here
+        }
         $msg = json_decode($raw, true);
         if (!is_array($msg) || ($msg['method'] ?? null) !== 'tools/call') {
             return false;
@@ -99,6 +105,9 @@ class Server
      */
     public function handle(string $raw, array $headers = []): array
     {
+        if (strlen($raw) > self::MAX_BODY) {
+            return [413, $this->error(null, self::INVALID_REQUEST, 'Request body too large (1 MB at most)')];
+        }
         $msg = json_decode($raw, true);
         if (!is_array($msg)) {
             return [400, $this->error(null, self::PARSE_ERROR, 'Parse error')];

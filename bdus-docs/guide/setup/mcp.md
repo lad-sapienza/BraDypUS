@@ -52,6 +52,9 @@ sees exactly what that key sees through the REST API, no more:
   may not read does not exist for it;
 - **row rules** and **locks** apply as everywhere.
 
+To **write**, the key must also be allowed to **read** the table (a group that may update
+a table but not read it can do so through the REST API, not through an assistant).
+
 So, to give an assistant limited access, do what you would do for an external
 collaborator: create a [group](./groups) with the rules you want (for example read-only
 on two tables, or only the records of one site), then an API key at level **Enter** with
@@ -152,6 +155,7 @@ administrator can restore them.
 | Records written or deleted per call | 50 |
 | Records written or deleted per key | 500 per hour (`BRADYPUS_RATE_MCP_WRITE_ROWS`, [deploy guide](../deploy/#environment-variables)) |
 | Requests per key | those of the [REST API](../api/#request-limits): 60 writes and 300 reads per minute |
+| Size of a request | 1 MB |
 | Prompts | 50, each with at most 10 arguments |
 
 ## Using it with care

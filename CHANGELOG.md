@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sees and changes exactly what its account or API key may through the REST API. Writes go
   through the same validation as the interface, need a dry run first (`records_validate` returns a
   token that `records_write` asks for) and are all-or-nothing per call; an API key may write or
-  delete 500 records per hour through MCP (`BRADYPUS_RATE_MCP_WRITE_ROWS`). Everything is off by
+  delete 500 records per hour through MCP (`BRADYPUS_RATE_MCP_WRITE_ROWS`) and a request may not
+  exceed 1 MB. Everything is off by
   default: an administrator enables the endpoint, writing and deleting separately, per application
   (`PUT /api/config/app` with `{ "mcp": { "enabled", "write", "delete", "guide" } }`; migration
   M052), or from the new "MCP (AI assistants)" page of the system configuration. User guide:

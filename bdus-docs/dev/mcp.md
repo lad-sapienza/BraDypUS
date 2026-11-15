@@ -161,7 +161,16 @@ Every change is recorded in `bdus_versions` with `channel = 'mcp'`
 `key_id`. With an API key there is no user: `creator` is null and `userid` 0.
 
 Plugin tables are refused as the `table` of a write: their rows are written
-inside their record, in `plugins`.
+inside their record, in `plugins`. The tool describes `{ "fields": { … } }` as "add a row"
+and `{ "id": 7, … }` as "change it", but `Record\Save` only adds a row to an *existing*
+record when the row carries `_isNew`; `RecordsValidate::pluginRows()` therefore sets the flag
+on every row without an `id`, and removes one a client supplies, so the dry run shows what
+will be written and a row that names an id never turns into an insert. A row id that does not
+belong to the record is ignored (`Record\Edit` works on the loaded record).
+
+To write, the principal must also be able to **read** the table: every tool goes through
+`Tools\Base::table()`. The REST API lets a group update without reading; MCP is stricter on
+purpose (`McpWriteRulesTest::testWritingNeedsToBeAbleToReadTheTable`).
 
 ## Prompts
 
@@ -203,6 +212,7 @@ sheet entry". `Mcp\Prompts` is the store: validation on write, order, rendering.
   hour, `BRADYPUS_RATE_MCP_WRITE_ROWS`, `0` = off). Over budget the call is refused
   before anything changes (`too_many_requests`, `retry_after`); a refused call is not
   counted. People signed in with a JWT are not limited.
+- A request body over 1 MB (`Server::MAX_BODY`) is refused with `413` before it is parsed.
 - `Origin`, when a browser sends it, must be the host itself or one of
   `BRADYPUS_CORS_ORIGIN`; otherwise `403`.
 
@@ -213,6 +223,13 @@ sheet entry". `Mcp\Prompts` is the store: validation on write, order, rendering.
 - `tests/Integration/McpWriteToolsTest.php` — validation, the token (payload,
   principal, expiry), all-or-nothing writes and deletes, what is left in the
   history, nested transactions.
+- `tests/Integration/McpReadParityTest.php` — every read tool against the REST API for a
+  group-scoped user, a group key, a key with no group and a reader: row rules, tables with no
+  rule, plugin tables, nested rows, history, vocabulary, schema.
+- `tests/Integration/McpWriteRulesTest.php` — locks, tiers, self writer, group rules (create,
+  update, delete scoped separately), pinned values, group keys and their trace in the history,
+  plugin rows (add, change, remove, a client's own `_isNew`), `creator`/`id` not client fields.
+- `tests/Integration/McpViewsTest.php` — read-only and writable SQL views.
 - `tests/api/55_mcp.hurl` — the endpoint over HTTP: 401, 404 while off, 405 on
   GET, handshake, modern headers, `Origin`, prompts without any prompt written.
 - `tests/api/56_mcp_prompts.hurl` — prompts written through the REST endpoints and read

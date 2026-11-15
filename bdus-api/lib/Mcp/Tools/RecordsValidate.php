@@ -141,10 +141,40 @@ class RecordsValidate extends Base
             $out[] = [
                 'id'      => $id === null ? null : (int) $id,
                 'core'    => $rec['core'] ?? [],
-                'plugins' => $rec['plugins'] ?? [],
+                'plugins' => self::pluginRows($rec['plugins'] ?? [], $i),
             ];
         }
         return $out;
+    }
+
+    /**
+     * The plugin rows of a record in the form Record\Save reads: a row without an `id`
+     * is a new row and says so (`_isNew`), a row with an `id` never does. Save takes the
+     * flag, not the missing id, as the sign of a new row when it updates a record; the
+     * tool describes `{ "fields": { … } }` as "add a row", so the flag is set here,
+     * and one a client supplies is never believed. Anything else is left for Save to judge.
+     */
+    private static function pluginRows(mixed $plugins, int $index): mixed
+    {
+        if (!is_array($plugins)) {
+            throw new ToolError('invalid_parameters', "records[{$index}].plugins");
+        }
+        foreach ($plugins as $table => $rows) {
+            if (!is_array($rows) || !array_is_list($rows)) {
+                continue;
+            }
+            foreach ($rows as $i => $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                unset($row['_isNew']);
+                if (empty($row['id']) && empty($row['_delete'])) {
+                    $row['_isNew'] = true;
+                }
+                $plugins[$table][$i] = $row;
+            }
+        }
+        return $plugins;
     }
 
     /**

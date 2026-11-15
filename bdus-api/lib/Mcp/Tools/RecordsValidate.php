@@ -9,6 +9,7 @@ namespace Mcp\Tools;
 
 use Mcp\Context;
 use Mcp\ToolError;
+use Mcp\ValidationToken;
 use Record\Save;
 
 /**
@@ -20,7 +21,6 @@ use Record\Save;
 class RecordsValidate extends Base
 {
     public const MAX_RECORDS = 50;
-    public const TOKEN_TTL   = 900;
 
     public function name(): string
     {
@@ -109,7 +109,7 @@ class RecordsValidate extends Base
             'table'            => $tb,
             'valid'            => $allOk,
             'results'          => $results,
-            'validation_token' => $allOk ? self::token($tb, $records, $ctx, time() + self::TOKEN_TTL) : null,
+            'validation_token' => $allOk ? self::token($tb, $records, $ctx) : null,
             'next'             => $allOk
                 ? 'Show the user what will be created or changed. After they agree, call records_write with the same table and records and this validation_token.'
                 : 'Nothing can be written until every record passes. Correct the errors or ask the user.',
@@ -177,38 +177,15 @@ class RecordsValidate extends Base
         return $plugins;
     }
 
-    /**
-     * Token for one payload, one principal, until $expires: `expires.signature`.
-     * It proves that this exact payload was validated; it does not prove that
-     * the user agreed — that is the client's confirmation.
-     */
-    public static function token(string $tb, array $records, Context $ctx, int $expires): string
+    /** Token for these records, for this principal, until $expires (default: 15 minutes). */
+    public static function token(string $tb, array $records, Context $ctx, ?int $expires = null): string
     {
-        $who = \Auth\CurrentUser::isApiKey()
-            ? 'key:' . (int) \Auth\CurrentUser::get('key_id')
-            : 'user:' . (int) \Auth\CurrentUser::id();
-        $payload = json_encode(self::canonical(['table' => $tb, 'records' => $records]), JSON_UNESCAPED_UNICODE);
-        return $expires . '.' . hash_hmac('sha256', $expires . '|' . $who . '|' . $payload, $ctx->signingKey);
+        return ValidationToken::issue('records', ['table' => $tb, 'records' => $records], $ctx, $expires);
     }
 
-    /** Is $token the one issued for this payload and principal, and still valid? */
+    /** Is $token the one issued for these records and principal, and still valid? */
     public static function tokenMatches(mixed $token, string $tb, array $records, Context $ctx): bool
     {
-        if (!is_string($token) || preg_match('/^(\d{1,12})\.[a-f0-9]{64}$/', $token, $m) !== 1 || (int) $m[1] < time()) {
-            return false;
-        }
-        return hash_equals(self::token($tb, $records, $ctx, (int) $m[1]), $token);
-    }
-
-    /** Same payload, same text: object keys sorted, lists left in order. */
-    private static function canonical(mixed $value): mixed
-    {
-        if (!is_array($value)) {
-            return $value;
-        }
-        if (!array_is_list($value)) {
-            ksort($value);
-        }
-        return array_map(self::canonical(...), $value);
+        return ValidationToken::valid($token, 'records', ['table' => $tb, 'records' => $records], $ctx);
     }
 }

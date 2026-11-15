@@ -69,8 +69,11 @@ class Server
             new Tools\Aggregate(),
             new Tools\Resolve(),
             new Tools\History(),
+            new Tools\RsRead(),
             new Tools\RecordsValidate(),
             new Tools\RecordsWrite(),
+            new Tools\RsValidate(),
+            new Tools\RsWrite(),
             new Tools\RecordsDelete(),
         ];
     }

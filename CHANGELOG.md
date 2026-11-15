@@ -8,9 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **MCP endpoint.** `POST /{app}/api/mcp` lets an AI client that speaks the Model Context Protocol
-  work on the database through ten generic tools, parameterised by table: `guide`, `schema`,
+  work on the database through thirteen generic tools, parameterised by table: `guide`, `schema`,
   `vocabulary`, `records_read`, `aggregate` (counts and breakdowns for reports), `resolve`,
-  `history`, and — to change data — `records_validate`, `records_write`, `records_delete`. A client
+  `history`, `rs_read` (stratigraphic relations of a record), and — to change data —
+  `records_validate`, `records_write`, `rs_validate`, `rs_write` (add and remove stratigraphic
+  relations, with the same dry run), `records_delete`. A client
   sees and changes exactly what its account or API key may through the REST API. Writes go
   through the same validation as the interface, need a dry run first (`records_validate` returns a
   token that `records_write` asks for) and are all-or-nothing per call; an API key may write or

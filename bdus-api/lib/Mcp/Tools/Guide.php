@@ -73,6 +73,13 @@ class Guide extends Base
       { "site": { "name": { "_eq": "Castro" } } }.
       `search` is a plain text search over the main fields; `filter` wins when both are given.
 
+    Stratigraphic relations (Harris matrix; only for tables with the feature `stratigraphic_relations`)
+    - `schema` of such a table gives the ten relation codes. A relation is read "first <name> second":
+      first 5 = covers means first covers second. The same fact read from the other side uses the
+      inverse code (covers 5 ↔ is covered by 1) and counts as a duplicate; 9 and 10 are symmetric.
+    - `rs_read` lists the relations of a record with the id to remove each by. Records are addressed
+      by id: find them with `resolve` first.
+
     Reports
     - For totals and breakdowns use `aggregate` (count, sum, avg, min, max, grouped by one or two
       fields) with the same filters; do not read and count rows yourself.
@@ -88,7 +95,11 @@ class Guide extends Base
     - Plugin rows go in `plugins`, inside their record; never set `id` or `id_link` of a new row.
     - A call writes all its records or none. `records_delete` needs `may.delete` and an explicit
       confirmation of the user for those very records.
-    - Every change is recorded in the history (`history`); an administrator can restore a version.
+    - Relations are changed the same way: `rs_validate` with `add` (`{ first, relation, second }`)
+      and `remove` (relation ids), show the user, wait, then `rs_write` with the same payload and
+      the token. A relation is part of both records it joins: you must be allowed to change both.
+    - Every change to a record is recorded in the history (`history`); an administrator can restore a
+      version. Relations are not in the history: a removed relation cannot be restored.
 
     Limits
     - Lists are paged: 25 rows by default, 200 at most. `total` is the size of the whole result;

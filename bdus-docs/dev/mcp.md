@@ -15,7 +15,7 @@ and what is still to come (write tools, history, OAuth) are in the
 
 | Built | Not yet |
 |---|---|
-| Protocol layer, settings (and their page: system configuration → MCP, `McpPanel.vue`), the ten tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete`, `prompts/list` and `prompts/get`, the REST endpoints and the page that edit prompts (system configuration → MCP, `McpPromptsEditor.vue`, with a button that adds two example prompts in the interface language) | A tool for stratigraphic relations, OAuth |
+| Protocol layer, settings (and their page: system configuration → MCP, `McpPanel.vue`), the thirteen tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `rs_read`, `records_validate`, `records_write`, `rs_validate`, `rs_write`, `records_delete`, `prompts/list` and `prompts/get`, the REST endpoints and the page that edit prompts (system configuration → MCP, `McpPromptsEditor.vue`, with a button that adds two example prompts in the interface language) | OAuth |
 
 ## Request flow
 
@@ -118,8 +118,11 @@ settings; it never learns how the principal was authenticated.
 | `aggregate` | `SQL\Aggregate` (also behind the charts) on the rows of a `QueryFromRequest` request | 2 grouping fields, 6 metrics, 200 groups, 1,000 at most |
 | `resolve` | `SQL\QueryFromRequest` on the key field | 100 values, 5 matches each |
 | `history` | `bdus_versions`, with the row rule of the REST history | read-only: no restore |
+| `rs_read` | `Record\Read::getRs()`, relations to records the principal cannot read left out | — |
 | `records_validate` | `Record\Save::check()` | 50 records |
 | `records_write` | `Record\Save::save()` in one transaction; needs `write` | 50 records |
+| `rs_validate` | `Record\Rs::checkAdd()` / `checkRemove()` | 50 relations (adds + removals) |
+| `rs_write` | `Record\Rs::add()` / `remove()` in one transaction; needs `write` | 50 relations |
 | `records_delete` | `Record\Delete` in one transaction; needs `delete` | 50 ids |
 
 Because the read tools build their queries with `QueryFromRequest`, row-level
@@ -179,6 +182,38 @@ belong to the record is ignored (`Record\Edit` works on the loaded record).
 To write, the principal must also be able to **read** the table: every tool goes through
 `Tools\Base::table()`. The REST API lets a group update without reading; MCP is stricter on
 purpose (`McpWriteRulesTest::testWritingNeedsToBeAbleToReadTheTable`).
+
+## Stratigraphic relations
+
+`Record\Rs` is the one place that adds and removes relations (`bdus_rs`: `tb`, `first`, `second`,
+`relation`, read "first <relation> second"); the REST endpoints `POST /api/record/{tb}/rs` and
+`DELETE /api/rs/{id}` and the MCP tools share it. It is a pure move of what the controller did,
+plus the checks the controller never made, now enforced for both entry points:
+
+| Code | Refused when |
+|---|---|
+| `rs_not_configured` | the table is unknown or does not have the `rs` plugin |
+| `invalid_relation` | the code is not 1–10 (`Rs::RELATIONS`; 1↔5, 2↔6, 3↔7, 4↔8, 9 and 10 symmetric) |
+| `relation_with_itself` | `first` = `second` |
+| `not_enough_privilege` | the principal may not change **both** records (level, group rules, row scope, locks) |
+| `record_not_found` | a record does not exist (after the rights check: existence is not told to someone who may not change it) |
+| `relation_already_exist` | the same fact is stored, **in either direction** (`Rs::findSame()`) |
+
+`rs_validate` / `rs_write` take `add: [{ first, relation, second }]` and `remove: [relation ids]`
+(the ids `rs_read` lists; a relation of another table counts as `not_found`). Removals are done
+before additions, so a call can swap a relation; the same fact twice in one call is caught at
+validation. The token is `ValidationToken` with scope `rs` (scope `records` for records: one
+cannot be used for the other). `schema` of a table with relations adds `stratigraphy`: the ten
+codes, their names and inverses, how to read them. `rs_read` is judged like `history`: the record
+must be readable, and a relation whose other record is not readable is left out. Labels in the
+dry run (`"3 covers 4"`) are shown only for readable records.
+
+**Relations are not versioned.** Neither the REST endpoints nor `Record\Persist` write a
+snapshot for them, and restoring a version does not bring them back: this is not specific to
+MCP. A removed relation is gone.
+
+Tests: `RecordRsTest`, `RecordCtrlRsTest` (REST refusals), `McpRsTest` (tools, rights, hidden
+records, token, budget), hurl phase 55.
 
 ## Prompts
 

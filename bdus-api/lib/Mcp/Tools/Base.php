@@ -70,6 +70,16 @@ abstract class Base implements Tool
         }
     }
 
+    /**
+     * Same as table(), callable from a sibling class that shares the checks (RsValidate::prepare()).
+     *
+     * @internal
+     */
+    public function tableOf(array $args, Context $ctx): string
+    {
+        return $this->table($args, $ctx);
+    }
+
     /** An integer argument within [$min, $max], or $default when absent. */
     protected function int(array $args, string $key, int $default, int $min, int $max): int
     {

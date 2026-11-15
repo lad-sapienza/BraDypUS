@@ -78,7 +78,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 2, "method": "tools/list" }
 HTTP 200
 [Asserts]
-jsonpath "$.result.tools" count == 10
+jsonpath "$.result.tools" count == 13
 jsonpath "$.result.tools[0].name" == "guide"
 jsonpath "$.result.tools[3].name" == "records_read"
 jsonpath "$.result.tools[3].inputSchema.type" == "object"
@@ -346,6 +346,116 @@ HTTP 200
 [Asserts]
 jsonpath "$.versions[0].operation" == "create"
 jsonpath "$.versions[0].channel" == "web"
+
+# ── stratigraphic relations (the table has the rs plugin) ────────────
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 40, "method": "tools/call",
+  "params": { "name": "schema", "arguments": { "table": "crud_test" } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.structuredContent.features" contains "stratigraphic_relations"
+jsonpath "$.result.structuredContent.stratigraphy.relations" count == 10
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 41, "method": "tools/call",
+  "params": { "name": "rs_validate", "arguments": { "table": "crud_test",
+    "add": [ { "first": {{mcp_id}}, "relation": 5, "second": {{rest_id}} } ] } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.valid" == true
+jsonpath "$.result.structuredContent.results[0].name" == "covers"
+[Captures]
+rtoken: jsonpath "$.result.structuredContent.validation_token"
+
+# without the token nothing is written
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 42, "method": "tools/call",
+  "params": { "name": "rs_write", "arguments": { "table": "crud_test",
+    "add": [ { "first": {{mcp_id}}, "relation": 5, "second": {{rest_id}} } ] } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.structuredContent.code" == "validation_token_invalid"
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 43, "method": "tools/call",
+  "params": { "name": "rs_write", "arguments": { "table": "crud_test", "validation_token": "{{rtoken}}",
+    "add": [ { "first": {{mcp_id}}, "relation": 5, "second": {{rest_id}} } ] } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.added" count == 1
+[Captures]
+rs_row: jsonpath "$.result.structuredContent.added[0].id"
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 44, "method": "tools/call",
+  "params": { "name": "rs_read", "arguments": { "table": "crud_test", "id": {{rest_id}} } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.structuredContent.relations" count == 1
+jsonpath "$.result.structuredContent.relations[0].id" == {{rs_row}}
+jsonpath "$.result.structuredContent.relations[0].name" == "covers"
+
+# the same fact read from the other side is a duplicate
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 45, "method": "tools/call",
+  "params": { "name": "rs_validate", "arguments": { "table": "crud_test",
+    "add": [ { "first": {{rest_id}}, "relation": 1, "second": {{mcp_id}} } ] } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.structuredContent.valid" == false
+jsonpath "$.result.structuredContent.results[0].code" == "relation_already_exist"
+jsonpath "$.result.structuredContent.validation_token" == null
+
+# the REST API sees the same row, and removes it
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{mcp_id}}
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.rs.*.relation" == 5
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 46, "method": "tools/call",
+  "params": { "name": "rs_validate", "arguments": { "table": "crud_test", "remove": [ {{rs_row}} ] } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.structuredContent.valid" == true
+[Captures]
+rtoken2: jsonpath "$.result.structuredContent.validation_token"
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 47, "method": "tools/call",
+  "params": { "name": "rs_write", "arguments": { "table": "crud_test", "validation_token": "{{rtoken2}}",
+    "remove": [ {{rs_row}} ] } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.structuredContent.removed" == 1
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 48, "method": "tools/call",
+  "params": { "name": "rs_read", "arguments": { "table": "crud_test", "id": {{rest_id}} } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.structuredContent.relations" count == 0
 
 # ── deleting has its own switch ──────────────────────────────────────
 POST {{base_url}}/{{app_name}}/api/mcp

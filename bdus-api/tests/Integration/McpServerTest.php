@@ -140,11 +140,11 @@ class McpServerTest extends BdusTestCase
     {
         [, $body] = $this->legacy('tools/list');
         $tools = $body['result']['tools'];
-        $this->assertSame(['guide', 'schema', 'vocabulary', 'records_read', 'aggregate', 'resolve', 'history', 'records_validate', 'records_write', 'records_delete'], array_column($tools, 'name'));
+        $this->assertSame(['guide', 'schema', 'vocabulary', 'records_read', 'aggregate', 'resolve', 'history', 'rs_read', 'records_validate', 'records_write', 'rs_validate', 'rs_write', 'records_delete'], array_column($tools, 'name'));
         foreach ($tools as $tool) {
             $this->assertSame('object', $tool['inputSchema']['type'], $tool['name']);
             $this->assertSame(
-                !in_array($tool['name'], ['records_write', 'records_delete'], true),
+                !in_array($tool['name'], ['records_write', 'rs_write', 'records_delete'], true),
                 $tool['annotations']['readOnlyHint'],
                 $tool['name']
             );
@@ -174,7 +174,7 @@ class McpServerTest extends BdusTestCase
     public function testModernToolsListAndCall(): void
     {
         [, $list] = $this->modern('tools/list');
-        $this->assertCount(10, $list['result']['tools']);
+        $this->assertCount(13, $list['result']['tools']);
         $this->assertSame('complete', $list['result']['resultType']);
 
         [$status, $call] = $this->modern('tools/call', ['name' => 'schema', 'arguments' => []]);
@@ -258,6 +258,9 @@ class McpServerTest extends BdusTestCase
     {
         $this->assertTrue(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"records_write"}}'));
         $this->assertTrue(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"records_delete"}}'));
+        $this->assertTrue(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"rs_write"}}'));
+        $this->assertFalse(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"rs_validate"}}'));
+        $this->assertFalse(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"rs_read"}}'));
         $this->assertFalse(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"records_validate"}}'));
         $this->assertFalse(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"records_read"}}'));
         $this->assertFalse(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/list"}'));

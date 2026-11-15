@@ -6269,8 +6269,9 @@ paths:
         `tools/call`, `prompts/list`, `prompts/get` (the application's prompts, written by a super
         admin through `/api/mcp-prompts`; `prompts/get` needs the `Mcp-Name` header in revision
         `2026-07-28`; an unknown prompt or a bad argument is `-32602`). Tools: `guide`, `schema`, `vocabulary`, `records_read`,
-        `aggregate`, `resolve`, `history`, `records_validate`, `records_write`
-        (needs `mcp.write` and the token `records_validate` returns),
+        `aggregate`, `resolve`, `history`, `rs_read`, `records_validate`, `records_write`
+        (needs `mcp.write` and the token `records_validate` returns), `rs_validate`, `rs_write` (stratigraphic
+        relations; needs `mcp.write` and the token `rs_validate` returns),
         `records_delete` (needs `mcp.delete`). Every tool sees only the tables and rows the principal may
         read through the REST API.
 

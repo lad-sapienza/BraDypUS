@@ -63,6 +63,7 @@ class Schema extends Base
             'is_view'     => $isView ?: null,
             'writable'    => $isView ? (($ctx->cfg->get("tables.{$tb}.view_writable") ?: 'none') !== 'none') : null,
             'features'    => $this->features($schema),
+            'stratigraphy' => !empty($schema['rs']) ? self::stratigraphy() : null,
             'fields'      => $this->compact($schema['fields']),
             'plugins'     => $plugins,
         ], fn($v) => $v !== null);
@@ -85,6 +86,20 @@ class Schema extends Base
             ], fn($v) => $v !== null);
         }
         return $out;
+    }
+
+    /** How to read and write the relations of a table that has them (tools rs_read, rs_validate, rs_write). */
+    private static function stratigraphy(): array
+    {
+        $relations = [];
+        foreach (\Record\Rs::RELATIONS as $code => $name) {
+            $relations[] = ['code' => $code, 'name' => str_replace('_', ' ', $name), 'inverse' => \Record\Rs::inverse($code)];
+        }
+        return [
+            'reading'   => 'A relation is read "first <name> second", e.g. first 5 = covers: first covers second. '
+                . 'The same fact read from the other side uses the inverse code and counts as a duplicate. 9 and 10 are symmetric.',
+            'relations' => $relations,
+        ];
     }
 
     /** Features switched on for the table, by name. */

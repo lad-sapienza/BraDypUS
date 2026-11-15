@@ -33,14 +33,18 @@ field names are yours: the assistant learns them from your configuration.
 | `aggregate` | Counts and breakdowns for reports (count, distinct, sum, average, min, max; up to two groupings) |
 | `resolve` | Turns names the user mentions ("US 1023", "Castro") into record ids |
 | `history` | Shows the versions of a record and what changed |
+| `rs_read` | Lists the stratigraphic relations of a record (Harris matrix), each read "first covers second", with the id to remove it by |
 | `records_validate` | **Dry run** of a new or changed record: errors, or the values as they would be saved and those they replace |
 | `records_write` | Creates and updates records, with their plugin rows (radiocarbon, osteology…) |
+| `rs_validate` | **Dry run** of stratigraphic relations to add and to remove: does the table have them, are the codes and records valid, may the key change both records, is the fact already there |
+| `rs_write` | Adds and removes stratigraphic relations |
 | `records_delete` | Deletes records |
 
-The last two are off until you switch them on. It does **not** change the structure of
-the application, manage users, run SQL, upload files, restore versions, or edit
-stratigraphic relations, geometries, bibliography and Pleiades links; those stay in the
-interface.
+The three that write (`records_write`, `rs_write`) or delete (`records_delete`) are off
+until you switch them on: writing covers records and relations, deleting only records.
+It does **not** change the structure of the application, manage users, run SQL, upload
+files, restore versions, or edit geometries, bibliography and Pleiades links; those stay
+in the interface.
 
 ## Who sees what
 
@@ -144,7 +148,13 @@ locks. On top of that:
    switch on any "approve everything" option of your client for these tools.
 3. **All or nothing.** One call is one transaction of up to 50 records: if one is
    refused, nothing is written and the answer names the record.
-4. **Ids, not names.** Records are changed by `id`; the assistant looks names up with
+4. **Relations too.** `rs_validate` and `rs_write` work the same way for stratigraphic
+   relations: a relation is part of **both** records it joins, so the key must be able
+   to change both; the same fact read from the other side ("2 covers 1" after "1 is covered
+   by 2") counts as a duplicate; a record cannot be related to itself. Relations are
+   **not** in the version history (neither through the API nor the interface): a removed
+   relation cannot be restored from it.
+5. **Ids, not names.** Records are changed by `id`; the assistant looks names up with
    `resolve` and shows you the match first, because a key field is not always unique.
 
 Every change is recorded in the [version history](../usage/versions) like any other,
@@ -158,8 +168,8 @@ administrator can restore them.
 | What | Limit |
 |---|---|
 | Rows read per call | 25 by default, 200 at most |
-| Records written or deleted per call | 50 |
-| Records written or deleted per key | 500 per hour (`BRADYPUS_RATE_MCP_WRITE_ROWS`, [deploy guide](../deploy/#environment-variables)) |
+| Records, or relations, written or deleted per call | 50 |
+| Records and relations written or deleted per key | 500 per hour (`BRADYPUS_RATE_MCP_WRITE_ROWS`, [deploy guide](../deploy/#environment-variables)) |
 | Requests per key | those of the [REST API](../api/#request-limits): 60 writes and 300 reads per minute |
 | Size of a request | 1 MB |
 | Prompts | 50, each with at most 10 arguments |
@@ -190,5 +200,4 @@ administrator can restore them.
 | `validation_token_invalid` | The records changed after validation, or 15 minutes passed: validate again |
 | `too_many_requests` | A limit was reached; wait the number of seconds given |
 
-How it is built, and what is planned (sign-in with a user account, a tool for
-stratigraphic relations), is in the [developer documentation](/dev/mcp).
+How it is built, and what is planned (sign-in with a user account), is in the [developer documentation](/dev/mcp).

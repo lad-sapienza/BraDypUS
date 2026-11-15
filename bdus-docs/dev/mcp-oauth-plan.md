@@ -6,8 +6,9 @@ title: MCP server & OAuth 2.1 — design plan
 
 ::: warning Status
 Design document. Implemented so far: the prerequisite refactor (decision D1)
-and the first part of phase 1 — protocol layer, settings (M052) and the read
-tools `guide`, `schema`, `vocabulary`, `records_read`, `resolve`, described in
+and the read side of phase 1 — protocol layer, settings (M052) and the tools
+`guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`,
+`history` — checked with Claude Code on the demo application and described in
 [MCP server](./mcp). Everything else here is still a plan.
 Written 2026-11-15 against v5.23.1. Statements about external projects (MCP
 specification, Directus, PHP libraries) were checked on that date and must be

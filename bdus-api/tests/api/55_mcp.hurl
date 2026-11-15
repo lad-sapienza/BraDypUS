@@ -76,7 +76,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 2, "method": "tools/list" }
 HTTP 200
 [Asserts]
-jsonpath "$.result.tools" count == 5
+jsonpath "$.result.tools" count == 7
 jsonpath "$.result.tools[0].name" == "guide"
 jsonpath "$.result.tools[3].name" == "records_read"
 jsonpath "$.result.tools[3].inputSchema.type" == "object"
@@ -120,6 +120,27 @@ HTTP 200
 jsonpath "$.result.isError" == false
 jsonpath "$.result.structuredContent.returned" <= 1
 jsonpath "$.result.structuredContent.total" >= 0
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 61, "method": "tools/call",
+  "params": { "name": "aggregate", "arguments": { "table": "crud_test", "group_by": ["tipo"] } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.truncated" == false
+jsonpath "$.result.structuredContent.groups" isCollection
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 62, "method": "tools/call",
+  "params": { "name": "history", "arguments": { "table": "crud_test", "id": 1 } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.versions" isCollection
 
 # A refusal is a tool result the model can read, not an HTTP error
 POST {{base_url}}/{{app_name}}/api/mcp

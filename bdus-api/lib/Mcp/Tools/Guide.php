@@ -73,6 +73,11 @@ class Guide extends Base
       { "site": { "name": { "_eq": "Castro" } } }.
       `search` is a plain text search over the main fields; `filter` wins when both are given.
 
+    Reports
+    - For totals and breakdowns use `aggregate` (count, sum, avg, min, max, grouped by one or two
+      fields) with the same filters; do not read and count rows yourself.
+    - `history` lists the saved versions of a record and shows what changed since one of them.
+
     Limits
     - Lists are paged: 25 rows by default, 200 at most. `total` is the size of the whole result;
       `truncated` says there is more. Ask for the fields you need, not for everything.

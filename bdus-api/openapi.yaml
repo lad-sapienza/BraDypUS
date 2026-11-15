@@ -6257,7 +6257,7 @@ paths:
 
         Methods: `initialize`, `ping`, `server/discover`, `tools/list`,
         `tools/call`. Tools: `guide`, `schema`, `vocabulary`, `records_read`,
-        `resolve`. Every tool sees only the tables and rows the principal may
+        `aggregate`, `resolve`, `history`. Every tool sees only the tables and rows the principal may
         read through the REST API.
 
         Off until an administrator enables it for the application

@@ -69,7 +69,7 @@ class Chart extends \Bdus\Controller
                 $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'function']);
                 return;
             }
-            if (!$this->isValidField($tb, $field)) {
+            if (!(new \SQL\Aggregate($this->db, $this->cfg))->isValidField($tb, $field)) {
                 $this->returnJson(['status' => 'error', 'code' => 'invalid_chart_field', 'detail' => $field]);
                 return;
             }
@@ -91,11 +91,11 @@ class Chart extends \Bdus\Controller
                 $this->returnJson(['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'y_function']);
                 return;
             }
-            if (!$this->isValidField($tb, $xField)) {
+            if (!(new \SQL\Aggregate($this->db, $this->cfg))->isValidField($tb, $xField)) {
                 $this->returnJson(['status' => 'error', 'code' => 'invalid_chart_field', 'detail' => $xField]);
                 return;
             }
-            if (!$this->isValidField($tb, $yField)) {
+            if (!(new \SQL\Aggregate($this->db, $this->cfg))->isValidField($tb, $yField)) {
                 $this->returnJson(['status' => 'error', 'code' => 'invalid_chart_field', 'detail' => $yField]);
                 return;
             }
@@ -127,7 +127,7 @@ class Chart extends \Bdus\Controller
         try {
             if ($type === 'metric') {
                 // SELECT {FUNC}({field}) AS value FROM {tb} {WHERE}
-                $sql    = "SELECT " . $this->renderAggregate($function, $field) . " AS value FROM {$tb}{$whereSql}";
+                $sql    = "SELECT " . \SQL\Aggregate::expression($function, $field) . " AS value FROM {$tb}{$whereSql}";
                 $rows   = $this->db->query($sql, $whereValues, 'read');
                 $value  = $rows[0]['value'] ?? null;
 
@@ -141,7 +141,7 @@ class Chart extends \Bdus\Controller
             } else {
                 // SELECT {x_field} AS label, {FUNC}({y_field}) AS value
                 // FROM {tb} {WHERE} GROUP BY {x_field} ORDER BY {x_field}
-                $sql  = "SELECT {$xField} AS label, " . $this->renderAggregate($yFunction, $yField) . " AS value"
+                $sql  = "SELECT {$xField} AS label, " . \SQL\Aggregate::expression($yFunction, $yField) . " AS value"
                     . " FROM {$tb}{$whereSql}"
                     . " GROUP BY {$xField}"
                     . " ORDER BY {$xField}";
@@ -447,34 +447,4 @@ class Chart extends \Bdus\Controller
         $row['owned_by_me'] = (int) $row['user_id'] === \Auth\CurrentUser::id();
         return $row;
     }
-
-    /**
-     * Renders an aggregate function call for SQL. COUNT_DISTINCT has no
-     * direct SQL equivalent as a function name — it maps to COUNT(DISTINCT …).
-     */
-    private function renderAggregate(string $function, string $field): string
-    {
-        return $function === 'COUNT_DISTINCT'
-            ? "COUNT(DISTINCT {$field})"
-            : "{$function}({$field})";
-    }
-
-    /**
-     * Validates that $field is allowed for $tb.
-     * `id` is always valid. Other fields must appear in config.
-     */
-    private function isValidField(string $tb, string $field): bool
-    {
-        if ($field === 'id') {
-            return true;
-        }
-        $fields = $this->cfg->get("tables.{$tb}.fields") ?: [];
-        foreach ($fields as $fld) {
-            if (($fld['name'] ?? null) === $field) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 }

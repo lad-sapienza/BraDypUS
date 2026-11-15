@@ -15,7 +15,7 @@ and what is still to come (write tools, history, OAuth) are in the
 
 | Built | Not yet |
 |---|---|
-| Protocol layer, settings, `guide`, `schema`, `vocabulary`, `records_read`, `resolve` | `aggregate`, `history`, `records_validate`, `records_write`, `records_delete`, prompts, settings page in the interface, OAuth |
+| Protocol layer, settings, the read tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history` | `records_validate`, `records_write`, `records_delete`, prompts, settings page in the interface, OAuth |
 
 ## Request flow
 
@@ -115,11 +115,19 @@ settings; it never learns how the principal was authenticated.
 | `schema` | `Config\TableSchema`, `Authorization::tableAbilities()` | — |
 | `vocabulary` | `Record\FieldOptions` (readable rows only) | 200 values, 1,000 at most |
 | `records_read` | `SQL\QueryFromRequest`, `Record\Expand` — the classes behind `GET /api/records/{tb}` | 25 rows, 200 at most |
+| `aggregate` | `SQL\Aggregate` (also behind the charts) on the rows of a `QueryFromRequest` request | 2 grouping fields, 6 metrics, 200 groups, 1,000 at most |
 | `resolve` | `SQL\QueryFromRequest` on the key field | 100 values, 5 matches each |
+| `history` | `bdus_versions`, with the row rule of the REST history | read-only: no restore |
 
 Because the read tools build their queries with `QueryFromRequest`, row-level
 rules of groups apply exactly as in the REST list.
-`McpServerTest::testRecordsReadSameTotalAsTheRestList` compares the two.
+`McpServerTest::testRecordsReadSameTotalAsTheRestList` compares the two, and
+`testAggregateSameCountAsRecordsRead` ties `aggregate` to `records_read`.
+
+`SQL\Aggregate` puts field names into SQL (`GROUP BY`, aggregate functions): each
+one is checked against the table configuration first, the function against a
+fixed list, and the alias of a metric is built by the tool, never taken from the
+caller.
 
 ## Access and rate limits
 

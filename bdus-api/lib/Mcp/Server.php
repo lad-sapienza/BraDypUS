@@ -60,7 +60,9 @@ class Server
             new Tools\Schema(),
             new Tools\Vocabulary(),
             new Tools\RecordsRead(),
+            new Tools\Aggregate(),
             new Tools\Resolve(),
+            new Tools\History(),
         ];
     }
 

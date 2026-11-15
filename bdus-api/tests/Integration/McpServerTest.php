@@ -125,7 +125,7 @@ class McpServerTest extends BdusTestCase
     {
         [, $body] = $this->legacy('tools/list');
         $tools = $body['result']['tools'];
-        $this->assertSame(['guide', 'schema', 'vocabulary', 'records_read', 'resolve'], array_column($tools, 'name'));
+        $this->assertSame(['guide', 'schema', 'vocabulary', 'records_read', 'aggregate', 'resolve', 'history'], array_column($tools, 'name'));
         foreach ($tools as $tool) {
             $this->assertSame('object', $tool['inputSchema']['type'], $tool['name']);
             $this->assertTrue($tool['annotations']['readOnlyHint'], $tool['name']);
@@ -155,7 +155,7 @@ class McpServerTest extends BdusTestCase
     public function testModernToolsListAndCall(): void
     {
         [, $list] = $this->modern('tools/list');
-        $this->assertCount(5, $list['result']['tools']);
+        $this->assertCount(7, $list['result']['tools']);
         $this->assertSame('complete', $list['result']['resultType']);
 
         [$status, $call] = $this->modern('tools/call', ['name' => 'schema', 'arguments' => []]);
@@ -373,6 +373,109 @@ class McpServerTest extends BdusTestCase
         $res = $this->tool('records_read', ['table' => 'items', 'limit' => 100000]);
         $this->assertFalse($res['__isError']);
         $this->assertSame(5, $res['returned']);
+    }
+
+    // ── aggregate ─────────────────────────────────────────────────────────────
+
+    public function testAggregateCountsByDefault(): void
+    {
+        $res = $this->tool('aggregate', ['table' => 'items']);
+        $this->assertFalse($res['__isError'], json_encode($res));
+        $this->assertSame([['count' => 5]], $res['groups']);
+    }
+
+    public function testAggregateGroupsAndFilters(): void
+    {
+        $res = $this->tool('aggregate', ['table' => 'items', 'group_by' => ['status']]);
+        $this->assertSame(
+            ['active' => 3, 'inactive' => 1, 'pending' => 1],
+            array_column($res['groups'], 'count', 'status')
+        );
+
+        $res = $this->tool('aggregate', [
+            'table'   => 'items',
+            'filter'  => ['status' => ['_eq' => 'active']],
+            'metrics' => [['fn' => 'count'], ['fn' => 'min', 'field' => 'name'], ['fn' => 'count_distinct', 'field' => 'status']],
+        ]);
+        $this->assertSame(3, $res['groups'][0]['count']);
+        $this->assertSame('Alpha item', $res['groups'][0]['min_name']);
+        $this->assertSame(1, $res['groups'][0]['count_distinct_status']);
+    }
+
+    public function testAggregateLabelsALookupGroup(): void
+    {
+        $res    = $this->tool('aggregate', ['table' => 'items', 'group_by' => ['cat_ref']]);
+        $labels = array_column($res['groups'], '@cat_ref', 'cat_ref');
+        $this->assertSame('Ceramics', $labels[1]);
+        $this->assertSame('Metal', $labels[2]);
+        $noCategory = array_values(array_filter($res['groups'], fn($g) => $g['cat_ref'] === null));
+        $this->assertSame(3, $noCategory[0]['count']);
+        $this->assertNull($noCategory[0]['@cat_ref']);
+    }
+
+    public function testAggregateSameCountAsRecordsRead(): void
+    {
+        $filter = ['name' => ['_icontains' => 'item']];
+        $this->assertSame(
+            $this->tool('records_read', ['table' => 'items', 'filter' => $filter])['total'],
+            $this->tool('aggregate', ['table' => 'items', 'filter' => $filter])['groups'][0]['count']
+        );
+    }
+
+    public function testAggregateIsCappedAndSaysSo(): void
+    {
+        $res = $this->tool('aggregate', ['table' => 'items', 'group_by' => ['name'], 'limit' => 2]);
+        $this->assertCount(2, $res['groups']);
+        $this->assertTrue($res['truncated']);
+    }
+
+    public function testAggregateRefusals(): void
+    {
+        $cases = [
+            [['table' => 'items', 'group_by' => ['nope']], 'invalid_parameters'],
+            [['table' => 'items', 'group_by' => ['id); DROP TABLE items; --']], 'invalid_parameters'],
+            [['table' => 'items', 'group_by' => ['name', 'status', 'id']], 'invalid_parameters'],
+            [['table' => 'items', 'metrics' => [['fn' => 'median', 'field' => 'score']]], 'invalid_parameters'],
+            [['table' => 'items', 'metrics' => [['fn' => 'sum']]], 'invalid_parameters'],
+            [['table' => 'items', 'metrics' => [['fn' => 'sum', 'field' => 'nope']]], 'invalid_parameters'],
+            [['table' => 'tags'], 'unknown_table'],
+        ];
+        foreach ($cases as [$args, $code]) {
+            $res = $this->tool('aggregate', $args);
+            $this->assertTrue($res['__isError'], json_encode($args));
+            $this->assertSame($code, $res['code'], json_encode($args));
+        }
+    }
+
+    // ── history ───────────────────────────────────────────────────────────────
+
+    public function testHistoryListsVersionsAndShowsWhatChanged(): void
+    {
+        $this->assertSame([], $this->tool('history', ['table' => 'items', 'id' => 3])['versions']);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
+            'tb' => 'items', 'id' => 3, 'core' => ['status' => 'archived'],
+        ]);
+        $this->assertSame('success', $this->callController($ctrl, 'saveRecord')['status']);
+
+        $list = $this->tool('history', ['table' => 'items', 'id' => 3]);
+        $this->assertCount(1, $list['versions']);
+        $this->assertSame('update', $list['versions'][0]['operation']);
+
+        $diff = $this->tool('history', ['table' => 'items', 'id' => 3, 'version' => $list['versions'][0]['version']]);
+        $this->assertFalse($diff['deleted']);
+        $this->assertSame(['status' => ['then' => 'active', 'now' => 'archived']], $diff['changed']);
+        $this->assertSame('Gamma item', $diff['then']['name']);
+    }
+
+    public function testHistoryRefusals(): void
+    {
+        $this->assertSame('parameter_missing', $this->tool('history', ['table' => 'items'])['code']);
+        $this->assertSame('version_not_found', $this->tool('history', ['table' => 'items', 'id' => 1, 'version' => 999999])['code']);
+        $this->assertSame('unknown_table', $this->tool('history', ['table' => 'bdus_versions', 'id' => 1])['code']);
+
+        $this->setPrivilege(40);
+        $this->assertSame('unknown_table', $this->tool('history', ['table' => 'items', 'id' => 1])['code']);
     }
 
     // ── resolve ───────────────────────────────────────────────────────────────

@@ -43,7 +43,17 @@ class Mcp extends \Bdus\Controller
             return;
         }
 
-        $server = new \Mcp\Server(new \Mcp\Context($this->db, $this->cfg, $this->access(), $settings, $this->log));
+        // Every change made from here on is recorded in the history as coming from MCP.
+        \Auth\Channel::set('mcp');
+
+        $server = new \Mcp\Server(new \Mcp\Context(
+            $this->db,
+            $this->cfg,
+            $this->access(),
+            $settings,
+            $this->log,
+            \JWT\JwtManager::deriveKey(APP, 'mcp-validation')
+        ));
         [$status, $body] = $server->handle((string) file_get_contents('php://input'), $headers);
         $this->emit($status, $body);
     }

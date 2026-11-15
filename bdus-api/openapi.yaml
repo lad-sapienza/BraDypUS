@@ -1087,6 +1087,7 @@ paths:
         Omit `id` to create; include `id` to update. Error `value_not_allowed`:
         a group rule pins the value of a field (`enforce`) and the value sent is
         not an allowed one (also returned by the duplicate and import endpoints).
+        Error `record_not_found`: the `id` to update does not exist.
 
         The payload is checked before anything is written. `invalid_json`: the body
         is not a JSON object. `parameter_missing` (detail `core`): a new record
@@ -1902,7 +1903,8 @@ paths:
       description: >
         Returns all snapshot entries for the given record, newest first.
         Each entry identifies when the snapshot was taken, by whom, and what
-        operation triggered it (`update` | `delete` | `restore`).
+        operation triggered it (`create` | `update` | `delete` | `restore`), and through
+        which channel (`web` | `api` | `mcp` | `import` | `cli`).
       parameters:
         - $ref: '#/components/parameters/tb'
         - $ref: '#/components/parameters/id'
@@ -1963,7 +1965,9 @@ paths:
       tags: [versions]
       summary: Restore a record to a previously snapshotted state
       description: >
-        Applies values from the chosen snapshot back to the live record.
+        Applies values from the chosen snapshot back to the live record. Error
+        `version_not_restorable`: the entry is the creation of the record
+        (`operation` = `create`), which holds no earlier state.
 
 
         **Core fields**: pass an array of field names in `fields` to restore
@@ -6257,7 +6261,9 @@ paths:
 
         Methods: `initialize`, `ping`, `server/discover`, `tools/list`,
         `tools/call`. Tools: `guide`, `schema`, `vocabulary`, `records_read`,
-        `aggregate`, `resolve`, `history`. Every tool sees only the tables and rows the principal may
+        `aggregate`, `resolve`, `history`, `records_validate`, `records_write`
+        (needs `mcp.write` and the token `records_validate` returns),
+        `records_delete` (needs `mcp.delete`). Every tool sees only the tables and rows the principal may
         read through the REST API.
 
         Off until an administrator enables it for the application
@@ -8148,11 +8154,16 @@ components:
           description: Timestamp of the snapshot (Y-m-d H:i:s)
         operation:
           type: string
-          enum: [update, delete, restore]
+          enum: [create, update, delete, restore]
           description: >
             What triggered the snapshot:
+            `create` — the record was created (no content: nothing to compare or restore);
             `update` — a field edit; `delete` — the record was erased;
             `restore` — a rollback was applied to this record.
+        channel:
+          type: [string, 'null']
+          enum: [web, api, mcp, import, cli, null]
+          description: Where the change came from; null on entries written before M053.
 
     VersionContent:
       type: object

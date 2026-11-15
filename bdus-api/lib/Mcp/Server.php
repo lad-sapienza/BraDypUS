@@ -63,6 +63,9 @@ class Server
             new Tools\Aggregate(),
             new Tools\Resolve(),
             new Tools\History(),
+            new Tools\RecordsValidate(),
+            new Tools\RecordsWrite(),
+            new Tools\RecordsDelete(),
         ];
     }
 
@@ -80,7 +83,7 @@ class Server
         $name = $msg['params']['name'] ?? null;
         foreach (self::standardTools() as $tool) {
             if ($tool->name() === $name) {
-                return $tool->isWrite();
+                return $tool->needs() !== null;
             }
         }
         return false;
@@ -244,8 +247,9 @@ class Server
             if (!is_array($args)) {
                 throw new ToolError('invalid_parameters', 'arguments');
             }
-            if ($tool->isWrite() && !$this->ctx->settings['write']) {
-                throw new ToolError('mcp_write_disabled');
+            $needs = $tool->needs();
+            if ($needs !== null && empty($this->ctx->settings[$needs])) {
+                throw new ToolError("mcp_{$needs}_disabled");
             }
             return $this->toolResult($tool->call($args, $this->ctx), false);
         } catch (ToolError $e) {

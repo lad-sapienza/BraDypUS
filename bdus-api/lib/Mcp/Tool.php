@@ -20,8 +20,12 @@ interface Tool
      */
     public function definition(): array;
 
-    /** Does the tool change data? (needs the application's `write` switch, counts as a write for rate limits) */
-    public function isWrite(): bool;
+    /**
+     * What the tool needs switched on in the application's MCP settings:
+     * null (it only reads), 'write' or 'delete'. A tool that needs something
+     * counts as a write for rate limits.
+     */
+    public function needs(): ?string;
 
     /**
      * Runs the tool and returns its structured result.

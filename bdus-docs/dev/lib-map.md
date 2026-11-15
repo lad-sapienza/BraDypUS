@@ -24,6 +24,7 @@ without going through a lib/ abstraction.
 | `Auth\RateLimiter`, `Auth\ClientIp` | `lib/Auth/RateLimiter.php`, `lib/Auth/ClientIp.php` | Request limits for API keys and failed logins; client address behind a trusted proxy |
 | `Record\Purge` | `lib/Record/Purge.php` | Retention: delete or anonymise old records and their version history (`bin/purge-records.php`) |
 | `Auth\Authorization` | `lib/Auth/Authorization.php` | Privilege check helpers |
+| `Auth\Channel` | `lib/Auth/Channel.php` | Where the request comes from (`web`, `api`, `mcp`, `import`, `cli`), recorded with every history entry |
 | `Auth\WriteGate` | `lib/Auth/WriteGate.php` | May the principal write to this record? Tier or rule, ownership, row scope, locks; a plugin row follows its host |
 | `Auth\Access` | `lib/Auth/Access.php` | Table- and row-level access: group rules and locks ([Groups & permissions](./groups-permissions)) |
 | `Auth\Password` | `lib/Auth/Password.php` | bcrypt hash / verify |
@@ -76,13 +77,14 @@ without going through a lib/ abstraction.
 | `Record\Edit` | `lib/Record/Edit.php` | Validates + prepares record edits |
 | `Record\Persist` | `lib/Record/Persist.php` | Low-level persistence (INSERT/UPDATE/DELETE) |
 | `Record\Save` | `lib/Record/Save.php` | Create or update one record with its plugin rows: access gate, payload shape, enforced values, validation, write. Request-independent |
+| `Record\Delete` | `lib/Record/Delete.php` | Delete one record after the access gate; request-independent |
 | `Record\Validator` | `lib/Record/Validator.php` | Validates a record payload against the table configuration; never writes |
 | `Record\FieldOptions` | `lib/Record/FieldOptions.php` | Values a field offers (table column, lookup table, vocabulary, static list), limited to readable rows |
 | `Config\TableSchema` | `lib/Config/TableSchema.php` | A table's schema as clients need it: fields, plugin tables, features |
 | `Template\Loader` | `lib/Template/Loader.php` | Loads Twig print templates from DB |
 | `Mcp\Server` | `lib/Mcp/Server.php` | MCP protocol layer: one JSON-RPC message in, status + body out; both protocol generations ([MCP server](./mcp)) |
 | `Mcp\Tool`, `Mcp\Context`, `Mcp\ToolError` | `lib/Mcp/` | Contract of a tool, what it receives, how it refuses |
-| `Mcp\Tools\*` | `lib/Mcp/Tools/` | The generic tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history` |
+| `Mcp\Tools\*` | `lib/Mcp/Tools/` | The generic tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete` |
 | `SQL\Aggregate` | `lib/SQL/Aggregate.php` | COUNT / SUM / AVG / MIN / MAX over the rows of a `QueryFromRequest` request, grouped by up to two fields; used by the charts and by the MCP `aggregate` tool |
 | `Template\Assign` | `lib/Template/Assign.php` | Record layouts per group: which templates a user's groups assign |
 | `Image\Resizer` | `lib/Image/Resizer.php` | Resize / convert an uploaded image in place (Intervention) |

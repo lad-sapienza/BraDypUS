@@ -7,22 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **MCP endpoint (first part, read-only).** `POST /{app}/api/mcp` lets an AI client that speaks the
-  Model Context Protocol read the database through seven generic tools: `guide`, `schema`,
-  `vocabulary`, `records_read`, `aggregate` (counts and breakdowns for reports), `resolve` and
-  `history`. A client sees exactly the tables and rows its
-  account or API key may read through the REST API. Off by default: an administrator enables it
-  per application (`PUT /api/config/app` with `{ "mcp": { "enabled": true } }`; migration M052).
-  Clients of protocol revision 2026-07-28 and of the earlier handshake revisions are both served.
-  No settings page in the interface yet, and no tools that change data. Developer docs:
-  `dev/mcp`, plan in `dev/mcp-oauth-plan`; hurl phase 55.
+- **MCP endpoint.** `POST /{app}/api/mcp` lets an AI client that speaks the Model Context Protocol
+  work on the database through ten generic tools, parameterised by table: `guide`, `schema`,
+  `vocabulary`, `records_read`, `aggregate` (counts and breakdowns for reports), `resolve`,
+  `history`, and — to change data — `records_validate`, `records_write`, `records_delete`. A client
+  sees and changes exactly what its account or API key may through the REST API. Writes go
+  through the same validation as the interface, need a dry run first (`records_validate` returns a
+  token that `records_write` asks for) and are all-or-nothing per call. Everything is off by
+  default: an administrator enables the endpoint, writing and deleting separately, per application
+  (`PUT /api/config/app` with `{ "mcp": { "enabled", "write", "delete", "guide" } }`; migration
+  M052). No settings page in the interface yet. Developer docs: `dev/mcp`, plan in
+  `dev/mcp-oauth-plan`; hurl phase 55.
+- **The history says who created a record, and where every change came from.** Creating a record
+  now leaves a `creation` entry in its version history (who, when; no content, so it cannot be
+  compared or restored), and every entry records the channel of the change — interface, API key,
+  MCP — and the API key that made it (migration M053). Records created before this release have
+  no creation entry.
+
+### Fixed
+
+- **Saving a record that no longer exists** (`POST /api/record/{tb}` with an `id` that is not there)
+  answered `success_saved` without writing anything. It now answers `record_not_found`.
 
 ### Changed
 
 - **Record write path moved out of the controller** (no change in behaviour or in the API). What
   `POST /api/record/{tb}` does — access gate, payload shape, enforced values, validation, write — is
-  now `Record\Save`, with `Record\Validator` (validation only, never writes) and `Auth\WriteGate`
-  (may the principal write to this record); the table schema and the field options sent to clients
+  now `Record\Save`, with `Record\Validator` (validation only, never writes), `Auth\WriteGate`
+  (may the principal write to this record) and `Record\Delete` for deletions; the table schema and the field options sent to clients
   are `Config\TableSchema` and `Record\FieldOptions`. `Bdus\Controllers\Record` only reads the
   request and calls them, so other entry points can share the same rules. Developer docs updated
   (record lifecycle, lib map).

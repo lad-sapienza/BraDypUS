@@ -29,7 +29,7 @@ class History extends Base
         return [
             'title'       => 'Record history',
             'description' => 'With `table` and `id`: the versions saved for the record, newest first (each is the state '
-                . 'before a change). Adding `version`: that state, and the fields that differ from the record as it is '
+                . 'before a change; `create` marks the creation and holds no state). Adding `version`: that state, and the fields that differ from the record as it is '
                 . 'now (`then` / `now`). `now` is null for every field when the record has been deleted.',
             'inputSchema' => [
                 'type'       => 'object',
@@ -61,7 +61,7 @@ class History extends Base
 
         if (!isset($args['version'])) {
             $rows = $ctx->db->query(
-                'SELECT id, userid, time, operation FROM bdus_versions WHERE tb = ? AND rowid = ? ORDER BY id DESC',
+                'SELECT * FROM bdus_versions WHERE tb = ? AND rowid = ? ORDER BY id DESC',
                 [$tb, $id],
                 'read'
             ) ?: [];
@@ -73,6 +73,7 @@ class History extends Base
                     'user_id'   => (int) $r['userid'] ?: null,
                     'time'      => $this->time($r['time']),
                     'operation' => $r['operation'],
+                    'channel'   => $r['channel'] ?? null,
                 ], $rows),
             ];
         }
@@ -116,6 +117,7 @@ class History extends Base
             'user_id'   => (int) $ver['userid'] ?: null,
             'time'      => $this->time($ver['time']),
             'operation' => $ver['operation'],
+            'channel'   => $ver['channel'] ?? null,
             'deleted'   => $now === null,
             'then'      => $core,
             'changed'   => $changed,

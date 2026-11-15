@@ -6,9 +6,11 @@ title: MCP server & OAuth 2.1 — design plan
 
 ::: warning Status
 Design document. Implemented so far: the prerequisite refactor (decision D1)
-and the read side of phase 1 — protocol layer, settings (M052) and the tools
-`guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`,
-`history` — checked with Claude Code on the demo application and described in
+and most of phase 1 — protocol layer, settings (M052), the ten tools of
+section 4, the validation token, provenance and `create` entries in the history
+(M053). The read tools were checked with Claude Code on the demo application.
+Still missing in phase 1: the settings page in the interface, prompts, the user
+guide. What exists is described in
 [MCP server](./mcp). Everything else here is still a plan.
 Written 2026-11-15 against v5.23.1. Statements about external projects (MCP
 specification, Directus, PHP libraries) were checked on that date and must be
@@ -369,10 +371,10 @@ All through `DB\System\Manage` (structure JSON + migration), on the three engine
 | Migration | Phase | Change |
 |---|---|---|
 | M052 | 1 | `bdus_cfg_app`: `mcp_enabled`, `mcp_write`, `mcp_delete` (INTEGER, default 0), `mcp_guide` (TEXT). Read by their own query, as `image_presets` is, so a pending migration does not break `AppSettings::get()` |
-| M053 | 1 | `bdus_cfg_tables.extra`: optional `description`; no schema change (JSON) — the migration only documents and validates |
-| M054 | 1 | `bdus_versions`: `channel` (TEXT: `web`, `api`, `mcp`, `import`, `cli`), `key_id` (INTEGER), `client_id` (TEXT), all nullable |
-| M055 | 1 | `bdus_mcp_prompts`: `id`, `name`, `title`, `description`, `arguments` (JSON), `template`, `sort` |
-| M056 | 3 | `bdus_oauth_clients`, `bdus_oauth_codes`, `bdus_oauth_tokens` (access and refresh, hashed id, `user_id`, `client_id`, `scopes`, `resource`, `expires_at`, `revoked_at`, `last_used_at`), `bdus_oauth_consents` |
+| M053 | 1 | `bdus_versions`: `channel` (TEXT: `web`, `api`, `mcp`, `import`, `cli`), `key_id` (INTEGER), `client_id` (TEXT), all nullable. ✅ |
+| — | 1 | `bdus_cfg_tables.extra`: optional table `description` (JSON, no migration needed); read by `schema` already, not yet editable in the interface |
+| M054 | 1 | `bdus_mcp_prompts`: `id`, `name`, `title`, `description`, `arguments` (JSON), `template`, `sort` |
+| M055 | 3 | `bdus_oauth_clients`, `bdus_oauth_codes`, `bdus_oauth_tokens` (access and refresh, hashed id, `user_id`, `client_id`, `scopes`, `resource`, `expires_at`, `revoked_at`, `last_used_at`), `bdus_oauth_consents` |
 
 Two gaps found while reading the code, both decided:
 
@@ -412,9 +414,9 @@ Two gaps found while reading the code, both decided:
 | Phase | Content | Done when |
 |---|---|---|
 | **0 — write path in `lib/`** | D1 | ✅ tests pass on three engines |
-| **1 — full cycle with API keys** | M052–M055, `Mcp\Server`, the ten tools of section 4 (`aggregate` on `SQL\Aggregate`, extracted from `Chart::getData`), validation token, provenance and `create` rows in the history, prompts, settings UI, user and developer docs | Claude Code and Claude Desktop connect with a level-39 group key; a key sees through MCP exactly the tables and rows it sees through REST (test); an end-of-season report and a context-sheet entry both run end to end on the demo; a refused record rolls the batch back; every MCP change is in the history with `channel = 'mcp'`; three engines pass |
+| **1 — full cycle with API keys** | M052–M054, `Mcp\Server`, the ten tools of section 4 (`aggregate` on `SQL\Aggregate`, extracted from `Chart::getData`), validation token, provenance and `create` rows in the history, prompts, settings UI, user and developer docs | Claude Code and Claude Desktop connect with a level-39 group key; a key sees through MCP exactly the tables and rows it sees through REST (test); an end-of-season report and a context-sheet entry both run end to end on the demo; a refused record rolls the batch back; every MCP change is in the history with `channel = 'mcp'`; three engines pass |
 | **2 — import and relations** | Data import through `Record\Save`; `rs_write` tool for stratigraphic relations | An import with an invalid row reports the row and writes nothing; imported rows are in the history; a context sheet is entered with its relations in one conversation |
-| **3 — OAuth** | M056, authorization server, consent page, "Authorised applications", `/.well-known` routing in nginx and `bdus-ops` | claude.ai (web and mobile) connects with CIMD, Cursor with dynamic registration; revoking a grant stops the next request; a waiting user cannot authorise |
+| **3 — OAuth** | M055, authorization server, consent page, "Authorised applications", `/.well-known` routing in nginx and `bdus-ops` | claude.ai (web and mobile) connects with CIMD, Cursor with dynamic registration; revoking a grant stops the next request; a waiting user cannot authorise |
 | **4 — other clients** | Loopback redirect for QGIS/scripts; decision on the Vue app | A QGIS plugin obtains a token without an API key |
 
 Each phase is released on its own and updates `CHANGELOG.md`, `openapi.yaml`
@@ -452,7 +454,7 @@ and the `bradypus-bootstrap` skill.
    labels of lookup fields, a cap on groups. Small.
 3. **Are labels rich enough?** One `label` and one `help` per field, one `label`
    per table, no translations. Enough for a well-configured application; `help`
-   is the description the model reads. Additions: a table `description` (M053)
+   is the description the model reads. Additions: a table `description`
    and guidance to fill `help`. No separate "description for AI": text good for
    a person is good for a model, and two texts drift apart.
 4. **Field-level permissions first?** No: D5.
@@ -461,7 +463,7 @@ and the `bradypus-bootstrap` skill.
 6. **Reuse the import upsert?** No. It matches on a non-unique key and writes
    with plain SQL, without validation or history. `resolve` is a read on
    `id_field`; writes take ids (D8).
-7. **Provenance in `bdus_versions`?** Yes, with three nullable columns (M054); no
+7. **Provenance in `bdus_versions`?** Yes, with three nullable columns (M053); no
    separate audit table. Creates need a row of their own (section 7).
 8. **System plugins.** Generic plugin rows cover radiocarbon (calibrated
    server-side by `Record\Save`), osteology, fuzzy dates (the raw

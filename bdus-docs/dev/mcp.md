@@ -15,7 +15,7 @@ and what is still to come (write tools, history, OAuth) are in the
 
 | Built | Not yet |
 |---|---|
-| Protocol layer, settings, the read tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history` | `records_validate`, `records_write`, `records_delete`, prompts, settings page in the interface, OAuth |
+| Protocol layer, settings, the ten tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete` | Settings page in the interface, prompts, a tool for stratigraphic relations, OAuth |
 
 ## Request flow
 
@@ -43,8 +43,8 @@ Four columns of `bdus_cfg_app` (M052), read by `Config\AppSettings::getMcp()`:
 | Setting | Default | Meaning |
 |---|---|---|
 | `enabled` | off | The endpoint answers; otherwise `404` |
-| `write` | off | Tools whose `isWrite()` is true may be called; otherwise `mcp_write_disabled` |
-| `delete` | off | Reserved for `records_delete` |
+| `write` | off | `records_write` may be called; otherwise `mcp_write_disabled` |
+| `delete` | off | `records_delete` may be called; otherwise `mcp_delete_disabled` |
 | `guide` | empty | Text of the administrator, returned by the `guide` tool |
 
 They are saved with `PUT /api/config/app` and `{ "mcp": { … } }`. Sent alone,
@@ -86,7 +86,7 @@ interface Tool
 {
     public function name(): string;           // snake_case, stable
     public function definition(): array;      // title, description, inputSchema, annotations
-    public function isWrite(): bool;          // needs the `write` switch; counts as a write for rate limits
+    public function needs(): ?string;         // null | 'write' | 'delete': the switch it needs; non-null counts as a write for rate limits
     public function call(array $args, Context $ctx): array;   // structured result; throws ToolError
 }
 ```
@@ -118,6 +118,9 @@ settings; it never learns how the principal was authenticated.
 | `aggregate` | `SQL\Aggregate` (also behind the charts) on the rows of a `QueryFromRequest` request | 2 grouping fields, 6 metrics, 200 groups, 1,000 at most |
 | `resolve` | `SQL\QueryFromRequest` on the key field | 100 values, 5 matches each |
 | `history` | `bdus_versions`, with the row rule of the REST history | read-only: no restore |
+| `records_validate` | `Record\Save::check()` | 50 records |
+| `records_write` | `Record\Save::save()` in one transaction; needs `write` | 50 records |
+| `records_delete` | `Record\Delete` in one transaction; needs `delete` | 50 ids |
 
 Because the read tools build their queries with `QueryFromRequest`, row-level
 rules of groups apply exactly as in the REST list.
@@ -128,6 +131,37 @@ rules of groups apply exactly as in the REST list.
 one is checked against the table configuration first, the function against a
 fixed list, and the alias of a metric is built by the tool, never taken from the
 caller.
+
+## Writing
+
+Writes go through `Record\Save` and `Record\Delete`, the classes behind
+`POST /api/record/{tb}` and `DELETE /api/record/{tb}/{id}`: same access gate,
+same validation, same history. Three rules are added for a client that is a model:
+
+1. **Validate first.** `records_validate` runs `Record\Save::check()` on every
+   record and, when all pass, returns a `validation_token`. `records_write`
+   refuses a call without the token of exactly that payload
+   (`validation_token_invalid`). The token is `expires.hmac`: an HMAC-SHA256 of
+   the expiry, the principal (user id or API key id) and the canonical JSON of
+   `table` + `records` (object keys sorted), signed with a key derived from the
+   application secret (`JwtManager::deriveKey(APP, 'mcp-validation')`). It is
+   valid 15 minutes and nothing is stored. It proves the payload was validated,
+   **not** that the user agreed: that is the client's confirmation, which the
+   `destructiveHint` annotation asks for.
+2. **All or nothing.** A call is one transaction (see *Nested transactions* in
+   [Database layer](./database)): if a record is refused, nothing is written and
+   the answer names the failing index (`write_refused`) or id (`delete_refused`).
+   Records valid on their own can still clash together (two new records with the
+   same `no_dupl` value): the second fails at write time and the first is rolled back.
+3. **Ids only.** Records are addressed by `id`; `resolve` turns a name into ids.
+   A key field is not guaranteed unique, so there is no upsert by name.
+
+Every change is recorded in `bdus_versions` with `channel = 'mcp'`
+(`Controllers\Mcp` calls `Auth\Channel::set('mcp')`) and, for an API key, its
+`key_id`. With an API key there is no user: `creator` is null and `userid` 0.
+
+Plugin tables are refused as the `table` of a write: their rows are written
+inside their record, in `plugins`.
 
 ## Access and rate limits
 
@@ -141,7 +175,10 @@ caller.
 
 ## Tests
 
-- `tests/Integration/McpServerTest.php` — protocol (both generations), each
-  tool, refusals, the write switch, the route gate, the settings.
+- `tests/Integration/McpServerTest.php` — protocol (both generations), the read
+  tools, refusals, the switches, the route gate, the settings.
+- `tests/Integration/McpWriteToolsTest.php` — validation, the token (payload,
+  principal, expiry), all-or-nothing writes and deletes, what is left in the
+  history, nested transactions.
 - `tests/api/55_mcp.hurl` — the endpoint over HTTP: 401, 404 while off, 405 on
   GET, handshake, modern headers, `Origin`.

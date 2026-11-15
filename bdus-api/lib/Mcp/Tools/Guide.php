@@ -78,6 +78,18 @@ class Guide extends Base
       fields) with the same filters; do not read and count rows yourself.
     - `history` lists the saved versions of a record and shows what changed since one of them.
 
+    Writing (only when `may.write` is true)
+    - Never write on your own initiative. Draft the records, call `records_validate`, show the user
+      what will be created or changed (for an update: the stored value next to the new one), and
+      wait for their agreement. Then call `records_write` with the same payload and the token.
+    - Records are addressed by `id`; to update "context 1023" find its id with `resolve` first.
+      A lookup field takes the id of the record it points to; other fields with a source of values
+      take one of the values `vocabulary` lists.
+    - Plugin rows go in `plugins`, inside their record; never set `id` or `id_link` of a new row.
+    - A call writes all its records or none. `records_delete` needs `may.delete` and an explicit
+      confirmation of the user for those very records.
+    - Every change is recorded in the history (`history`); an administrator can restore a version.
+
     Limits
     - Lists are paged: 25 rows by default, 200 at most. `total` is the size of the whole result;
       `truncated` says there is more. Ask for the fields you need, not for everything.

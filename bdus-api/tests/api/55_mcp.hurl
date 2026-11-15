@@ -76,7 +76,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 2, "method": "tools/list" }
 HTTP 200
 [Asserts]
-jsonpath "$.result.tools" count == 7
+jsonpath "$.result.tools" count == 10
 jsonpath "$.result.tools[0].name" == "guide"
 jsonpath "$.result.tools[3].name" == "records_read"
 jsonpath "$.result.tools[3].inputSchema.type" == "object"
@@ -205,11 +205,132 @@ Origin: https://evil.example
 { "jsonrpc": "2.0", "id": 8, "method": "tools/list" }
 HTTP 403
 
+# ── writing: off until its own switch is on ──────────────────────────
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 20, "method": "tools/call",
+  "params": { "name": "records_write", "arguments": { "table": "crud_test",
+    "records": [ { "core": { "sigla": "P5501", "tipo": "f55" } } ], "validation_token": "x" } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.isError" == true
+jsonpath "$.result.structuredContent.code" == "mcp_write_disabled"
+
+PUT {{base_url}}/{{app_name}}/api/config/app
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "mcp": { "write": true } }
+HTTP 200
+
+# dry run: nothing written, a token for exactly this payload
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 21, "method": "tools/call",
+  "params": { "name": "records_validate", "arguments": { "table": "crud_test",
+    "records": [ { "core": { "sigla": "P5501", "tipo": "f55" } } ] } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.valid" == true
+jsonpath "$.result.structuredContent.results[0].action" == "create"
+[Captures]
+vtoken: jsonpath "$.result.structuredContent.validation_token"
+
+GET {{base_url}}/{{app_name}}/api/records/crud_test?filter[sigla][_eq]=P5501
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.total" == 0
+
+# the token of another payload is refused
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 22, "method": "tools/call",
+  "params": { "name": "records_write", "arguments": { "table": "crud_test",
+    "records": [ { "core": { "sigla": "P5502", "tipo": "f55" } } ], "validation_token": "{{vtoken}}" } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.structuredContent.code" == "validation_token_invalid"
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 23, "method": "tools/call",
+  "params": { "name": "records_write", "arguments": { "table": "crud_test",
+    "records": [ { "core": { "sigla": "P5501", "tipo": "f55" } } ], "validation_token": "{{vtoken}}" } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.written" == 1
+jsonpath "$.result.structuredContent.results[0].action" == "created"
+[Captures]
+mcp_id: jsonpath "$.result.structuredContent.results[0].id"
+
+# the creation is in the history, marked as coming from MCP
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{mcp_id}}/versions
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.versions" count == 1
+jsonpath "$.versions[0].operation" == "create"
+jsonpath "$.versions[0].channel" == "mcp"
+
+# a record created through the REST API is marked `web`
+POST {{base_url}}/{{app_name}}/api/record/crud_test
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "core": { "sigla": "P5503", "tipo": "f55" }, "plugins": {} }
+HTTP 200
+[Captures]
+rest_id: jsonpath "$.id"
+
+GET {{base_url}}/{{app_name}}/api/record/crud_test/{{rest_id}}/versions
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.versions[0].operation" == "create"
+jsonpath "$.versions[0].channel" == "web"
+
+# ── deleting has its own switch ──────────────────────────────────────
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 24, "method": "tools/call",
+  "params": { "name": "records_delete", "arguments": { "table": "crud_test", "ids": [{{mcp_id}}] } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.structuredContent.code" == "mcp_delete_disabled"
+
+PUT {{base_url}}/{{app_name}}/api/config/app
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "mcp": { "delete": true } }
+HTTP 200
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 25, "method": "tools/call",
+  "params": { "name": "records_delete", "arguments": { "table": "crud_test", "ids": [{{mcp_id}}, {{rest_id}}] } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.isError" == false
+jsonpath "$.result.structuredContent.deleted" == 2
+
+GET {{base_url}}/{{app_name}}/api/records/crud_test?filter[tipo][_eq]=f55
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.total" == 0
+
 # ── switch it off again ──────────────────────────────────────────────
 PUT {{base_url}}/{{app_name}}/api/config/app
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
-{ "mcp": { "enabled": false, "guide": "" } }
+{ "mcp": { "enabled": false, "write": false, "delete": false, "guide": "" } }
 HTTP 200
 
 POST {{base_url}}/{{app_name}}/api/mcp

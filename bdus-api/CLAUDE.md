@@ -117,7 +117,7 @@ fields appear in the order defined in the config; never sort them.
   statements, exceptions on error. `query($sql, $params, $type)` with `$type`
   = `'read'` (default) | `'boolean'` | `'id'` | `'affected'` | int (column N of
   first row). `exec`, `execInTransaction`, `beginTransaction/commit/rollBack`,
-  `saveSnapshot()` (record versioning), `getEngine()`.
+  `saveSnapshot()` (record versioning: `create`/`update`/`delete`/`restore` entries with the channel of the change, `Auth\Channel`), nested transactions (an inner `beginTransaction()` joins the outer one), `getEngine()`.
 - `DB\System\Manage` — CRUD and DDL helpers for `bdus_*` system tables, driven by
   `lib/DB/System/Structure/*.json`. `createTable()` is idempotent; trans-engine
   `createIndex`, `addForeignKey`, `tableExists`, `columnExists`.

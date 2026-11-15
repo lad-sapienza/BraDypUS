@@ -125,10 +125,14 @@ class McpServerTest extends BdusTestCase
     {
         [, $body] = $this->legacy('tools/list');
         $tools = $body['result']['tools'];
-        $this->assertSame(['guide', 'schema', 'vocabulary', 'records_read', 'aggregate', 'resolve', 'history'], array_column($tools, 'name'));
+        $this->assertSame(['guide', 'schema', 'vocabulary', 'records_read', 'aggregate', 'resolve', 'history', 'records_validate', 'records_write', 'records_delete'], array_column($tools, 'name'));
         foreach ($tools as $tool) {
             $this->assertSame('object', $tool['inputSchema']['type'], $tool['name']);
-            $this->assertTrue($tool['annotations']['readOnlyHint'], $tool['name']);
+            $this->assertSame(
+                !in_array($tool['name'], ['records_write', 'records_delete'], true),
+                $tool['annotations']['readOnlyHint'],
+                $tool['name']
+            );
             $this->assertNotEmpty($tool['description'], $tool['name']);
         }
     }
@@ -155,7 +159,7 @@ class McpServerTest extends BdusTestCase
     public function testModernToolsListAndCall(): void
     {
         [, $list] = $this->modern('tools/list');
-        $this->assertCount(7, $list['result']['tools']);
+        $this->assertCount(10, $list['result']['tools']);
         $this->assertSame('complete', $list['result']['resultType']);
 
         [$status, $call] = $this->modern('tools/call', ['name' => 'schema', 'arguments' => []]);
@@ -219,7 +223,7 @@ class McpServerTest extends BdusTestCase
         return new class implements Tool {
             public function name(): string { return 'fake_write'; }
             public function definition(): array { return ['title' => 'x', 'description' => 'x', 'inputSchema' => ['type' => 'object'], 'annotations' => []]; }
-            public function isWrite(): bool { return true; }
+            public function needs(): ?string { return 'write'; }
             public function call(array $args, Context $ctx): array { return ['done' => true]; }
         };
     }
@@ -237,6 +241,9 @@ class McpServerTest extends BdusTestCase
 
     public function testReadToolsAreNotWriteCalls(): void
     {
+        $this->assertTrue(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"records_write"}}'));
+        $this->assertTrue(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"records_delete"}}'));
+        $this->assertFalse(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"records_validate"}}'));
         $this->assertFalse(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"records_read"}}'));
         $this->assertFalse(Server::isWriteCall('{"jsonrpc":"2.0","id":1,"method":"tools/list"}'));
         $this->assertFalse(Server::isWriteCall('garbage'));

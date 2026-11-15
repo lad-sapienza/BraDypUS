@@ -102,6 +102,18 @@ class JwtManager
         return ($claims['exp'] - time()) < self::REFRESH_WINDOW;
     }
 
+    // ── Derived keys ─────────────────────────────────────────────────
+
+    /**
+     * A key derived from the application's secret for one purpose, so that
+     * other features can sign their own short-lived tokens without ever
+     * holding the secret that signs login tokens.
+     */
+    public static function deriveKey(string $app, string $purpose): string
+    {
+        return hash_hmac('sha256', 'bdus:' . $purpose, self::getSecret($app));
+    }
+
     // ── Secret management ────────────────────────────────────────────
 
     /**

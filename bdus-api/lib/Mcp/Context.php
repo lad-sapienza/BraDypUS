@@ -28,5 +28,7 @@ class Context
         public readonly Access $access,
         public readonly array $settings,
         public readonly ?Logger $log = null,
+        /** Key that signs the validation tokens of this application (see Tools\RecordsValidate). */
+        public readonly string $signingKey = '',
     ) {}
 }

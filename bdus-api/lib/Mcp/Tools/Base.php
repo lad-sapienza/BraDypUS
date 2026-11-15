@@ -13,9 +13,9 @@ use Mcp\ToolError;
 
 abstract class Base implements Tool
 {
-    public function isWrite(): bool
+    public function needs(): ?string
     {
-        return false;
+        return null;
     }
 
     /** Annotations of a tool that only reads the application's own data. */

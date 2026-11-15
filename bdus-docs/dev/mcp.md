@@ -210,7 +210,8 @@ dry run (`"3 covers 4"`) are shown only for readable records.
 
 **Relations are not versioned.** Neither the REST endpoints nor `Record\Persist` write a
 snapshot for them, and restoring a version does not bring them back: this is not specific to
-MCP. A removed relation is gone.
+MCP. A removed relation is gone. Tracked in
+[issue #78](https://github.com/lad-sapienza/BraDypUS/issues/78).
 
 Tests: `RecordRsTest`, `RecordCtrlRsTest` (REST refusals), `McpRsTest` (tools, rights, hidden
 records, token, budget), hurl phase 55.

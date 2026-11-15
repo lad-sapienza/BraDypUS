@@ -35,7 +35,11 @@ no second permission model, no second validation.
 
 Decisions taken by the project owner on 2026-11-15: D1 done, D2 route in
 `bdus-api`, D3 hand-written layer (documented), D4 `league/oauth2-server`,
-D5 no "hidden from MCP" list, D6 existing API keys in phase 1.
+D5 no "hidden from MCP" list, D6 existing API keys in phase 1; the first
+release is the **full cycle** (read and write), every insert leaves a row in the
+history, the data import goes through `Record\Save`, writes need a validation
+token, stratigraphic relations get a dedicated tool and geometries wait
+(section 13).
 
 ## 2. Decisions
 
@@ -363,19 +367,28 @@ All through `DB\System\Manage` (structure JSON + migration), on the three engine
 |---|---|---|
 | M052 | 1 | `bdus_cfg_app`: `mcp_enabled`, `mcp_write`, `mcp_delete` (INTEGER, default 0), `mcp_guide` (TEXT). Read by their own query, as `image_presets` is, so a pending migration does not break `AppSettings::get()` |
 | M053 | 1 | `bdus_cfg_tables.extra`: optional `description`; no schema change (JSON) — the migration only documents and validates |
-| M054 | 2 | `bdus_versions`: `channel` (TEXT: `web`, `api`, `mcp`, `import`, `cli`), `key_id` (INTEGER), `client_id` (TEXT), all nullable |
-| M055 | 2 | `bdus_mcp_prompts`: `id`, `name`, `title`, `description`, `arguments` (JSON), `template`, `sort` |
+| M054 | 1 | `bdus_versions`: `channel` (TEXT: `web`, `api`, `mcp`, `import`, `cli`), `key_id` (INTEGER), `client_id` (TEXT), all nullable |
+| M055 | 1 | `bdus_mcp_prompts`: `id`, `name`, `title`, `description`, `arguments` (JSON), `template`, `sort` |
 | M056 | 3 | `bdus_oauth_clients`, `bdus_oauth_codes`, `bdus_oauth_tokens` (access and refresh, hashed id, `user_id`, `client_id`, `scopes`, `resource`, `expires_at`, `revoked_at`, `last_used_at`), `bdus_oauth_consents` |
 
-Two gaps found while reading the code, to settle with M054:
+Two gaps found while reading the code, both decided:
 
 - **Creates leave no trace.** `Persist` writes a snapshot before an UPDATE and a
   DELETE, not after an INSERT. A record created through MCP is identified only
-  by `creator`, which is null for an API key. Proposal: write a row with
-  `operation = 'create'` (empty content) for every insert, all channels.
+  by `creator`, which is null for an API key. **Decided:** every insert, on every
+  channel, writes a row with `operation = 'create'` and metadata only (who,
+  when, channel, key or client) — no content, so the table grows by one small
+  row per record. `getVersionDiff` and `restoreVersion` must treat such a row as
+  "nothing to compare or restore".
 - **The data import writes with plain SQL.** `Import::importData` does not go
-  through `Record\Persist`: no validation, no snapshot. Not an MCP matter, but
-  it weakens the claim "every change is in the history". To decide separately.
+  through `Record\Persist`: no validation, no snapshot (v4 left it out for its
+  complexity). **Decided:** the import goes through `Record\Save`, so imported
+  rows are validated and recorded like any other. It is a visible change: files
+  that load today may be refused for values that break the field checks, and
+  large files get slower (one read and one snapshot per updated row). The work
+  includes a per-row error report, a measurement on a large file on the three
+  engines, and a `channel = 'import'` in the history. It is its own step
+  (phase 2), not a condition for MCP.
 
 ## 8. Security review
 
@@ -396,8 +409,8 @@ Two gaps found while reading the code, to settle with M054:
 | Phase | Content | Done when |
 |---|---|---|
 | **0 — write path in `lib/`** | D1 | ✅ tests pass on three engines |
-| **1 — read-only MCP** | M052–M053, `Mcp\Server`, `guide`, `schema`, `vocabulary`, `records_read`, `resolve`, `history`, `aggregate` (`SQL\Aggregate` extracted from `Chart::getData`), API keys, settings UI, user and developer docs | Claude Code and Claude Desktop connect with a level-39 group key; a key sees through MCP exactly the tables and rows it sees through REST (test); an end-of-season report is produced on the demo application; three engines pass |
-| **2 — writes** | M054–M055, `records_validate`, `records_write`, `records_delete`, provenance, prompts | The context-sheet workflow runs end to end on the demo; a refused record rolls the batch back; every MCP change is in the history with `channel = 'mcp'` |
+| **1 — full cycle with API keys** | M052–M055, `Mcp\Server`, the ten tools of section 4 (`aggregate` on `SQL\Aggregate`, extracted from `Chart::getData`), validation token, provenance and `create` rows in the history, prompts, settings UI, user and developer docs | Claude Code and Claude Desktop connect with a level-39 group key; a key sees through MCP exactly the tables and rows it sees through REST (test); an end-of-season report and a context-sheet entry both run end to end on the demo; a refused record rolls the batch back; every MCP change is in the history with `channel = 'mcp'`; three engines pass |
+| **2 — import and relations** | Data import through `Record\Save`; `rs_write` tool for stratigraphic relations | An import with an invalid row reports the row and writes nothing; imported rows are in the history; a context sheet is entered with its relations in one conversation |
 | **3 — OAuth** | M056, authorization server, consent page, "Authorised applications", `/.well-known` routing in nginx and `bdus-ops` | claude.ai (web and mobile) connects with CIMD, Cursor with dynamic registration; revoking a grant stops the next request; a waiting user cannot authorise |
 | **4 — other clients** | Loopback redirect for QGIS/scripts; decision on the Vue app | A QGIS plugin obtains a token without an API key |
 
@@ -451,9 +464,11 @@ and the `bradypus-bootstrap` skill.
    server-side by `Record\Save`), osteology, fuzzy dates (the raw
    `chrono_label` is a field) and any plugin table. Read side of the others
    through `records_read` on a full record: stratigraphic relations, geodata,
-   bibliography, Pleiades links. Writing geometries, stratigraphic relations and
-   Zotero/Pleiades links needs dedicated tools (`geodata_write`, `rs_write`),
-   left after phase 2 and decided on demand. Geometry cap: 256 kB per record.
+   bibliography, Pleiades links. Stratigraphic relations are part of a context
+   sheet and get a dedicated tool, `rs_write` (add and remove relations of a
+   record, same rules as `Record::addRs` / `deleteRs`), in phase 2. Geometries
+   and Zotero/Pleiades links wait for a real request; if `geodata_write` comes,
+   its cap is 256 kB per record.
 9. **Writable views.** `Persist` refuses a view whose `view_writable` is `none`
    and `Record\Save` answers `view_read_only`; MCP inherits both. Engine
    differences (SQLite needs `INSTEAD OF` triggers, MySQL and PostgreSQL update
@@ -514,15 +529,20 @@ Checked on the Directus documentation, 2026-11-15 (MCP requires v11.12+).
   were not verified: `aggregate` and `records_read` on a plugin table must be
   covered by the parity tests before they are allowed.
 
-**Questions.**
+**Answers of the project owner (2026-11-15).**
 
-1. Record a `create` row in the history for every insert (section 7)? It changes
-   the history of all channels, not only MCP.
-2. Should the data import go through `Record\Save` (validation, history), at the
-   cost of speed on large files?
-3. Is the validation token (section 4) wanted, or is the client's confirmation
-   enough?
-4. Phase 1 without writes: acceptable for the first release, knowing assisted
-   entry arrives with phase 2 and is only attributable to a user with phase 3?
-5. Dedicated tools for geometries and stratigraphic relations: after phase 2, or
-   only when a real case asks for them?
+1. A `create` row in the history for every insert: **yes, metadata only**.
+2. The data import through `Record\Save`: **yes**.
+3. Validation token before `records_write`: **yes**.
+4. First release read-only: **no — full cycle**, read and write together.
+5. Dedicated tools: **yes for stratigraphic relations, wait for geometries**.
+
+**Still to confirm.**
+
+- D7: endpoints under `/{app}/api/` instead of `/{app}/mcp`.
+- D8: writes take ids only; `resolve` maps human references.
+- Whether `mcp_write` stays **off by default** in a new application. With API
+  keys a write has no author; the switch lets an administrator accept that
+  knowingly until OAuth (phase 3) attributes every write to a user.
+- Whether "full cycle" also means waiting for OAuth before the first release.
+  This plan assumes it does not: phase 1 ships with API keys, OAuth follows.

@@ -25,6 +25,7 @@ class RateLimiter
         'KEY_IP'     => [120, 60],    // per client address, any API-key request
         'BAD_KEY_IP' => [60, 60],     // per client address, rejected credentials
         'LOGIN_IP'   => [30, 900],    // per client address, failed logins
+        'MCP_WRITE_ROWS' => [500, 3600], // per API key, records written or deleted through MCP
     ];
 
     private static ?string $dir = null;
@@ -46,13 +47,15 @@ class RateLimiter
     }
 
     /**
-     * Counts one hit on $bucket for the named limit.
+     * Counts $weight hits (one request, or the rows it touches) on $bucket for
+     * the named limit. A refused call is not counted: the budget left stays usable
+     * by a smaller call.
      *
      * @return int 0 when allowed, else the seconds to wait (Retry-After)
      */
-    public static function hit(string $name, string $bucket): int
+    public static function hit(string $name, string $bucket, int $weight = 1): int
     {
-        return self::touch($name, $bucket, true);
+        return self::touch($name, $bucket, true, max(1, $weight));
     }
 
     /** Like hit() but without counting: is the bucket already over its limit? */
@@ -61,7 +64,7 @@ class RateLimiter
         return self::touch($name, $bucket, false);
     }
 
-    private static function touch(string $name, string $bucket, bool $count): int
+    private static function touch(string $name, string $bucket, bool $count, int $weight = 1): int
     {
         [$limit, $window] = self::limit($name);
         if ($limit <= 0) {
@@ -88,14 +91,14 @@ class RateLimiter
                 $start = $now;
                 $n     = 0;
             }
-            if ($count) {
-                $n++;
+            // The limit-th hit still passes; the next one is refused.
+            $over = $count ? $n + $weight > $limit : $n >= $limit;
+            if ($count && !$over) {
+                $n += $weight;
                 ftruncate($fh, 0);
                 rewind($fh);
                 fwrite($fh, "$start $n");
             }
-            // The limit-th request still passes; the next one is refused.
-            $over = $count ? $n > $limit : $n >= $limit;
             return $over ? max(1, $window - ($now - $start)) : 0;
         } finally {
             flock($fh, LOCK_UN);

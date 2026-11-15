@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `history`, and — to change data — `records_validate`, `records_write`, `records_delete`. A client
   sees and changes exactly what its account or API key may through the REST API. Writes go
   through the same validation as the interface, need a dry run first (`records_validate` returns a
-  token that `records_write` asks for) and are all-or-nothing per call. Everything is off by
+  token that `records_write` asks for) and are all-or-nothing per call; an API key may write or
+  delete 500 records per hour through MCP (`BRADYPUS_RATE_MCP_WRITE_ROWS`). Everything is off by
   default: an administrator enables the endpoint, writing and deleting separately, per application
   (`PUT /api/config/app` with `{ "mcp": { "enabled", "write", "delete", "guide" } }`; migration
   M052). No settings page in the interface yet. Developer docs: `dev/mcp`, plan in

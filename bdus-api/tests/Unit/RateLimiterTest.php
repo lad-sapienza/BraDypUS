@@ -18,7 +18,7 @@ class RateLimiterTest extends TestCase
 
     protected function setUp(): void
     {
-        foreach (['KEY_WRITE', 'KEY_READ', 'KEY_IP', 'BAD_KEY_IP', 'LOGIN_IP'] as $n) {
+        foreach (['KEY_WRITE', 'KEY_READ', 'KEY_IP', 'BAD_KEY_IP', 'LOGIN_IP', 'MCP_WRITE_ROWS'] as $n) {
             $this->savedEnv['BRADYPUS_RATE_' . $n] = getenv('BRADYPUS_RATE_' . $n);
         }
         $this->dir = sys_get_temp_dir() . '/bdus_rl_' . bin2hex(random_bytes(4)) . '/';
@@ -49,6 +49,15 @@ class RateLimiterTest extends TestCase
         }
         $this->assertGreaterThan(0, RateLimiter::hit('KEY_WRITE', 'k1'));
         $this->assertGreaterThan(0, RateLimiter::blocked('KEY_WRITE', 'k1'));
+    }
+
+    public function testWeightCountsRowsAndARefusedCallIsNotCounted(): void
+    {
+        $this->assertSame(0, RateLimiter::hit('KEY_WRITE', 'k1', 2));
+        $this->assertGreaterThan(0, RateLimiter::hit('KEY_WRITE', 'k1', 2), '2 + 2 > 3');
+        // the refused call left the budget alone: one more row still fits
+        $this->assertSame(0, RateLimiter::hit('KEY_WRITE', 'k1', 1));
+        $this->assertGreaterThan(0, RateLimiter::hit('KEY_WRITE', 'k1', 1));
     }
 
     public function testBucketsAreIndependent(): void

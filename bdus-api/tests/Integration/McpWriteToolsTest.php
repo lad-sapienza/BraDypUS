@@ -259,6 +259,46 @@ class McpWriteToolsTest extends BdusTestCase
 
     // ── records_delete ────────────────────────────────────────────────────────
 
+    public function testAKeyHasAnHourlyBudgetOfWrittenRows(): void
+    {
+        $dir   = sys_get_temp_dir() . '/bdus_mcp_rows_' . bin2hex(random_bytes(4)) . '/';
+        $saved = getenv('BRADYPUS_RATE_MCP_WRITE_ROWS');
+        \Auth\RateLimiter::setDir($dir);
+        putenv('BRADYPUS_RATE_MCP_WRITE_ROWS=3');
+        try {
+            \Auth\CurrentUser::set(['id' => 0, 'key_id' => 8, 'privilege' => 20, 'is_api_key' => true, 'name' => 'key']);
+
+            $two = [['core' => ['name' => 'Budget 1']], ['core' => ['name' => 'Budget 2']]];
+            $this->assertFalse($this->validateAndWrite($two)['__isError']);
+
+            // 2 + 2 > 3: refused before anything is written
+            $more = [['core' => ['name' => 'Budget 3']], ['core' => ['name' => 'Budget 4']]];
+            $res  = $this->validateAndWrite($more);
+            $this->assertTrue($res['__isError']);
+            $this->assertSame('too_many_requests', $res['code']);
+            $this->assertGreaterThan(0, $res['detail']['retry_after']);
+            $this->assertFalse($this->nameExists('Budget 3'));
+
+            // deletes count too; the refused call did not use up the budget
+            $one = $this->validateAndWrite([['core' => ['name' => 'Budget 5']]]);
+            $this->assertFalse($one['__isError'], json_encode($one));
+            $del = $this->tool('records_delete', ['table' => 'items', 'ids' => [$one['results'][0]['id']]]);
+            $this->assertSame('too_many_requests', $del['code']);
+            $this->assertTrue($this->nameExists('Budget 5'));
+
+            // a person with a JWT is not limited
+            \Auth\CurrentUser::set(['id' => 1, 'privilege' => 1, 'name' => 'Test Admin']);
+            $this->assertFalse($this->validateAndWrite($more)['__isError']);
+        } finally {
+            putenv($saved === false ? 'BRADYPUS_RATE_MCP_WRITE_ROWS' : "BRADYPUS_RATE_MCP_WRITE_ROWS=$saved");
+            \Auth\RateLimiter::setDir(null);
+            foreach (glob($dir . '*') ?: [] as $f) {
+                unlink($f);
+            }
+            @rmdir($dir);
+        }
+    }
+
     public function testDeleteNeedsItsOwnSwitch(): void
     {
         $res = $this->tool('records_delete', ['table' => 'items', 'ids' => [5]], ['delete' => false]);

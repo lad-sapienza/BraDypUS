@@ -28,6 +28,7 @@ services:
       - BRADYPUS_RATE_KEY_IP=0
       - BRADYPUS_RATE_BAD_KEY_IP=0
       - BRADYPUS_RATE_LOGIN_IP=0
+      - BRADYPUS_RATE_MCP_WRITE_ROWS=0
     volumes:
       - bdus_test_projects:/var/www/html/projects
 

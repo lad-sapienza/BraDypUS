@@ -170,6 +170,11 @@ inside their record, in `plugins`.
 - Every MCP call is an HTTP `POST`, so the Dispatcher asks
   `Mcp\Server::isWriteCall()` whether the body calls a write tool, and counts
   the request against `KEY_READ` or `KEY_WRITE` accordingly.
+- Records are counted too: `records_write` and `records_delete` add the number of
+  records of the call to the `MCP_WRITE_ROWS` budget of the API key (default 500 per
+  hour, `BRADYPUS_RATE_MCP_WRITE_ROWS`, `0` = off). Over budget the call is refused
+  before anything changes (`too_many_requests`, `retry_after`); a refused call is not
+  counted. People signed in with a JWT are not limited.
 - `Origin`, when a browser sends it, must be the host itself or one of
   `BRADYPUS_CORS_ORIGIN`; otherwise `403`.
 

@@ -51,6 +51,25 @@ abstract class Base implements Tool
         return $tb;
     }
 
+    /**
+     * Counts $rows written or deleted against the hourly budget of the API key
+     * (MCP_WRITE_ROWS). People signed in with a JWT are not limited, as on the
+     * rest of the API. Call it before changing anything.
+     */
+    protected function budgetRows(int $rows): void
+    {
+        $keyId = \Auth\Channel::keyId();
+        if ($keyId === null) {
+            return;
+        }
+        if ($wait = \Auth\RateLimiter::hit('MCP_WRITE_ROWS', (string) $keyId, $rows)) {
+            throw new ToolError('too_many_requests', [
+                'retry_after' => $wait,
+                'note'        => 'This key has written too many records in the last hour. Nothing was changed.',
+            ]);
+        }
+    }
+
     /** An integer argument within [$min, $max], or $default when absent. */
     protected function int(array $args, string $key, int $default, int $min, int $max): int
     {

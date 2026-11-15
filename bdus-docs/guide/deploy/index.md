@@ -50,6 +50,7 @@ Set these in `docker-compose.prod.yml` or via a `.env` file:
 | `BRADYPUS_RATE_KEY_IP` | `120` | API-key requests per client address per minute |
 | `BRADYPUS_RATE_BAD_KEY_IP` | `60` | Rejected credentials per client address per minute |
 | `BRADYPUS_RATE_LOGIN_IP` | `30` | Failed logins per client address per 15 minutes |
+| `BRADYPUS_RATE_MCP_WRITE_ROWS` | `500` | Records written or deleted through MCP per API key per hour |
 | `RESEND_API_KEY` | — | API key for [Resend](https://resend.com), used to send password-reset and self-registration emails. One key covers every application on this instance. Leave unset to keep those features reported as unavailable instead of failing silently — see [Login & authentication](/guide/usage/authentication). |
 | `MAIL_FROM_ADDRESS` | — | Sender address for those emails. Must be on a domain verified in your Resend account. |
 | `MAIL_FROM_NAME` | `BraDypUS` | Sender display name. |

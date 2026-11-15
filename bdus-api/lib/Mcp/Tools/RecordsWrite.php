@@ -52,6 +52,8 @@ class RecordsWrite extends Base
             );
         }
 
+        $this->budgetRows(count($records));
+
         $save    = new Save($ctx->db, $ctx->cfg, $ctx->access, $ctx->log);
         $results = [];
 

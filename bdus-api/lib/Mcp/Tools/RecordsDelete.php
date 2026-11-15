@@ -64,6 +64,8 @@ class RecordsDelete extends Base
             throw new ToolError('not_enough_privilege');
         }
 
+        $this->budgetRows(count($ids));
+
         $deleter = new Delete($ctx->db, $ctx->cfg, $ctx->access);
 
         $ctx->db->beginTransaction();

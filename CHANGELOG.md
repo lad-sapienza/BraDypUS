@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.23.1] - 2026-11-15
+
 ### Added
 
 - **GeoFace layer panel.** Configured `tiles`/`wms` layers were added to the map but never shown.

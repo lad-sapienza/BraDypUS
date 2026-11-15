@@ -2399,6 +2399,12 @@ paths:
       operationId: postRecordRsByTb
       tags: [rs]
       summary: Add a stratigraphic relation between two records
+      description: |
+        Refusals answer `200` with an error `code`: `parameter_missing`, `rs_not_configured` (unknown
+        table, or the table does not have the `rs` plugin), `invalid_relation` (not 1–10),
+        `relation_with_itself`, `not_enough_privilege` (both records must be changeable: level, group
+        rules, row scope, locks), `record_not_found`, `relation_already_exist` (the same fact in either
+        direction). Shared with the MCP tools `rs_validate` / `rs_write` (`Record\Rs`).
       parameters:
         - $ref: '#/components/parameters/tb'
       requestBody:

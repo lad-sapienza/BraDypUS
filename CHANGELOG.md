@@ -42,6 +42,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Adding a stratigraphic relation is checked.** `POST /api/record/{tb}/rs` accepted anything:
+  records that do not exist, relation codes outside 1–10, a record related to itself, tables
+  without the `rs` plugin. It now refuses them (`record_not_found`, `invalid_relation`,
+  `relation_with_itself`, `rs_not_configured`). The logic moved to `Record\Rs`, shared with MCP.
+
 - **Record write path moved out of the controller** (no change in behaviour or in the API). What
   `POST /api/record/{tb}` does — access gate, payload shape, enforced values, validation, write — is
   now `Record\Save`, with `Record\Validator` (validation only, never writes), `Auth\WriteGate`

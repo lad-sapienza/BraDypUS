@@ -382,6 +382,8 @@
   "ok_relation_erased": "La relazione è stata cancellata",
   "error_relation_erased": "Errore. La relazione non è stata cancellata",
   "rs_all_fields_required": "Tutti i campi sono necessari per insrire una nuova relazione stratigrafica",
+  "invalid_relation": "Rapporto stratigrafico non valido",
+  "relation_with_itself": "Un record non può avere un rapporto stratigrafico con se stesso",
   "relation_already_exist": "Errore. La relazione non è stata aggiunta, probabilmente una relazione tra questi due campi già esiste.",
   "ok_relation_add": "La relazione è stata aggiunta",
   "lost_passsword": "Password dimenticata",

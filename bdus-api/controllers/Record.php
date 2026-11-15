@@ -1223,18 +1223,6 @@ class Record extends \Bdus\Controller
   }
 
   /**
-   * Returns the inverse relation code for polarity inversion.
-   * Relations 1-4 ↔ 5-8 (pairs offset by 4).
-   * Relations 9, 10 are self-inverse (symmetric).
-   */
-  private static function rsInverse(int $rel): int
-  {
-    if ($rel >= 1 && $rel <= 4) return $rel + 4;
-    if ($rel >= 5 && $rel <= 8) return $rel - 4;
-    return $rel; // 9, 10 symmetric
-  }
-
-  /**
    * Adds a stratigraphic relation between two records.
    *
    * POST ?obj=record_ctrl&method=addRs
@@ -1260,40 +1248,14 @@ class Record extends \Bdus\Controller
       return;
     }
 
-    $first    = (int) $first;
-    $second   = (int) $second;
-    $relation = (int) $relation;
-    $inverse  = self::rsInverse($relation);
-
-    // A relation is part of both records it joins.
-    if (!$this->mayChange('update', $tb, $first) || !$this->mayChange('update', $tb, $second)) {
-      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-      return;
-    }
-
     try {
-      // Deduplication: check both A→B (with this relation) and B→A (with inverse)
-      $count = (int) ($this->db->query(
-        "SELECT COUNT(*) AS c FROM bdus_rs
-         WHERE tb = ? AND (
-           (first = ? AND second = ? AND relation = ?) OR
-           (first = ? AND second = ? AND relation = ?)
-         )",
-        [$tb, $first, $second, $relation, $second, $first, $inverse]
-      )[0]['c'] ?? 0);
+      // Table, relation code, the two records, the rights over both, duplicates: \Record\Rs.
+      $res = (new \Record\Rs($this->db, $this->cfg, $this->access()))
+        ->add((string) $tb, (int) $first, (int) $relation, (int) $second);
 
-      if ($count > 0) {
-        $this->returnJson(['status' => 'error', 'code' => 'relation_already_exist']);
-        return;
-      }
-
-      $newId = (int) $this->db->query(
-        "INSERT INTO bdus_rs (tb, first, second, relation) VALUES (?, ?, ?, ?)",
-        [$tb, $first, $second, $relation],
-        'id'
-      );
-
-      $this->returnJson(['status' => 'success', 'code' => 'ok_relation_add', 'id' => $newId]);
+      $this->returnJson($res['status'] === 'success'
+        ? ['status' => 'success', 'code' => 'ok_relation_add', 'id' => $res['id']]
+        : $res);
 
     } catch (\Throwable $e) {
       $this->log->error($e);
@@ -1320,26 +1282,12 @@ class Record extends \Bdus\Controller
       return;
     }
 
-    $rel = $this->db->query("SELECT tb, first, second FROM bdus_rs WHERE id = ?", [(int) $id], 'read')[0] ?? null;
-    if ($rel && (!$this->mayChange('update', (string) $rel['tb'], (int) $rel['first'])
-              || !$this->mayChange('update', (string) $rel['tb'], (int) $rel['second']))) {
-      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-      return;
-    }
-
     try {
-      $affected = $this->db->query(
-        "DELETE FROM bdus_rs WHERE id = ?",
-        [(int)$id],
-        'affected'
-      );
+      $res = (new \Record\Rs($this->db, $this->cfg, $this->access()))->remove((int) $id);
 
-      if ($affected === 0) {
-        $this->returnJson(['status' => 'error', 'code' => 'not_found']);
-        return;
-      }
-
-      $this->returnJson(['status' => 'success', 'code' => 'ok_relation_erased']);
+      $this->returnJson($res['status'] === 'success'
+        ? ['status' => 'success', 'code' => 'ok_relation_erased']
+        : $res);
 
     } catch (\Throwable $e) {
       $this->log->error($e);

@@ -124,6 +124,28 @@ class RecordCtrlRsTest extends BdusTestCase
         $this->assertSame('relation_already_exist', $res['code']);
     }
 
+    public function testAddRsRefusesWhatCannotBeARelation(): void
+    {
+        $before = (int) static::$db->query('SELECT COUNT(*) AS n FROM bdus_rs', [], 'read')[0]['n'];
+
+        foreach ([
+            'record_not_found'     => ['tb' => self::TB, 'first' => 3, 'relation' => 5, 'second' => 99999],
+            'invalid_relation'     => ['tb' => self::TB, 'first' => 3, 'relation' => 11, 'second' => 4],
+            'relation_with_itself' => ['tb' => self::TB, 'first' => 3, 'relation' => 5, 'second' => 3],
+            'rs_not_configured'    => ['tb' => 'reviews', 'first' => 1, 'relation' => 5, 'second' => 2],
+        ] as $code => $post) {
+            $res = $this->callController($this->makeController('Bdus\\Controllers\\Record', [], $post), 'addRs');
+            $this->assertSame('error', $res['status'], $code);
+            $this->assertSame($code, $res['code']);
+        }
+        $this->assertSame('rs_not_configured', $this->callController(
+            $this->makeController('Bdus\\Controllers\\Record', [], ['tb' => 'no_such_table', 'first' => 1, 'relation' => 5, 'second' => 2]),
+            'addRs'
+        )['code']);
+
+        $this->assertSame($before, (int) static::$db->query('SELECT COUNT(*) AS n FROM bdus_rs', [], 'read')[0]['n'], 'nothing was written');
+    }
+
     public function testAddRsRejectsMissingParams(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [

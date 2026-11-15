@@ -382,6 +382,8 @@
   "ok_relation_erased": "The relation was erased",
   "error_relation_erased": "Error. The relation was not erased",
   "rs_all_fields_required": "All fields are required to enter a new stratigraphic relationship",
+  "invalid_relation": "This is not a valid stratigraphic relation",
+  "relation_with_itself": "A record cannot have a stratigraphic relation with itself",
   "relation_already_exist": "Error. The relationshipwas not saved. Probably a relation between these fields  already exsists in the database",
   "ok_relation_add": "The new relationship was saved",
   "lost_passsword": "Forgotten password",

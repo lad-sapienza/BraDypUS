@@ -53,7 +53,7 @@ class RecordsValidate extends Base
                 'items'    => [
                     'type'       => 'object',
                     'properties' => [
-                        'id'      => ['type' => ['integer', 'null'], 'description' => 'Record to update; null or absent to create.'],
+                        'id'      => ['type' => ['integer', 'null'], 'minimum' => 1, 'description' => 'Record to update; null or absent to create.'],
                         'core'    => ['type' => 'object', 'description' => '{ field: value } — only the fields to set. Lookup fields take the id.'],
                         'plugins' => [
                             'type'        => 'object',
@@ -133,11 +133,13 @@ class RecordsValidate extends Base
                 throw new ToolError('invalid_parameters', "records[{$i}]");
             }
             $id = $rec['id'] ?? null;
-            if ($id !== null && !is_int($id) && !(is_string($id) && ctype_digit($id))) {
+            // An id is a positive integer. 0 must never fall back to "create":
+            // a model that sends it by mistake would add a record, not change one.
+            if ($id !== null && (!(is_int($id) || (is_string($id) && ctype_digit($id))) || (int) $id < 1)) {
                 throw new ToolError('invalid_parameters', "records[{$i}].id");
             }
             $out[] = [
-                'id'      => $id === null ? null : ((int) $id ?: null),
+                'id'      => $id === null ? null : (int) $id,
                 'core'    => $rec['core'] ?? [],
                 'plugins' => $rec['plugins'] ?? [],
             ];

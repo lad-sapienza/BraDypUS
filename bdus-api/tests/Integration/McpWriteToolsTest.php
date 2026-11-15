@@ -142,6 +142,23 @@ class McpWriteToolsTest extends BdusTestCase
 
     // ── records_write ─────────────────────────────────────────────────────────
 
+    public function testRecordIdMustBePositive(): void
+    {
+        $before = (int) static::$db->query('SELECT COUNT(*) FROM items', [], 0);
+        foreach ([0, '0', -3, 'abc', 1.5] as $bad) {
+            foreach (['records_validate', 'records_write'] as $name) {
+                $args = ['table' => 'items', 'records' => [['id' => $bad, 'core' => ['name' => 'Id ' . json_encode($bad)]]]];
+                if ($name === 'records_write') {
+                    $args['validation_token'] = 'x';
+                }
+                $res = $this->tool($name, $args);
+                $this->assertTrue($res['__isError'], "$name accepted id " . json_encode($bad));
+                $this->assertSame('invalid_parameters', $res['code'], "$name, id " . json_encode($bad));
+            }
+        }
+        $this->assertSame($before, (int) static::$db->query('SELECT COUNT(*) FROM items', [], 0), 'nothing was created');
+    }
+
     public function testWriteCreatesAndLeavesACreateEntryFromMcp(): void
     {
         $res = $this->validateAndWrite([['core' => ['name' => 'Written by MCP', 'status' => 'active']]]);

@@ -268,6 +268,13 @@ class Save
       return $shape;
     }
 
+    // `id` and `creator` are the server's: on an update a client value is dropped, as it
+    // already is on create. Otherwise whoever may edit a record could hand it to another
+    // user, or forge its author.
+    if ($id && is_array($core)) {
+      unset($core['id'], $core['creator']);
+    }
+
     // Group rules may pin the value of some fields (`enforce`, #51): refuse a value
     // outside the allowed ones; on create, fill in a field left empty. Runs before
     // validation so that the filled-in values are validated like any other.

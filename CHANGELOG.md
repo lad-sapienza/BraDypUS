@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Updating a record could change its `creator`.** `POST /api/record/{tb}` with an `id` took an
+  `id` or `creator` from the request body, so whoever could edit a record could hand it to another
+  user or forge its author. Both are now dropped on update, as they already were on create.
 - **Saving a record that no longer exists** (`POST /api/record/{tb}` with an `id` that is not there)
   answered `success_saved` without writing anything. It now answers `record_not_found`.
 

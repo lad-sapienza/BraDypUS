@@ -115,6 +115,19 @@ class AccessWriteEnforcementTest extends BdusTestCase
         $this->assertSame(0, (int) static::$db->query("SELECT COUNT(*) AS n FROM tags WHERE label = 'new-x'", [], 'read')[0]['n']);
     }
 
+    public function testUpdateNeverTakesIdOrCreatorFromTheClient(): void
+    {
+        static::$db->exec("UPDATE items SET creator = '52' WHERE id = 1");
+        $this->actAs(25);
+
+        $res = $this->save(1, ['description' => 'by the owner', 'creator' => '7', 'id' => 99]);
+
+        $this->assertSame('success', $res['status'], json_encode($res));
+        $this->assertSame('by the owner', $this->field(1));
+        $this->assertSame('52', $this->field(1, 'creator'), 'whoever may edit a record cannot hand it over or forge its author');
+        $this->assertSame(0, (int) static::$db->query('SELECT COUNT(*) AS n FROM items WHERE id = 99', [], 'read')[0]['n']);
+    }
+
     public function testSelfWriterChangesOnlyOwnUnfrozenRecords(): void
     {
         static::$db->exec("UPDATE items SET creator = '52' WHERE id IN (1, 2)");

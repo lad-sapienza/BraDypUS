@@ -150,10 +150,14 @@ Record\Read    — loads the full model: core, plugins, links, backlinks, manual
                  files, geodata, rs, bibliography
 Record\Edit    — stages changes on the model (_val / _delete markers)
 Record\Persist — writes: persistCore / persistPlugins / persistManualLinks / persistRs
+Record\Save    — create/update of one record: gate (Auth\WriteGate), Record\Validator,
+                 then Edit / Persist. Request-independent: use it from any entry point
 ```
 
-New records are built by `Bdus\Controllers\Record` and written with
-`Persist::all()`. File attachments live in `bdus_file_links`
+`Bdus\Controllers\Record::saveRecord()` only reads the request and calls
+`Record\Save`; new records are built there and written with `Persist::all()`.
+The table schema sent to clients is `Config\TableSchema`, field options
+`Record\FieldOptions`. File attachments live in `bdus_file_links`
 (`file_id`, `table_name`, `record_id`, `sort`); record-to-record manual links in
 `bdus_userlinks` (bidirectional). Details: `bdus-docs/dev/record-lifecycle.md`.
 

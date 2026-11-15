@@ -73,72 +73,33 @@ abstract class Controller
         return $cond === '1=1' ? ['', []] : [' AND (' . $cond . ')', $values];
     }
 
+    /** The write rules shared by every entry point (see \Auth\WriteGate), built on first use. */
+    private ?\Auth\WriteGate $gate = null;
+
+    protected function gate(): \Auth\WriteGate
+    {
+        return $this->gate ??= new \Auth\WriteGate($this->db, $this->cfg, $this->access());
+    }
+
     /**
      * The record whose rules govern a write to record $id of $tb: the record
-     * itself, or for a plugin table the host record its row belongs to (plugin
-     * rows follow their record). [null, 0] when a plugin row has no resolvable host.
+     * itself, or for a plugin table the host record its row belongs to.
+     * See \Auth\WriteGate::writeTarget().
      *
      * @return array{0: ?string, 1: int}
      */
     protected function writeTarget(string $tb, int $id): array
     {
-        if (!$this->cfg->get("tables.{$tb}.is_plugin")) {
-            return [$tb, $id];
-        }
-        $host = $this->cfg->get("tables.{$tb}.plugin_of");
-        if (!$host || !preg_match('/^[A-Za-z0-9_]+$/', $tb)) {
-            return [null, 0];
-        }
-        $row    = $this->db->query("SELECT id_link FROM {$tb} WHERE id = ?", [$id], 'read');
-        $idLink = (int) ($row[0]['id_link'] ?? 0);
-        return $idLink ? [$host, $idLink] : [null, 0];
+        return $this->gate()->writeTarget($tb, $id);
     }
 
     /**
      * May the principal change (`update` or `delete`) record $id of $tb? The
-     * single gate for writes to existing records: the tier or a group rule must
-     * grant it (table level, $creator lets a self writer act on their own
-     * records), and the row must be inside the principal's scope and outside
-     * every lock. A plugin row is judged by its host record, always as an update.
-     *
-     * Without $creator the owner of the record (of the host, for a plugin row) is
-     * looked up, so that a self writer can change what hangs off their own
-     * records — its plugin rows, relations, links, files, geometries — and nothing
-     * that hangs off someone else's.
+     * single gate for writes to existing records. See \Auth\WriteGate::mayChange().
      */
     protected function mayChange(string $action, string $tb, int $id, ?int $creator = null): bool
     {
-        if ($this->cfg->get("tables.{$tb}.is_plugin")) {
-            $action = 'update';
-        }
-        [$gateTb, $gateId] = $this->writeTarget($tb, $id);
-        if ($gateTb === null) {
-            return false;
-        }
-        $allowed = \Auth\Authorization::can('edit', $creator, $gateTb);
-        if (!$allowed && $creator === null) {
-            $owner   = $this->ownerOf($gateTb, $gateId);
-            $allowed = $owner !== null && \Auth\Authorization::can('edit', $owner, $gateTb);
-        }
-        if (!$allowed) {
-            return false;
-        }
-        $access = $this->access();
-        return $access->unrestricted($action, $gateTb) || $access->rowAllowed($action, $gateTb, $gateId);
-    }
-
-    /** User id that created record $id of $tb; null when unknown (no creator column, no such record). */
-    private function ownerOf(string $tb, int $id): ?int
-    {
-        if (preg_match('/^[A-Za-z0-9_]+$/', $tb) !== 1 || empty($this->cfg->get("tables.{$tb}"))) {
-            return null;
-        }
-        try {
-            $row = $this->db->query("SELECT creator FROM {$tb} WHERE id = ?", [$id], 'read');
-        } catch (\Throwable $e) {
-            return null;
-        }
-        return (int) ($row[0]['creator'] ?? 0) ?: null;
+        return $this->gate()->mayChange($action, $tb, $id, $creator);
     }
 
     /**

@@ -5,6 +5,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Record write path moved out of the controller** (no change in behaviour or in the API). What
+  `POST /api/record/{tb}` does — access gate, payload shape, enforced values, validation, write — is
+  now `Record\Save`, with `Record\Validator` (validation only, never writes) and `Auth\WriteGate`
+  (may the principal write to this record); the table schema and the field options sent to clients
+  are `Config\TableSchema` and `Record\FieldOptions`. `Bdus\Controllers\Record` only reads the
+  request and calls them, so other entry points can share the same rules. Developer docs updated
+  (record lifecycle, lib map).
+
 ## [5.23.1] - 2026-11-15
 
 ### Added

@@ -151,7 +151,8 @@ through one of them.
    lookup labels that point at data the principal cannot read. This filtering is on
    the *response* only — never on the model used for saving, or a save would drop
    the hidden links.
-3. **Writes** — `Controller::mayChange($action, $tb, $id, $creator)`: the tier or a
+3. **Writes** — `Controller::mayChange($action, $tb, $id, $creator)` (a wrapper of
+   `Auth\WriteGate::mayChange()`, which `Record\Save` calls directly): the tier or a
    rule must grant it (table level, honouring ownership for a self writer), the row
    must be in scope, and no lock may cover it. A plugin row is judged by its host
    record, always as an update (`writeTarget()`); adding something to a record

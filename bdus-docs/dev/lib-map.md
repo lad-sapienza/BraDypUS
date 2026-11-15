@@ -24,6 +24,7 @@ without going through a lib/ abstraction.
 | `Auth\RateLimiter`, `Auth\ClientIp` | `lib/Auth/RateLimiter.php`, `lib/Auth/ClientIp.php` | Request limits for API keys and failed logins; client address behind a trusted proxy |
 | `Record\Purge` | `lib/Record/Purge.php` | Retention: delete or anonymise old records and their version history (`bin/purge-records.php`) |
 | `Auth\Authorization` | `lib/Auth/Authorization.php` | Privilege check helpers |
+| `Auth\WriteGate` | `lib/Auth/WriteGate.php` | May the principal write to this record? Tier or rule, ownership, row scope, locks; a plugin row follows its host |
 | `Auth\Access` | `lib/Auth/Access.php` | Table- and row-level access: group rules and locks ([Groups & permissions](./groups-permissions)) |
 | `Auth\Password` | `lib/Auth/Password.php` | bcrypt hash / verify |
 | `JWT\JwtManager` | `lib/JWT/JwtManager.php` | JWT issue / verify / peek |
@@ -74,6 +75,10 @@ without going through a lib/ abstraction.
 | `Record\Expand` | `lib/Record/Expand.php` | `fields=` of the record list: parses `rel.*` tokens, nests plugin rows / lookup rows in batch (one `IN` query per relation, group rules applied) |
 | `Record\Edit` | `lib/Record/Edit.php` | Validates + prepares record edits |
 | `Record\Persist` | `lib/Record/Persist.php` | Low-level persistence (INSERT/UPDATE/DELETE) |
+| `Record\Save` | `lib/Record/Save.php` | Create or update one record with its plugin rows: access gate, payload shape, enforced values, validation, write. Request-independent |
+| `Record\Validator` | `lib/Record/Validator.php` | Validates a record payload against the table configuration; never writes |
+| `Record\FieldOptions` | `lib/Record/FieldOptions.php` | Values a field offers (table column, lookup table, vocabulary, static list), limited to readable rows |
+| `Config\TableSchema` | `lib/Config/TableSchema.php` | A table's schema as clients need it: fields, plugin tables, features |
 | `Template\Loader` | `lib/Template/Loader.php` | Loads Twig print templates from DB |
 | `Template\Assign` | `lib/Template/Assign.php` | Record layouts per group: which templates a user's groups assign |
 | `Image\Resizer` | `lib/Image/Resizer.php` | Resize / convert an uploaded image in place (Intervention) |
@@ -195,7 +200,10 @@ See [SQL layer](./sql-layer).
 **`Record\Read`** assembles a complete record response:
 fields + plugin rows + manual links + files.
 
-**`Record\Edit`** validates incoming data and delegates to `Record\Persist`.
+**`Record\Edit`** stages changes on the model and delegates to `Record\Persist`.
+
+**`Record\Save`** is the whole write path of one record (gate, validation with
+`Record\Validator`, then `Edit` / `Persist`), independent of the HTTP request.
 
 **`Record\Persist`** writes a single atomic change: INSERT / UPDATE / DELETE.
 

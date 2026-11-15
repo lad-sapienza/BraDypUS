@@ -14,6 +14,10 @@ Record\Read  ──►  Record\Edit  ──►  Record\Persist
   (load)           (mutate)          (write)
 ```
 
+`Record\Save` drives the three for a create or an update, after checking access
+and validating the payload with `Record\Validator` (see "the whole write path"
+below).
+
 All three operate on the same **model** — a structured PHP array that
 represents a single record together with all its associated data.
 
@@ -290,21 +294,52 @@ $result = $edit->persist($db, $cfg);
 
 ---
 
+## `Record\Save` — the whole write path
+
+`Record\Save::save($tb, $id, $core, $plugins): array` creates (`$id = null`) or
+updates one record with its plugin rows, and answers with the envelope of
+`POST /api/record/{tb}` (`status`, `code`, `id`, or `errors` / `detail`). It
+knows nothing of the HTTP request, so every entry point that writes a record
+goes through it and gets the same rules, in this order:
+
+1. the table exists and is not a read-only view (`view_read_only`);
+2. the access gate — `Auth\WriteGate::mayChange()` for an existing record (tier
+   or group rule, ownership for a self writer, row scope, locks),
+   `Authorization::can('add_new')` or `WriteGate::mayAddPluginRow()` for a new one;
+3. the shape of the payload — `Record\Validator::payloadShapeErrors()`: only
+   fields of the table and of its plugin tables, plain values;
+4. the values a group rule pins — `Access::enforceValues()`;
+5. validation — `Record\Validator::validatePayload()`: `required`, `int`,
+   `real`, `email`, `min` / `max`, `max_length`, `pattern`, `no_dupl`,
+   `valid_wkt`, and the existence of a lookup target (`fk_not_found`);
+6. the write: `Record\Edit` → `persist()` for an update; for a **new** record
+   the model is built directly (`rec_id => null`) and written with
+   `Record\Persist::all()`. Radiocarbon plugin rows are calibrated server-side.
+
+`Record\Validator` never writes and can be used on its own (a dry run).
+
+```php
+$save   = new \Record\Save($db, $cfg, \Auth\Access::forCurrentUser($db, $cfg), $log);
+$result = $save->save('items', null, ['code' => 'A1', 'title' => 'First'], []);
+// ['status' => 'success', 'code' => 'success_created', 'id' => 42]
+```
+
 ## Where the controller fits in
 
-`Bdus\Controllers\Record` (`controllers/Record.php`) is the HTTP boundary. It:
+`Bdus\Controllers\Record` (`controllers/Record.php`) is the HTTP boundary. It
+reads the request, calls the classes above and emits the answer with
+`$this->returnJson([...])`:
 
-1. Reads `$this->get['tb']` and `$this->get['id']` from the request.
-2. Instantiates `Record\Read`.
-3. For updates, instantiates `Record\Edit`, calls the appropriate setter(s),
-   then calls `$edit->persist($this->db, $this->cfg)`. For a **new** record it
-   builds the model directly (with `rec_id => null`) and calls
-   `Record\Persist::all()`.
-4. Calls `$this->returnJson([...])` with the result.
+- `saveRecord()` reads `tb`, `id`, `core`, `plugins` from the body and hands
+  them to `Record\Save`;
+- `getRecord()` instantiates `Record\Read` and adds the table schema built by
+  `Config\TableSchema::describe()` (fields, plugin tables, features);
+- `getFieldOptions()` returns `Record\FieldOptions::resolve()` — the values a
+  field offers, limited to the rows the principal may read.
 
 Privilege tiers come from `Router::ROUTE_PRIVILEGE` (see
 [Bootstrapping & routing](./architecture)); finer, per-table checks
-(`Authorization::can()`, owner/creator rules) happen in the controller **before**
+(`Authorization::can()`, owner/creator rules, group rules) happen **before**
 `Record\Read` / `Record\Edit` write anything.
 
 Further reading: `lib/Record/DataStructure.md` in the API repository describes

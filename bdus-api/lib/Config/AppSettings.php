@@ -124,6 +124,69 @@ class AppSettings
         }
     }
 
+    // ── MCP ───────────────────────────────────────────────────────────────────
+
+    /**
+     * The MCP settings of the application: `enabled` (the endpoint answers),
+     * `write` and `delete` (the tools that change data may be used), `guide`
+     * (text added to the `guide` tool). Everything is off until M052 has been
+     * applied and an administrator switches it on.
+     *
+     * Read with its own query, like the image presets: bundling the columns
+     * into get() would break every other setting until the upgrade is applied.
+     *
+     * @return array{enabled: bool, write: bool, delete: bool, guide: string}
+     */
+    public static function getMcp(DBInterface $db): array
+    {
+        try {
+            $rows = $db->query(
+                'SELECT mcp_enabled, mcp_write, mcp_delete, mcp_guide FROM ' . self::TABLE . ' WHERE id = ?',
+                [self::ROW_ID],
+                'read'
+            );
+            $row = $rows[0] ?? [];
+        } catch (\Throwable) {
+            $row = []; // columns not yet added by M052
+        }
+        return [
+            'enabled' => !empty($row['mcp_enabled']),
+            'write'   => !empty($row['mcp_write']),
+            'delete'  => !empty($row['mcp_delete']),
+            'guide'   => (string) ($row['mcp_guide'] ?? ''),
+        ];
+    }
+
+    /**
+     * Persists the MCP settings; only the keys present in $mcp are changed.
+     * Returns false when M052 has not been applied yet.
+     */
+    public static function saveMcp(DBInterface $db, array $mcp): bool
+    {
+        $data = [];
+        foreach (['enabled' => 'mcp_enabled', 'write' => 'mcp_write', 'delete' => 'mcp_delete'] as $key => $col) {
+            if (array_key_exists($key, $mcp)) {
+                $data[$col] = $mcp[$key] ? 1 : 0;
+            }
+        }
+        if (array_key_exists('guide', $mcp)) {
+            $data['mcp_guide'] = trim((string) $mcp['guide']);
+        }
+        if (!$data) {
+            return true;
+        }
+        try {
+            $db->query(
+                'UPDATE ' . self::TABLE . ' SET ' . implode(', ', array_map(fn($k) => "{$k} = ?", array_keys($data))) . ' WHERE id = ?',
+                [...array_values($data), self::ROW_ID],
+                'boolean'
+            );
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     // ── Write ─────────────────────────────────────────────────────────────────
 
     /**

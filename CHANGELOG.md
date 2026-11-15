@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **MCP endpoint (first part, read-only).** `POST /{app}/api/mcp` lets an AI client that speaks the
+  Model Context Protocol read the database through five generic tools: `guide`, `schema`,
+  `vocabulary`, `records_read` and `resolve`. A client sees exactly the tables and rows its
+  account or API key may read through the REST API. Off by default: an administrator enables it
+  per application (`PUT /api/config/app` with `{ "mcp": { "enabled": true } }`; migration M052).
+  Clients of protocol revision 2026-07-28 and of the earlier handshake revisions are both served.
+  No settings page in the interface yet, and no tools that change data. Developer docs:
+  `dev/mcp`, plan in `dev/mcp-oauth-plan`; hurl phase 55.
+
 ### Changed
 
 - **Record write path moved out of the controller** (no change in behaviour or in the API). What

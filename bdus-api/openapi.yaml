@@ -140,6 +140,8 @@ tags:
     description: Assemblage-analysis pivot wizard — saved analyses and on-demand data
   - name: chrono
     description: Chronological timeline and density distribution views
+  - name: mcp
+    description: Model Context Protocol endpoint for AI clients (JSON-RPC, not the status/code envelope)
 
 # ──────────────────────────────────────────────────────────────────────────────
 paths:
@@ -2749,6 +2751,9 @@ paths:
       operationId: putConfigApp
       tags: [config]
       summary: Save application-level properties
+      description: |
+        `mcp` (`{ enabled, write, delete, guide }`) holds the MCP settings; sent
+        alone, only those are changed. Everything is off by default.
       requestBody:
         required: true
         content:
@@ -6225,6 +6230,122 @@ paths:
                               type: number
         '403':
           $ref: '#/components/responses/Forbidden'
+
+  # ── MCP ───────────────────────────────────────────────────────────────────────
+
+  /api/mcp:
+    post:
+      operationId: postMcp
+      tags: [mcp]
+      summary: Model Context Protocol endpoint (one JSON-RPC message per request)
+      description: |
+        Endpoint for MCP clients (AI assistants). One JSON-RPC 2.0 message per
+        request, answered with `application/json`; no session and no stream.
+        `GET` and `DELETE` answer `405`; a notification answers `202` with no body.
+
+        Unlike the rest of the API, answers use HTTP status codes and JSON-RPC
+        bodies (`result` / `error`), not the `status` / `code` envelope. A tool
+        that refuses a call answers `200` with `result.isError = true` and
+        `result.structuredContent.code` (`unknown_table`, `unknown_field`,
+        `invalid_parameters`, `invalid_filter`, `mcp_write_disabled`, …).
+
+        Clients of protocol revision `2026-07-28` send their version and
+        capabilities in `params._meta` and repeat them in the
+        `MCP-Protocol-Version`, `Mcp-Method` and `Mcp-Name` headers, which must
+        agree with the body (`400`, error `-32020`). Clients of earlier revisions
+        open with `initialize`.
+
+        Methods: `initialize`, `ping`, `server/discover`, `tools/list`,
+        `tools/call`. Tools: `guide`, `schema`, `vocabulary`, `records_read`,
+        `resolve`. Every tool sees only the tables and rows the principal may
+        read through the REST API.
+
+        Off until an administrator enables it for the application
+        (`PUT /api/config/app` with `{ "mcp": { "enabled": true } }`): `404`.
+        Any authenticated principal that may read can call it, including an API
+        key scoped by a group.
+      parameters:
+        - name: MCP-Protocol-Version
+          in: header
+          required: false
+          schema:
+            type: string
+            enum: ['2026-07-28', '2025-11-25', '2025-06-18', '2025-03-26']
+        - name: Mcp-Method
+          in: header
+          required: false
+          description: Revision 2026-07-28 only; must equal the `method` of the body.
+          schema:
+            type: string
+        - name: Mcp-Name
+          in: header
+          required: false
+          description: Revision 2026-07-28 only, on `tools/call`; must equal `params.name`.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jsonrpc, method]
+              properties:
+                jsonrpc:
+                  type: string
+                  enum: ['2.0']
+                id:
+                  type: [string, integer]
+                  description: Absent on a notification.
+                method:
+                  type: string
+                params:
+                  type: object
+            example:
+              jsonrpc: '2.0'
+              id: 1
+              method: tools/call
+              params:
+                name: records_read
+                arguments:
+                  table: contexts
+                  limit: 10
+      responses:
+        '200':
+          description: JSON-RPC response (a `result` or an `error`)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [jsonrpc]
+                properties:
+                  jsonrpc:
+                    type: string
+                  id:
+                    type: [string, integer, 'null']
+                  result:
+                    type: object
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                      message:
+                        type: string
+                      data:
+                        type: object
+        '202':
+          description: Notification accepted (no body)
+        '400':
+          description: Malformed message, unsupported protocol version, or headers that disagree with the body (JSON-RPC error body)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Not enough privilege, or `Origin` not allowed
+        '404':
+          description: MCP is not enabled for the application, or unknown method (revision 2026-07-28)
+        '429':
+          description: Rate limit exceeded (`Retry-After` header)
 
   # ── Widgets ───────────────────────────────────────────────────────────────────
 

@@ -5,8 +5,10 @@ title: MCP server & OAuth 2.1 — design plan
 # MCP server & OAuth 2.1 authorization server — design plan
 
 ::: warning Status
-Design document, **nothing described here is implemented** except the
-prerequisite refactor (decision D1).
+Design document. Implemented so far: the prerequisite refactor (decision D1)
+and the first part of phase 1 — protocol layer, settings (M052) and the read
+tools `guide`, `schema`, `vocabulary`, `records_read`, `resolve`, described in
+[MCP server](./mcp). Everything else here is still a plan.
 Written 2026-11-15 against v5.23.1. Statements about external projects (MCP
 specification, Directus, PHP libraries) were checked on that date and must be
 re-checked when each phase starts.
@@ -537,12 +539,6 @@ Checked on the Directus documentation, 2026-11-15 (MCP requires v11.12+).
 4. First release read-only: **no — full cycle**, read and write together.
 5. Dedicated tools: **yes for stratigraphic relations, wait for geometries**.
 
-**Still to confirm.**
-
-- D7: endpoints under `/{app}/api/` instead of `/{app}/mcp`.
-- D8: writes take ids only; `resolve` maps human references.
-- Whether `mcp_write` stays **off by default** in a new application. With API
-  keys a write has no author; the switch lets an administrator accept that
-  knowingly until OAuth (phase 3) attributes every write to a user.
-- Whether "full cycle" also means waiting for OAuth before the first release.
-  This plan assumes it does not: phase 1 ships with API keys, OAuth follows.
+**Confirmed by the project owner (2026-11-15).** D7 (endpoints under
+`/{app}/api/`), D8 (writes take ids only), `mcp_write` off by default, and
+phase 1 released with API keys, OAuth following.

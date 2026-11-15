@@ -84,6 +84,10 @@ class Dispatcher
                 // API-key traffic only: people signed in with a JWT are never limited.
                 if (\Auth\CurrentUser::isApiKey()) {
                     $isWrite = !in_array($_SERVER['REQUEST_METHOD'] ?? 'GET', ['GET', 'HEAD', 'OPTIONS'], true);
+                    // Every MCP call is a POST: what counts is the tool it calls.
+                    if ($obj === 'Bdus\\Controllers\\Mcp') {
+                        $isWrite = \Mcp\Server::isWriteCall((string) file_get_contents('php://input'));
+                    }
                     $keyId   = (int) \Auth\CurrentUser::get('key_id');
                     $wait    = \Auth\RateLimiter::hit($isWrite ? 'KEY_WRITE' : 'KEY_READ', (string) $keyId)
                             ?: \Auth\RateLimiter::hit('KEY_IP', \Auth\ClientIp::get());

@@ -102,6 +102,9 @@ class Router
         'Bdus\\Controllers\\Vocabularies::usages'                  => 'read',
         'Bdus\\Controllers\\Chrono::timeline'                      => 'read',
         'Bdus\\Controllers\\Chrono::related'                       => 'read',
+        // MCP endpoint: any principal that may read; each tool then checks the table,
+        // the row and, for the tools that change data, the application's MCP switches.
+        'Bdus\\Controllers\\Mcp::handle'                           => 'read',
 
         // ── Edit — write operations ──────────────────────────────────────────
         'Bdus\\Controllers\\Record::duplicateRecord'               => 'edit',
@@ -311,6 +314,7 @@ class Router
         'Bdus\\Controllers\\Geoface::saveNew',
         'Bdus\\Controllers\\Geoface::updateGeometry',
         'Bdus\\Controllers\\Geoface::eraseGeometry',
+        'Bdus\\Controllers\\Mcp::handle',
     ];
 
     /**
@@ -706,6 +710,10 @@ class Router
             $r->addRoute('DELETE', '/api/zotero/link/{id:\d+}',     ['Bdus\\Controllers\\Zotero', 'deleteLink']);
             $r->addRoute('POST',   '/api/zotero/sync/{tb}/{id:\d+}', ['Bdus\\Controllers\\Zotero', 'syncRecord']);
             $r->addRoute('POST',   '/api/zotero/sync',              ['Bdus\\Controllers\\Zotero', 'syncAll']);
+
+            // ── MCP (Model Context Protocol) ───────────────────────────────────
+            // POST only: FastRoute answers 405 to GET / DELETE, as the protocol asks.
+            $r->addRoute('POST', '/api/mcp', ['Bdus\\Controllers\\Mcp', 'handle']);
 
             $r->addRoute('GET',    '/api/pleiades/search',           ['Bdus\\Controllers\\Pleiades', 'search']);
             $r->addRoute('GET',    '/api/pleiades/place/{id:\d+}',   ['Bdus\\Controllers\\Pleiades', 'getPlace']);

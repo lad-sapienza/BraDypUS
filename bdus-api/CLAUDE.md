@@ -54,6 +54,12 @@ method. See `bdus-docs/dev/architecture.md` for the full trace.
   Dispatcher re-reads `privilege` and `token_version` from `bdus_users`, so the
   JWT value is never trusted alone. No PHP sessions.
 
+- **MCP:** `POST /{app}/api/mcp` (`Bdus\Controllers\Mcp` → `Mcp\Server` → `Mcp\Tools\*`) answers with
+  HTTP status codes and JSON-RPC bodies, **not** the `status`/`code` envelope. Off per application
+  until enabled (`AppSettings::getMcp()`, M052). A new tool implements `Mcp\Tool`, goes through
+  `Tools\Base::table()` for table names and is registered in `Server::standardTools()`. See
+  `bdus-docs/dev/mcp.md`.
+
 ### Controller conventions
 
 ```php

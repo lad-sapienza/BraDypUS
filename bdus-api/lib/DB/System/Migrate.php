@@ -60,6 +60,7 @@ use DB\System\Migrations\M048_AddImagePresetsToCfgApp;
 use DB\System\Migrations\M049_AddAttrsToGroups;
 use DB\System\Migrations\M050_AddDefaultGroups;
 use DB\System\Migrations\M051_AddLayoutsToGroups;
+use DB\System\Migrations\M052_AddMcpSettingsToCfgApp;
 use Monolog\Logger;
 
 /**
@@ -156,6 +157,7 @@ class Migrate
         M049_AddAttrsToGroups::class,
         M050_AddDefaultGroups::class,
         M051_AddLayoutsToGroups::class,
+        M052_AddMcpSettingsToCfgApp::class,
     ];
 
     /**

@@ -80,6 +80,9 @@ without going through a lib/ abstraction.
 | `Record\FieldOptions` | `lib/Record/FieldOptions.php` | Values a field offers (table column, lookup table, vocabulary, static list), limited to readable rows |
 | `Config\TableSchema` | `lib/Config/TableSchema.php` | A table's schema as clients need it: fields, plugin tables, features |
 | `Template\Loader` | `lib/Template/Loader.php` | Loads Twig print templates from DB |
+| `Mcp\Server` | `lib/Mcp/Server.php` | MCP protocol layer: one JSON-RPC message in, status + body out; both protocol generations ([MCP server](./mcp)) |
+| `Mcp\Tool`, `Mcp\Context`, `Mcp\ToolError` | `lib/Mcp/` | Contract of a tool, what it receives, how it refuses |
+| `Mcp\Tools\*` | `lib/Mcp/Tools/` | The generic tools: `guide`, `schema`, `vocabulary`, `records_read`, `resolve` |
 | `Template\Assign` | `lib/Template/Assign.php` | Record layouts per group: which templates a user's groups assign |
 | `Image\Resizer` | `lib/Image/Resizer.php` | Resize / convert an uploaded image in place (Intervention) |
 | `Image\Presets` | `lib/Image/Presets.php` | Derived-image presets: validation, built-in `thumb`, lookup |

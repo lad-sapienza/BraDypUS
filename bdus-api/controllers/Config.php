@@ -609,6 +609,20 @@ class Config extends \Bdus\Controller
         \Config\AppSettings::save($this->db, $appSettingsData);
         $data = array_diff_key($data, $appSettingsData);
       }
+      // MCP settings live in bdus_cfg_app too (M052).
+      if (array_key_exists('mcp', $data)) {
+        if (!is_array($data['mcp']) || !\Config\AppSettings::saveMcp($this->db, $data['mcp'])) {
+          $this->returnJson(['status' => 'error', 'code' => 'error_cfg_data_updated', 'detail' => 'mcp']);
+          return;
+        }
+        unset($data['mcp']);
+        // Sent alone: nothing else to save. (setMain() falls back to defaults for the
+        // settings it is not given, so it must not run on an empty payload.)
+        if ($data === []) {
+          $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated']);
+          return;
+        }
+      }
       if (array_key_exists('imagePresets', $data)) {
         try {
           $data['imagePresets'] = \Image\Presets::normalize(is_array($data['imagePresets']) ? $data['imagePresets'] : []);
@@ -1455,6 +1469,7 @@ class Config extends \Bdus\Controller
           'color'                   => $appSettings['color'] ?? 'indigo',
           'allow_self_registration' => (bool) ($appSettings['allow_self_registration'] ?? false),
           'mail_configured'         => \Mail\Mailer::isConfigured(),
+          'mcp'                     => \Config\AppSettings::getMcp($this->db),
         ]
       ),
       'users'          => $users,

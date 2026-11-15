@@ -396,8 +396,9 @@ async function load() {
 async function save() {
   saving.value = true
   try {
-    // mail_configured is server-derived/read-only — don't post it back.
-    const { mail_configured, ...payload } = form.value
+    // mail_configured is server-derived/read-only — don't post it back. `mcp` has its
+    // own panel: posting the copy loaded here could overwrite what was saved there.
+    const { mail_configured, mcp, ...payload } = form.value
     const res = await api.put('/api/config/app', payload)
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',

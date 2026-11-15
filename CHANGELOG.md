@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   delete 500 records per hour through MCP (`BRADYPUS_RATE_MCP_WRITE_ROWS`). Everything is off by
   default: an administrator enables the endpoint, writing and deleting separately, per application
   (`PUT /api/config/app` with `{ "mcp": { "enabled", "write", "delete", "guide" } }`; migration
-  M052). No settings page in the interface yet. Developer docs: `dev/mcp`, plan in
+  M052), or from the new "MCP (AI assistants)" page of the system configuration. Developer docs: `dev/mcp`, plan in
   `dev/mcp-oauth-plan`; hurl phase 55.
 - **The history says who created a record, and where every change came from.** Creating a record
   now leaves a `creation` entry in its version history (who, when; no content, so it cannot be

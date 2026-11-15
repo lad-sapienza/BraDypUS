@@ -41,6 +41,15 @@
       </button>
       <button
         class="cfg-action-btn"
+        :class="{ active: active === 'mcp' }"
+        @click="$emit('select', 'mcp')"
+        :title="t('mcp_title')"
+      >
+        <RobotOutlined />
+        <span>{{ t('mcp_title') }}</span>
+      </button>
+      <button
+        class="cfg-action-btn"
         :class="{ active: active === 'relations' }"
         @click="$emit('select', 'relations')"
         :title="t('cfg_relations')"
@@ -127,7 +136,7 @@
 </template>
 
 <script setup>
-import { ApartmentOutlined, BarsOutlined, BookOutlined, CheckCircleOutlined, CompassOutlined, DatabaseOutlined, ExportOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, SettingOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
+import { ApartmentOutlined, BarsOutlined, BookOutlined, CheckCircleOutlined, CompassOutlined, DatabaseOutlined, ExportOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, RobotOutlined, SettingOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { ref, watch, onBeforeUnmount } from 'vue'
 import Sortable       from 'sortablejs'
 import { useConfigStore } from '@/stores/config'

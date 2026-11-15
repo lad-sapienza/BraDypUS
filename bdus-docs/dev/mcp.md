@@ -15,7 +15,7 @@ and what is still to come (write tools, history, OAuth) are in the
 
 | Built | Not yet |
 |---|---|
-| Protocol layer, settings, the ten tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete` | Settings page in the interface, prompts, a tool for stratigraphic relations, OAuth |
+| Protocol layer, settings (and their page: system configuration → MCP, `McpPanel.vue`), the ten tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete` | Prompts, a tool for stratigraphic relations, OAuth |
 
 ## Request flow
 
@@ -47,7 +47,7 @@ Four columns of `bdus_cfg_app` (M052), read by `Config\AppSettings::getMcp()`:
 | `delete` | off | `records_delete` may be called; otherwise `mcp_delete_disabled` |
 | `guide` | empty | Text of the administrator, returned by the `guide` tool |
 
-They are saved with `PUT /api/config/app` and `{ "mcp": { … } }`. Sent alone,
+They are edited in the interface at system configuration → *MCP (AI assistants)* (`bdus-app/src/components/config/McpPanel.vue`) and saved with `PUT /api/config/app` and `{ "mcp": { … } }`; the panel sends only that key, and `ConfigAppForm.vue` leaves `mcp` out of its own payload so it cannot overwrite it. Sent alone,
 only the MCP settings change: `Config::setMain()` falls back to defaults for the
 settings it is not given, so it is not called for an `mcp`-only payload.
 

@@ -32,7 +32,7 @@
           </span>
           <span class="vd-meta">
             <span class="vd-time">{{ v.time }}</span>
-            <span class="vd-user">{{ v.userid }}</span>
+            <span class="vd-user">{{ v.userid }}<template v-if="v.channel"> · {{ channelLabel(v.channel) }}</template></span>
           </span>
           <!-- The entry of a creation holds no earlier state: nothing to compare or restore -->
           <RightOutlined v-if="v.operation !== 'create'" class="vd-arrow" />
@@ -56,7 +56,7 @@
           {{ t(`version_op_${selectedVersion.operation}`) }}
         </span>
         <span class="vd-time">{{ selectedVersion.time }}</span>
-        <span class="vd-user">{{ selectedVersion.userid }}</span>
+        <span class="vd-user">{{ selectedVersion.userid }}<template v-if="selectedVersion.channel"> · {{ channelLabel(selectedVersion.channel) }}</template></span>
       </div>
 
       <!-- Diff loading -->
@@ -258,6 +258,13 @@ async function loadVersions() {
 }
 
 // ── Load diff for a selected version ──────────────────────────
+// Where a change came from (bdus_versions.channel). Entries from before M053 have none;
+// an unknown value is shown as it is rather than hidden.
+const CHANNELS = ['web', 'api', 'mcp', 'import', 'cli']
+function channelLabel(channel) {
+  return CHANNELS.includes(channel) ? t(`version_channel_${channel}`) : channel
+}
+
 async function loadDiff(version) {
   selectedVersion.value = version
   diff.value      = null

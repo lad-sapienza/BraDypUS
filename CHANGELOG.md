@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **The history says who created a record, and where every change came from.** Creating a record
   now leaves a `creation` entry in its version history (who, when; no content, so it cannot be
   compared or restored), and every entry records the channel of the change — interface, API key,
-  MCP — and the API key that made it (migration M053). Records created before this release have
+  MCP — and the API key that made it (migration M053). The version history drawer shows the channel next to the user. Records created before this release have
   no creation entry.
 
 ### Fixed

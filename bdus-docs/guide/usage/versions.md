@@ -24,7 +24,7 @@ Each entry shows:
 
 - **Operation badge** — `creation`, `update`, `delete` or `restore`
 - **Timestamp** — when the change was made
-- **User** — who made the change
+- **User** — who made the change, followed by the **channel** it came from: the interface, an API key, an AI assistant (MCP), a data import or the command line. Entries saved before the channel was recorded show none.
 
 A **creation** entry <Badge type="tip" text="next release" /> records who created the
 record and when. It holds no earlier state, so it cannot be opened, compared or restored.

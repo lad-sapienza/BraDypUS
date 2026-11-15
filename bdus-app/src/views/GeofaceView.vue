@@ -70,6 +70,33 @@
     <div class="geoface-map-wrap">
       <div ref="mapEl" class="geoface-map" :style="{ visibility: loading || loadError ? 'hidden' : 'visible' }" />
 
+      <!-- Layer panel: base layer select + overlay toggles -->
+      <div v-if="baseOptions.length > 1 || overlayOptions.length" class="geoface-layer-panel">
+        <button type="button" class="geoface-layer-panel-head" @click="layerPanelOpen = !layerPanelOpen">
+          <span>{{ t('layers') }}</span>
+          <span>{{ layerPanelOpen ? '−' : '+' }}</span>
+        </button>
+        <div v-show="layerPanelOpen" class="geoface-layer-panel-body">
+          <template v-if="baseOptions.length > 1">
+            <div class="geoface-layer-group">{{ t('base_layer') }}</div>
+            <ARadio.Group :value="activeBase" class="geoface-layer-list" @change="e => applyBase(e.target.value)">
+              <ARadio v-for="b in baseOptions" :key="b.key" :value="b.key">{{ b.label }}</ARadio>
+            </ARadio.Group>
+          </template>
+          <template v-if="overlayOptions.length">
+            <div class="geoface-layer-group">{{ t('overlay_layers') }}</div>
+            <div class="geoface-layer-list">
+              <ACheckbox
+                v-for="o in overlayOptions"
+                :key="o.key"
+                :checked="!!overlayOn[o.key]"
+                @change="e => toggleOverlay(o, e.target.checked)"
+              >{{ o.label }}</ACheckbox>
+            </div>
+          </template>
+        </div>
+      </div>
+
       <!-- Legend for the active theming field (issue #53) -->
       <div v-if="legendEntries.length" class="geoface-legend">
         <div class="geoface-legend-title">{{ colorByLabel }}</div>
@@ -135,7 +162,9 @@ import {
   AutoComplete as AAutoComplete,
   Alert as AAlert,
   Slider as ASlider,
-  Select as ASelect
+  Select as ASelect,
+  Radio as ARadio,
+  Checkbox as ACheckbox
 } from 'ant-design-vue'
 import { format as chronoFormat } from '@/utils/chronoParser'
 
@@ -154,6 +183,14 @@ const meta    = ref({})
 
 let map  = null
 let draw = null
+
+// Layer panel: one entry per configured base layer (plus the built-in default)
+// and per overlay. `mapLayerIds` are the MapLibre layers a toggle shows/hides.
+const baseOptions    = ref([])   // [{ key, label, mapLayerIds }]
+const overlayOptions = ref([])   // [{ key, label, mapLayerIds }]
+const activeBase     = ref(null)
+const overlayOn      = ref({})   // { [key]: boolean }
+const layerPanelOpen = ref(true)
 let mapResizeObserver = null
 
 const featureCount = computed(() => geojson.value?.features?.length ?? 0)
@@ -399,7 +436,10 @@ async function initMap() {
   map.addControl(new maplibregl.ScaleControl())
 
   map.on('load', () => {
+    initLayerPanel(!!maplibreStyleLayer)
     addCustomLayers()
+    applyBase(activeBase.value)
+    for (const o of overlayOptions.value) if (overlayOn.value[o.key]) setLayersVisible(o.mapLayerIds, true)
     addRecordLayer()
     applyTheme()
     if (meta.value.canUserEdit) addDrawControl()
@@ -415,23 +455,120 @@ async function initMap() {
   mapResizeObserver.observe(mapEl.value)
 }
 
-// ── Custom overlay layers (XYZ, WMS, local GeoJSON) ───────────────────────
+// ── Layer panel (base layer select + overlay toggles) ─────────────────────
+const isBaseLayer = l => l.layertype === 'base' && l.type !== 'local'
+
+function rasterTiles(layer) {
+  if (layer.type === 'wms') {
+    return `${layer.path}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap`
+      + `&LAYERS=${encodeURIComponent(layer.wmslayers ?? '')}`
+      + `&FORMAT=image/png&TRANSPARENT=true&SRS=EPSG:3857&WIDTH=256&HEIGHT=256`
+      + `&BBOX={bbox-epsg-3857}`
+  }
+  return layer.path
+}
+
+function layerKey(layer, idx) {
+  return `custom-${idx}`
+}
+
+function setLayersVisible(ids, visible) {
+  for (const id of ids) {
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none')
+  }
+}
+
+/** Builds the panel entries. Must run right after the style loaded, before our own layers are added. */
+function initLayerPanel(hasStyleBase) {
+  const layers = meta.value.layers ?? []
+  const styleLayerIds = (map.getStyle().layers ?? []).map(l => l.id)
+
+  const bases = []
+  // The map's own style (a configured maplibre_style, or the built-in OSM raster).
+  const styleBase = layers.find(l => l.type === 'maplibre_style' && l.layertype === 'base')
+  bases.push({
+    key: 'style',
+    sid: 'style',
+    label: styleBase?.label || (hasStyleBase ? t('base_layer') : 'OpenStreetMap'),
+    mapLayerIds: styleLayerIds
+  })
+  layers.forEach((l, idx) => {
+    if (l.type === 'maplibre_style' || !isBaseLayer(l)) return
+    bases.push({ key: layerKey(l, idx), sid: stableId(l), label: l.label || l.path, mapLayerIds: [layerKey(l, idx)] })
+  })
+
+  const overlays = []
+  layers.forEach((l, idx) => {
+    if (l.type === 'maplibre_style' || isBaseLayer(l)) return
+    const key = layerKey(l, idx)
+    overlays.push({
+      key,
+      sid: stableId(l),
+      label: l.label || l.path,
+      mapLayerIds: l.type === 'local' ? [key + '-fill', key + '-line'] : [key]
+    })
+  })
+
+  baseOptions.value    = bases
+  overlayOptions.value = overlays
+  overlayOn.value      = {}
+  // A configured base layer is shown first; otherwise the built-in default.
+  activeBase.value     = bases.length > 1 ? bases[1].key : bases[0].key
+
+  // Remembered choice (per app, per browser); ignore entries no longer configured.
+  const saved = loadLayerChoice()
+  const savedBase = bases.find(b => b.sid === saved.base)
+  if (savedBase) activeBase.value = savedBase.key
+  for (const o of overlays) if (saved.overlays.includes(o.sid)) overlayOn.value[o.key] = true
+}
+
+// ── Remembered layer choice (localStorage; a per-viewer convenience) ──────
+const stableId = l => [l.type, l.label ?? '', l.path ?? ''].join('|')
+const choiceKey = () => `bdus_geoface_layers:${route.params.app ?? ''}`
+
+function loadLayerChoice() {
+  try {
+    const v = JSON.parse(localStorage.getItem(choiceKey()) ?? 'null')
+    return { base: v?.base ?? null, overlays: Array.isArray(v?.overlays) ? v.overlays : [] }
+  } catch {
+    return { base: null, overlays: [] }
+  }
+}
+
+function saveLayerChoice() {
+  try {
+    localStorage.setItem(choiceKey(), JSON.stringify({
+      base: baseOptions.value.find(b => b.key === activeBase.value)?.sid ?? null,
+      overlays: overlayOptions.value.filter(o => overlayOn.value[o.key]).map(o => o.sid)
+    }))
+  } catch { /* storage unavailable: choice just isn't remembered */ }
+}
+
+function applyBase(key) {
+  activeBase.value = key
+  for (const b of baseOptions.value) setLayersVisible(b.mapLayerIds, b.key === key)
+  saveLayerChoice()
+}
+
+function toggleOverlay(opt, on) {
+  overlayOn.value = { ...overlayOn.value, [opt.key]: on }
+  setLayersVisible(opt.mapLayerIds, on)
+  saveLayerChoice()
+}
+
+// ── Custom layers (XYZ, WMS, local GeoJSON) ───────────────────────────────
 function addCustomLayers() {
-  const overlayLayers = (meta.value.layers ?? []).filter(l => l.type !== 'maplibre_style')
+  const all = (meta.value.layers ?? []).map((layer, idx) => ({ layer, idx }))
+    .filter(({ layer }) => layer.type !== 'maplibre_style')
+  // Base layers go in first so overlays are drawn above them.
+  const ordered = [...all.filter(({ layer }) => isBaseLayer(layer)), ...all.filter(({ layer }) => !isBaseLayer(layer))]
 
-  for (const layer of overlayLayers) {
-    const id = 'custom-' + (layer.label ?? layer.path ?? String(Math.random())).replace(/\s/g, '-')
+  for (const { layer, idx } of ordered) {
+    const id = layerKey(layer, idx)
+    const base = isBaseLayer(layer)
 
-    if (layer.type === 'tiles') {
-      map.addSource(id, { type: 'raster', tiles: [layer.path], tileSize: 256 })
-      map.addLayer({ id, type: 'raster', source: id, layout: { visibility: 'none' } })
-
-    } else if (layer.type === 'wms') {
-      const wmsUrl = `${layer.path}?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap`
-        + `&LAYERS=${encodeURIComponent(layer.wmslayers ?? '')}`
-        + `&FORMAT=image/png&TRANSPARENT=true&SRS=EPSG:3857&WIDTH=256&HEIGHT=256`
-        + `&BBOX={bbox-epsg-3857}`
-      map.addSource(id, { type: 'raster', tiles: [wmsUrl], tileSize: 256 })
+    if (layer.type === 'tiles' || layer.type === 'wms') {
+      map.addSource(id, { type: 'raster', tiles: [rasterTiles(layer)], tileSize: 256 })
       map.addLayer({ id, type: 'raster', source: id, layout: { visibility: 'none' } })
 
     } else if (layer.type === 'local') {
@@ -450,12 +587,12 @@ function addCustomLayers() {
           map.addLayer({
             id: id + '-fill', type: 'fill', source: id,
             paint: { 'fill-color': '#3388ff', 'fill-opacity': 0.2 },
-            layout: { visibility: 'none' }
+            layout: { visibility: overlayOn.value[id] ? 'visible' : 'none' }
           })
           map.addLayer({
             id: id + '-line', type: 'line', source: id,
             paint: { 'line-color': '#3388ff', 'line-width': 2 },
-            layout: { visibility: 'none' }
+            layout: { visibility: overlayOn.value[id] ? 'visible' : 'none' }
           })
         })
         .catch(() => {
@@ -904,6 +1041,42 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
 }
+
+.geoface-layer-panel {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 5;
+  background: var(--p-content-background);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-border-radius-md, 6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 0.8rem;
+  min-width: 170px;
+  max-width: 260px;
+}
+.geoface-layer-panel-head {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.4rem 0.7rem;
+  background: none;
+  border: 0;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+}
+.geoface-layer-panel-body { padding: 0 0.7rem 0.6rem; max-height: 50vh; overflow-y: auto; }
+.geoface-layer-group {
+  margin: 0.4rem 0 0.2rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--p-text-muted-color);
+}
+.geoface-layer-list { display: flex; flex-direction: column; gap: 0.2rem; }
+.geoface-layer-list :deep(.ant-radio-wrapper),
+.geoface-layer-list :deep(.ant-checkbox-wrapper) { margin: 0; font-size: 0.8rem; }
 
 .geoface-legend {
   position: absolute;

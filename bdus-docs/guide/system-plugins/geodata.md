@@ -74,19 +74,28 @@ Supported layer types:
 
 | Type | Description |
 |---|---|
-| **WMS** | OGC Web Map Service — raster tiles |
-| **WFS** | OGC Web Feature Service — vector features |
-| **Local file** | GeoJSON or KML file uploaded to the server (`projects/{app}/geodata/`) |
+| **tiles** | XYZ raster tiles (`https://…/{z}/{x}/{y}.png`) |
+| **wms** | OGC Web Map Service — raster tiles (URL + comma-separated layer names) |
+| **maplibre_style** | A MapLibre style JSON (only used as the map's own base) |
+| **local** | GeoJSON file uploaded to the server (`projects/{app}/geodata/`), always an overlay |
 
 For each layer configure:
 
 | Property | Description |
 |---|---|
-| **Label** | Display name shown in the layer switcher |
-| **URL** | Service endpoint or local file path |
-| **Layer** | Layer name (WMS/WFS) |
-| **Attribution** | Copyright/attribution text shown on the map |
-| **Visible by default** | Whether the layer is on when the map opens |
+| **Label** | Display name shown in the layer panel |
+| **Type** | One of the types above |
+| **Role** | `base` (background map) or `overlay` (drawn above the base, off until switched on) |
+| **URL / file** | Service endpoint, tile template or local file |
+
+### Layer panel <Badge type="tip" text="v5.23.1" />
+
+When at least one `base` layer is configured, or any `overlay`, the GeoFace map shows a
+**Layers** panel (top left, collapsible). **Base layer** is a radio list: pick one background
+at a time (the built-in OpenStreetMap map is always one of the choices; the first configured base
+layer is the one shown when the map opens). **Overlays** are check boxes that show or hide each
+overlay on top of the chosen base. The choice is remembered in the browser (per application), so the
+map reopens with the same base and overlays; layers that are no longer configured are ignored.
 
 ## Editing geometries on the map
 

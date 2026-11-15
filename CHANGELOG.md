@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **GeoFace layer panel.** Configured `tiles`/`wms` layers were added to the map but never shown.
+  The map now has a collapsible **Layers** panel: a radio list to choose the base layer (built-in
+  OpenStreetMap plus every `base` layer in Config → Geoface) and check boxes to switch overlays on
+  and off. The choice is remembered per application in the browser (`localStorage`); with no saved choice
+  overlays start off and the first configured base layer starts on.
+
 ### Fixed
 
 - **GeoFace layers multiplied on every save.** A JSON body that is a list (the layer list of

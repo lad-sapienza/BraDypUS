@@ -879,6 +879,8 @@
   "no_fields": "Nessun campo definito",
   "geoface": "GeoFace",
   "layers": "Layer",
+  "base_layer": "Layer di base",
+  "overlay_layers": "Sovrapposizioni",
   "add_layer": "Aggiungi layer",
   "no_layers": "Nessun layer configurato",
   "layer_type": "Tipo",

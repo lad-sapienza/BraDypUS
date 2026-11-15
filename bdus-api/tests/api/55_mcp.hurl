@@ -8,6 +8,8 @@
 #     2026-07-28 (per-request _meta + mirrored headers) are both served
 #   - answers use HTTP status codes and JSON-RPC bodies, not the
 #     status/code envelope of the rest of the API
+#   - prompts/list and prompts/get (M054); unknown prompt -32602, missing
+#     Mcp-Name header -32020
 # Settings: PUT /api/config/app { "mcp": { enabled, write, delete, guide } }
 # ════════════════════════════════════════════════════════════════════
 
@@ -181,6 +183,57 @@ HTTP 200
 [Asserts]
 jsonpath "$.result.resultType" == "complete"
 jsonpath "$.result.isError" == false
+
+# prompts: none until an administrator writes some (phase 56 creates them)
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+MCP-Protocol-Version: 2026-07-28
+Mcp-Method: prompts/list
+{ "jsonrpc": "2.0", "id": "pl", "method": "prompts/list",
+  "params": { "_meta": { "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                         "io.modelcontextprotocol/clientCapabilities": {} } } }
+HTTP 200
+[Asserts]
+jsonpath "$.result.resultType" == "complete"
+jsonpath "$.result.prompts" isCollection
+jsonpath "$.result.ttlMs" exists
+
+# an unknown prompt is invalid params; prompts/get also needs its Mcp-Name header
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+MCP-Protocol-Version: 2026-07-28
+Mcp-Method: prompts/get
+Mcp-Name: no_such_prompt
+{ "jsonrpc": "2.0", "id": "pg", "method": "prompts/get",
+  "params": { "name": "no_such_prompt",
+              "_meta": { "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                         "io.modelcontextprotocol/clientCapabilities": {} } } }
+HTTP 200
+[Asserts]
+jsonpath "$.error.code" == -32602
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+MCP-Protocol-Version: 2026-07-28
+Mcp-Method: prompts/get
+{ "jsonrpc": "2.0", "id": "pg2", "method": "prompts/get",
+  "params": { "name": "no_such_prompt",
+              "_meta": { "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                         "io.modelcontextprotocol/clientCapabilities": {} } } }
+HTTP 400
+[Asserts]
+jsonpath "$.error.code" == -32020
+
+POST {{base_url}}/{{app_name}}/api/mcp
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "jsonrpc": "2.0", "id": 62, "method": "prompts/list" }
+HTTP 200
+[Asserts]
+jsonpath "$.result.prompts" isCollection
 
 # header and body disagree
 POST {{base_url}}/{{app_name}}/api/mcp

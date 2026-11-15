@@ -278,6 +278,7 @@ bdus_charts            — User-defined charts
 bdus_file_links        — File ↔ record associations
 bdus_files             — Uploaded file metadata
 bdus_group_rules       — Per-group, per-table CRUD grants (optional JSON row filter, optional `enforce` map of accepted values)
+bdus_mcp_prompts       — Prompt templates offered to MCP clients (name, title, description, arguments JSON, template, sort)
 bdus_groups            — User groups (optional JSON `attrs`, read by rules as `$GROUP.<key>`)
 bdus_table_locks       — Row subsets frozen against update/delete
 bdus_geodata           — Geospatial features (WKT)

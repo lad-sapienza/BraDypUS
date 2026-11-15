@@ -54,7 +54,7 @@ class McpServerTest extends BdusTestCase
     {
         $params['_meta'] = self::META;
         $headers += ['mcp-protocol-version' => '2026-07-28', 'mcp-method' => $method];
-        if ($method === 'tools/call') {
+        if ($method === 'tools/call' || $method === 'prompts/get') {
             $headers += ['mcp-name' => $params['name'] ?? ''];
         }
         return $this->server()->handle(

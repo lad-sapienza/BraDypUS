@@ -1,0 +1,15 @@
+{
+    "columns": [
+        { "name": "id",          "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "name",        "type": "TEXT",               "notnull": true  },
+        { "name": "title",       "type": "TEXT",               "notnull": false },
+        { "name": "description", "type": "TEXT",               "notnull": false },
+        { "name": "arguments",   "type": "TEXT",               "notnull": false },
+        { "name": "template",    "type": "TEXT",               "notnull": true  },
+        { "name": "sort",        "type": "INTEGER",            "notnull": false, "default": 0 }
+    ],
+    "indexes": [
+        { "name": "mcp_prompts_name_idx", "columns": ["name"], "unique": true }
+    ],
+    "relations": []
+}

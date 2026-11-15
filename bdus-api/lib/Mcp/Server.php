@@ -10,7 +10,8 @@ namespace Mcp;
 /**
  * Model Context Protocol server: one JSON-RPC message in, one answer out.
  * Stateless — no session, no stream, no message initiated by the server —
- * so it fits one PHP request. Tools only.
+ * so it fits one PHP request. Tools and prompts; no resources, sampling or
+ * subscriptions.
  *
  * Two generations of clients are served on the same endpoint:
  *  - revision 2026-07-28: no handshake; every request carries its protocol
@@ -41,6 +42,8 @@ class Server
 
     /** @var array<string, Tool> */
     private array $tools = [];
+
+    private ?Prompts $prompts = null;
 
     /**
      * @param Tool[]|null $tools  the tools to serve; null = the standard set
@@ -139,7 +142,7 @@ class Server
 
         // The headers repeat what the body says; they must agree.
         $expected = ['mcp-protocol-version' => $version, 'mcp-method' => $method];
-        if ($method === 'tools/call') {
+        if ($method === 'tools/call' || $method === 'prompts/get') {
             $expected['mcp-name'] = is_string($params['name'] ?? null) ? $params['name'] : '';
         }
         foreach ($expected as $name => $value) {
@@ -154,7 +157,7 @@ class Server
             case 'server/discover':
                 return [200, $this->result($id, $extra + [
                     'supportedVersions' => [self::MODERN],
-                    'capabilities'      => ['tools' => new \stdClass()],
+                    'capabilities'      => $this->capabilities(),
                     'instructions'      => self::INSTRUCTIONS,
                     'ttlMs'             => 3600000,
                     'cacheScope'        => 'public',
@@ -171,6 +174,19 @@ class Server
                 $out = $this->callTool($params);
                 return is_int($out)
                     ? [200, $this->error($id, $out, 'Unknown tool: ' . (is_string($params['name'] ?? null) ? $params['name'] : ''))]
+                    : [200, $this->result($id, $extra + $out)];
+
+            case 'prompts/list':
+                return [200, $this->result($id, $extra + [
+                    'prompts'    => $this->promptList(),
+                    'ttlMs'      => 300000,
+                    'cacheScope' => 'public',
+                ])];
+
+            case 'prompts/get':
+                $out = $this->getPrompt($params);
+                return isset($out['error'])
+                    ? [200, $this->error($id, $out['error'][0], $out['error'][1], $out['error'][2])]
                     : [200, $this->result($id, $extra + $out)];
         }
 
@@ -195,7 +211,7 @@ class Server
                 return [200, $this->result($id, [
                     // The version the client asked for when we speak it, else our latest handshake revision.
                     'protocolVersion' => in_array($asked, self::LEGACY, true) ? $asked : self::LEGACY[0],
-                    'capabilities'    => ['tools' => new \stdClass()],
+                    'capabilities'    => $this->capabilities(),
                     'serverInfo'      => $this->serverInfo(),
                     'instructions'    => self::INSTRUCTIONS,
                 ])];
@@ -210,6 +226,15 @@ class Server
                 $out = $this->callTool($params);
                 return is_int($out)
                     ? [200, $this->error($id, $out, 'Unknown tool: ' . (is_string($params['name'] ?? null) ? $params['name'] : ''))]
+                    : [200, $this->result($id, $out)];
+
+            case 'prompts/list':
+                return [200, $this->result($id, ['prompts' => $this->promptList()])];
+
+            case 'prompts/get':
+                $out = $this->getPrompt($params);
+                return isset($out['error'])
+                    ? [200, $this->error($id, $out['error'][0], $out['error'][1], $out['error'][2])]
                     : [200, $this->result($id, $out)];
         }
 
@@ -276,6 +301,63 @@ class Server
         ];
     }
 
+    // ── Prompts ───────────────────────────────────────────────────────────────
+
+    /** The prompts of the application, as `prompts/list` describes them. Same for every principal. */
+    private function promptList(): array
+    {
+        $list = [];
+        foreach ($this->prompts()->all() as $p) {
+            $item = ['name' => $p['name']];
+            if ($p['title'] !== '') {
+                $item['title'] = $p['title'];
+            }
+            if ($p['description'] !== '') {
+                $item['description'] = $p['description'];
+            }
+            if ($p['arguments']) {
+                $item['arguments'] = array_map(fn($a) => array_filter(
+                    ['name' => $a['name'], 'description' => $a['description'], 'required' => $a['required']],
+                    fn($v) => $v !== ''
+                ), $p['arguments']);
+            }
+            $list[] = $item;
+        }
+        return $list;
+    }
+
+    /**
+     * `prompts/get`: the text of one prompt for the supplied arguments.
+     *
+     * @return array  the result, or ['error' => [code, message, data|null]]
+     */
+    private function getPrompt(array $params): array
+    {
+        $name   = $params['name'] ?? null;
+        $prompt = is_string($name) ? $this->prompts()->find($name) : null;
+        if ($prompt === null) {
+            return ['error' => [self::INVALID_PARAMS, 'Unknown prompt: ' . (is_string($name) ? $name : ''), null]];
+        }
+        $args = $params['arguments'] ?? [];
+        if (!is_array($args) || ($args && array_is_list($args))) {
+            return ['error' => [self::INVALID_PARAMS, 'arguments must be an object', null]];
+        }
+        try {
+            $text = $this->prompts()->render($prompt, $args);
+        } catch (PromptError $e) {
+            return ['error' => [self::INVALID_PARAMS, $e->errorCode, ['detail' => $e->detail]]];
+        }
+        return [
+            'description' => $prompt['description'] !== '' ? $prompt['description'] : $prompt['title'],
+            'messages'    => [['role' => 'user', 'content' => ['type' => 'text', 'text' => $text]]],
+        ];
+    }
+
+    private function prompts(): Prompts
+    {
+        return $this->prompts ??= new Prompts($this->ctx->db);
+    }
+
     // ── Envelope ──────────────────────────────────────────────────────────────
 
     private function serverInfo(): array
@@ -297,6 +379,12 @@ class Server
             $error['data'] = $data;
         }
         return ['jsonrpc' => '2.0', 'id' => $id, 'error' => $error];
+    }
+
+    /** What this server offers. Both lists are the same for every principal and change only when an administrator edits them. */
+    private function capabilities(): array
+    {
+        return ['tools' => new \stdClass(), 'prompts' => ['listChanged' => false]];
     }
 
     private const INSTRUCTIONS = 'A BraDypUS research database. Call `guide` first, then `schema` to learn the tables: '

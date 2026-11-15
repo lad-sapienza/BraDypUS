@@ -62,6 +62,7 @@ use DB\System\Migrations\M050_AddDefaultGroups;
 use DB\System\Migrations\M051_AddLayoutsToGroups;
 use DB\System\Migrations\M052_AddMcpSettingsToCfgApp;
 use DB\System\Migrations\M053_AddProvenanceToVersions;
+use DB\System\Migrations\M054_CreateMcpPrompts;
 use Monolog\Logger;
 
 /**
@@ -160,6 +161,7 @@ class Migrate
         M051_AddLayoutsToGroups::class,
         M052_AddMcpSettingsToCfgApp::class,
         M053_AddProvenanceToVersions::class,
+        M054_CreateMcpPrompts::class,
     ];
 
     /**

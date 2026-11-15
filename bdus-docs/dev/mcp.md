@@ -15,7 +15,7 @@ and what is still to come (write tools, history, OAuth) are in the
 
 | Built | Not yet |
 |---|---|
-| Protocol layer, settings (and their page: system configuration → MCP, `McpPanel.vue`), the ten tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete` | Prompts, a tool for stratigraphic relations, OAuth |
+| Protocol layer, settings (and their page: system configuration → MCP, `McpPanel.vue`), the ten tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete`, `prompts/list` and `prompts/get` | Editing prompts (REST endpoints and a page), a tool for stratigraphic relations, OAuth |
 
 ## Request flow
 
@@ -162,6 +162,28 @@ Every change is recorded in `bdus_versions` with `channel = 'mcp'`
 
 Plugin tables are refused as the `table` of a write: their rows are written
 inside their record, in `plugins`.
+
+## Prompts
+
+`prompts/list` and `prompts/get` serve the text templates an administrator wrote
+for the application (`bdus_mcp_prompts`, M054) — "end-of-season report", "context
+sheet entry". `Mcp\Prompts` is the store: validation on write, order, rendering.
+
+- **A prompt is text, not a permission.** It is the same for every principal and
+  grants nothing; what the model can then do is still decided by the tools and the
+  principal's rights. Prompts are **read-only from MCP**: only an administrator edits
+  them (a model that could write its own prompts would have a permanent injection channel).
+- **Template.** `{{argument}}` placeholders; every placeholder must be a declared
+  argument (refused when saved). Rendering is one pass over the template: a value
+  containing `{{x}}` is not expanded again. An optional argument left out becomes empty.
+- **Limits.** 50 prompts, 10 arguments each, title 100, description 500, template
+  20,000 characters, an argument value 5,000; name `[a-z0-9][a-z0-9_-]{0,63}`, unique.
+- **Protocol.** `capabilities.prompts = { listChanged: false }` (no notifications).
+  The list is not paginated (50 at most), carries `ttlMs` 300000 and `cacheScope: public`
+  in revision `2026-07-28`, where `prompts/get` also needs the `Mcp-Name` header equal to
+  `params.name` (`400`, `-32020` otherwise). An unknown prompt, a missing required argument,
+  an undeclared argument or a value that is not text answer `-32602`.
+- **Before M054** `prompts/list` answers an empty list instead of failing.
 
 ## Access and rate limits
 

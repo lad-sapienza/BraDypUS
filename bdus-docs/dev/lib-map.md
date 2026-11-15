@@ -84,6 +84,7 @@ without going through a lib/ abstraction.
 | `Template\Loader` | `lib/Template/Loader.php` | Loads Twig print templates from DB |
 | `Mcp\Server` | `lib/Mcp/Server.php` | MCP protocol layer: one JSON-RPC message in, status + body out; both protocol generations ([MCP server](./mcp)) |
 | `Mcp\Tool`, `Mcp\Context`, `Mcp\ToolError` | `lib/Mcp/` | Contract of a tool, what it receives, how it refuses |
+| `Mcp\Prompts`, `Mcp\PromptError` | `lib/Mcp/` | The prompts of an application (`bdus_mcp_prompts`, M054): validation, order, `{{argument}}` rendering |
 | `Mcp\Tools\*` | `lib/Mcp/Tools/` | The generic tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete` |
 | `SQL\Aggregate` | `lib/SQL/Aggregate.php` | COUNT / SUM / AVG / MIN / MAX over the rows of a `QueryFromRequest` request, grouped by up to two fields; used by the charts and by the MCP `aggregate` tool |
 | `Template\Assign` | `lib/Template/Assign.php` | Record layouts per group: which templates a user's groups assign |

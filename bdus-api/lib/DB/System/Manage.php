@@ -84,6 +84,8 @@ class Manage
         'bdus_zotero_links',
         // user-defined index registry (no FK deps)
         'bdus_cfg_indexes',
+        // text templates offered to MCP clients (no FK deps)
+        'bdus_mcp_prompts',
     ];
 
     /**

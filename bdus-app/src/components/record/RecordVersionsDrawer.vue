@@ -24,7 +24,8 @@
           v-for="v in versions"
           :key="v.id"
           class="vd-list-item"
-          @click="loadDiff(v)"
+          :class="{ 'vd-list-item--plain': v.operation === 'create' }"
+          @click="v.operation !== 'create' && loadDiff(v)"
         >
           <span class="vd-op-badge" :class="`op-${v.operation}`">
             {{ t(`version_op_${v.operation}`) }}
@@ -33,7 +34,8 @@
             <span class="vd-time">{{ v.time }}</span>
             <span class="vd-user">{{ v.userid }}</span>
           </span>
-          <RightOutlined class="vd-arrow" />
+          <!-- The entry of a creation holds no earlier state: nothing to compare or restore -->
+          <RightOutlined v-if="v.operation !== 'create'" class="vd-arrow" />
         </li>
       </ul>
     </template>
@@ -464,6 +466,8 @@ function reset() {
 .op-update  { background: var(--p-blue-100);   color: var(--p-blue-700); }
 .op-delete  { background: var(--p-red-100);    color: var(--p-red-700); }
 .op-restore { background: var(--p-orange-100); color: var(--p-orange-700); }
+.op-create  { background: var(--p-green-100);  color: var(--p-green-700); }
+.vd-list-item--plain { cursor: default; }
 
 /* ── Diff nav ── */
 .vd-diff-nav { margin-bottom: 0.5rem; }

@@ -220,6 +220,12 @@ class Persist
             }
             $this->id = $newId;
 
+            // History entry of the creation: who, when and through which channel.
+            // No content (the record as created is the record itself until it is changed).
+            if ($newId > 0) {
+                $this->db->saveSnapshot($this->tb, $newId, ['core' => [], 'plugins' => []], 'create');
+            }
+
             return ['affected' => 1, 'id' => $this->id];
         }
     }

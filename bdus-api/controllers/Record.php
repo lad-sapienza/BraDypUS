@@ -1896,8 +1896,7 @@ class Record extends \Bdus\Controller
     // resolveOwnerCreator() / issue #64. Resolved once here, outside the
     // loop, since it's the same for every id in this batch (all deleted
     // from the same $tb).
-    $isPlugin    = (bool) $this->cfg->get("tables.{$tb}.is_plugin");
-    $hasPleiades = (bool) $this->cfg->get("tables.{$tb}.pleiades");
+    $deleter = new \Record\Delete($this->db, $this->cfg, $this->access());
 
     $ok    = [];
     $error = [];
@@ -1905,36 +1904,12 @@ class Record extends \Bdus\Controller
     foreach ($ids as $id) {
       if (!$id) continue;
       try {
-        // Already gone (e.g. deleted meanwhile by another user): nothing to
-        // delete, so it must not be reported as a successful deletion (#45).
-        if (!$this->db->query("SELECT 1 FROM {$tb} WHERE id = ?", [$id], 'read')) {
+        // Existence, ownership, row scope, locks and the delete itself: \Record\Delete.
+        if ($deleter->delete($tb, $id) === \Record\Delete::DELETED) {
+          $ok[] = $id;
+        } else {
           $error[] = $id;
-          continue;
         }
-
-        $reader = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
-
-        $creator = $hasBlanketEdit ? null : $this->resolveOwnerCreator($tb, $reader, $isPlugin);
-        if (!$this->mayChange('delete', $tb, $id, $creator)) {
-          $error[] = $id;
-          continue;
-        }
-
-        // Pleiades "pulizia totale": the plugin's own bdus_geodata row (if
-        // any — tracked via pleiades_geo_id so a manually-drawn Geoface
-        // geometry on the same record is never touched) has no FK/cascade
-        // of its own, so it must be cleaned up explicitly on record delete.
-        if ($hasPleiades) {
-          $geoId = (int) ($reader->getCore('pleiades_geo_id', true) ?? 0);
-          if ($geoId) {
-            $this->db->query('DELETE FROM bdus_geodata WHERE id = ?', [$geoId], 'boolean');
-          }
-        }
-
-        $editor = new \Record\Edit($reader);
-        $editor->delete();
-        $editor->persist($this->db, $this->cfg);
-        $ok[] = $id;
       } catch (\Throwable $e) {
         $this->log->error($e);
         $error[] = $id;
@@ -2067,12 +2042,14 @@ class Record extends \Bdus\Controller
 
     try {
       $rows = $this->db->query(
-        "SELECT id, userid, time, operation
-           FROM bdus_versions
-          WHERE tb = ? AND rowid = ?
-          ORDER BY id DESC",
+        "SELECT * FROM bdus_versions WHERE tb = ? AND rowid = ? ORDER BY id DESC",
         [$tb, $id]
       ) ?: [];
+      // `channel` is there from M053 on; the snapshot itself is served by getVersionDiff().
+      $rows = array_map(fn($r) => array_intersect_key(
+        $r,
+        array_flip(['id', 'userid', 'time', 'operation', 'channel'])
+      ), $rows);
 
       foreach ($rows as &$row) {
         if ($row['time']) {
@@ -2235,6 +2212,12 @@ class Record extends \Bdus\Controller
       $tb      = $ver['tb'];
       $rid     = (int)$ver['rowid'];
       $content = json_decode($ver['content'], true) ?? ['core' => [], 'plugins' => []];
+
+      // The entry of a creation holds no state to go back to.
+      if (($ver['operation'] ?? '') === 'create') {
+        $this->returnJson(['status' => 'error', 'code' => 'version_not_restorable']);
+        return;
+      }
 
       // Validate table against config.
       $knownTables = array_keys($this->cfg->get('tables') ?? []);

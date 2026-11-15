@@ -22,9 +22,13 @@ A drawer slides in from the right listing all snapshots, newest first.
 
 Each entry shows:
 
-- **Operation badge** — `update`, `delete` or `restore`
+- **Operation badge** — `creation`, `update`, `delete` or `restore`
 - **Timestamp** — when the change was made
 - **User** — who made the change
+
+A **creation** entry <Badge type="tip" text="next release" /> records who created the
+record and when. It holds no earlier state, so it cannot be opened, compared or restored.
+Records created before this feature have no creation entry.
 
 ## Comparing a snapshot
 

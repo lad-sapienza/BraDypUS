@@ -250,25 +250,38 @@ Handles `bdus_rs`: INSERT sets `tb`, `first`, `second`, `relation`.
 
 ### Versioning
 
-Before every UPDATE and DELETE, `persistCore()` calls `DB::saveSnapshot()`:
+`persistCore()` calls `DB::saveSnapshot()` for every write:
+
+| Write | Entry in `bdus_versions` |
+|---|---|
+| INSERT | `operation = 'create'`, **no content** (`{core: [], plugins: []}`): who created the record, when, through which channel |
+| UPDATE | `operation = 'update'`, the record and its plugin rows as they were **before** the change |
+| DELETE | `operation = 'delete'`, the record and its plugin rows before deletion |
 
 ```php
 $db->saveSnapshot(
     tb:        'sites',
     id:        42,
     content:   ['core' => [...], 'plugins' => [...]],
-    operation: 'update'  // or 'delete'
+    operation: 'update'
 );
 ```
 
-This inserts a row into `bdus_versions` with the full pre-write state as JSON,
-enabling unlimited undo / diff history accessible from the record detail view.
+The snapshot of an UPDATE and of a DELETE is written in the same transaction as
+the write: a change the database refuses (a constraint, a trigger) leaves no
+entry. The `create` entry is written right after the INSERT.
 
-The snapshot is taken **before** the `UPDATE` runs and is not rolled back if the
-`UPDATE` fails: a save rejected by the database (a constraint, or a trigger) still
-leaves a `bdus_versions` row (proven). `tb` and the snapshot's columns are those of
-the table name used in the request; for a [SQL view registered as a
-table](/guide/setup/views) that is the view name and the view's columns only.
+Each entry also says where the change came from (M053): `channel` (`web`, `api`,
+`mcp`, `import`, `cli` — see `Auth\Channel`), `key_id` (the API key) and
+`client_id` (the OAuth client). An entry point that is not the plain REST API
+names itself with `Auth\Channel::set()`.
+
+A `create` entry holds no state: `restoreVersion` answers
+`version_not_restorable` for it and the interface does not open it.
+
+`tb` and the snapshot's columns are those of the table name used in the request;
+for a [SQL view registered as a table](/guide/setup/views) that is the view name
+and the view's columns only.
 
 ---
 
@@ -316,7 +329,17 @@ goes through it and gets the same rules, in this order:
    the model is built directly (`rec_id => null`) and written with
    `Record\Persist::all()`. Radiocarbon plugin rows are calibrated server-side.
 
-`Record\Validator` never writes and can be used on its own (a dry run).
+`Record\Validator` never writes. `Record\Save::check()` runs steps 1–5 without
+step 6 — a dry run — and returns the values as they would be written and the
+stored values they replace.
+
+An update of an id that does not exist answers `record_not_found` (after the
+access gate, so that the existence of a record is not told to someone who could
+not read it).
+
+`Record\Delete::delete($tb, $id)` is the counterpart for deletions: existence,
+the same gate, then `Record\Edit::delete()`; it answers `deleted`, `not_found`
+or `not_enough_privilege`.
 
 ```php
 $save   = new \Record\Save($db, $cfg, \Auth\Access::forCurrentUser($db, $cfg), $log);

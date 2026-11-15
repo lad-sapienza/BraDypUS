@@ -81,6 +81,19 @@ $db->getApp(): string                   // application name
 $db->hasSpatialExtension(): bool        // checks ST_GeomFromText support
 ```
 
+### Nested transactions
+
+`beginTransaction()` inside an open transaction joins it instead of failing, so
+a caller can wrap several writes that each open their own transaction
+(`Record\Persist`) into one all-or-nothing unit:
+
+- an inner `commit()` decides nothing: the outer one does;
+- an inner `rollBack()` dooms the outer transaction, which stays open until its
+  own `rollBack()`; an outer `commit()` of a doomed transaction rolls back and
+  throws `RuntimeException`.
+
+Code that never nests behaves exactly as before.
+
 ### `saveSnapshot()` — versioning
 
 Before every write operation `Record\Persist` calls `DB::saveSnapshot()`:
@@ -90,7 +103,7 @@ $db->saveSnapshot(
     tb: 'sites',
     id: 42,
     content: ['core' => [...], 'plugins' => [...]],
-    operation: 'update'  // 'update' | 'delete' | 'restore'
+    operation: 'update'  // 'create' | 'update' | 'delete' | 'restore'
 );
 ```
 

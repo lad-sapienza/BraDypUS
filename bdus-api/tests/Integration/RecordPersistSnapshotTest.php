@@ -46,9 +46,9 @@ class RecordPersistSnapshotTest extends BdusTestCase
         return $rows[0] ?? null;
     }
 
-    // ── INSERT → no snapshot ──────────────────────────────────────────────────
+    // ── INSERT → a `create` entry without content ─────────────────────────────
 
-    public function testInsertDoesNotCreateSnapshot(): void
+    public function testInsertRecordsACreateEntryWithoutContent(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], [
             'tb'   => self::TB,
@@ -58,9 +58,18 @@ class RecordPersistSnapshotTest extends BdusTestCase
         $this->assertSame('success', $res['status']);
 
         $newId = (int)$res['id'];
-        $this->assertSame(0, $this->versionCount(self::TB, $newId),
-            'INSERT must not create a snapshot — the record did not exist before.'
-        );
+        $this->assertSame(1, $this->versionCount(self::TB, $newId), 'one entry: the creation');
+        $ver = $this->latestVersion(self::TB, $newId);
+        $this->assertSame('create', $ver['operation']);
+        $this->assertSame(['core' => [], 'plugins' => []], json_decode($ver['content'], true),
+            'the record did not exist before: there is no state to save');
+        $this->assertSame('web', $ver['channel']);
+        $this->assertNull($ver['key_id']);
+
+        // A creation cannot be "restored".
+        $this->setPrivilege(1);
+        $restore = $this->makeController('Bdus\\Controllers\\Record', ['id' => (int) $ver['id']], []);
+        $this->assertSame('version_not_restorable', $this->callController($restore, 'restoreVersion')['code']);
 
         // Clean up
         static::$db->query('DELETE FROM items WHERE id = ?', [$newId], 'boolean');

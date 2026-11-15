@@ -180,7 +180,7 @@ class DB implements DBInterface
    * @param string $tb        Table name (user-data table, not a system table).
    * @param int    $id        Primary key of the record being modified.
    * @param array  $content   Full snapshot: {core: {...}, plugins: {tb: [rows]}}.
-   * @param string $operation One of 'update' | 'delete' | 'restore'.
+   * @param string $operation One of 'update' | 'delete' | 'restore' | 'create'.
    */
   public function saveSnapshot(
     string $tb,
@@ -189,23 +189,30 @@ class DB implements DBInterface
     string $operation = 'update'
   ): void {
     try {
-      $dt = new \DateTime();
       // editsql and editvalues are legacy columns that may carry NOT NULL on
       // older databases; pass empty strings to satisfy that constraint.
       // They are unused by the snapshot system (all data lives in `content`).
+      $row = [
+        'userid'     => \Auth\CurrentUser::id(),
+        'time'       => time(),
+        'tb'         => $tb,
+        'rowid'      => $id,
+        'content'    => json_encode($content, JSON_UNESCAPED_UNICODE),
+        'editsql'    => '',
+        'editvalues' => '',
+        'operation'  => $operation,
+      ];
+      // Where the change came from (M053): the channel, and the API key or
+      // the OAuth client that made it.
+      if ($this->versionsHaveProvenance()) {
+        $row['channel']   = \Auth\Channel::get();
+        $row['key_id']    = \Auth\Channel::keyId();
+        $row['client_id'] = \Auth\Channel::client();
+      }
       $this->query(
-        "INSERT INTO bdus_versions (userid, time, tb, rowid, content, editsql, editvalues, operation)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          \Auth\CurrentUser::id(),
-          $dt->format('U'),
-          $tb,
-          $id,
-          json_encode($content, JSON_UNESCAPED_UNICODE),
-          '',   // editsql  — legacy column, kept for schema compat
-          '',   // editvalues — legacy column, kept for schema compat
-          $operation,
-        ]
+        'INSERT INTO bdus_versions (' . implode(', ', array_keys($row)) . ') VALUES ('
+          . implode(', ', array_fill(0, count($row), '?')) . ')',
+        array_values($row)
       );
     } catch (DBException $e) {
       // Already logged by DB::run().
@@ -214,6 +221,34 @@ class DB implements DBInterface
         $this->log->error($th);
       }
     }
+  }
+
+  /** Does bdus_versions have the provenance columns of M053? Looked up once. */
+  private ?bool $versionsProvenance = null;
+
+  private function versionsHaveProvenance(): bool
+  {
+    if ($this->versionsProvenance === null) {
+      // Asked of the catalogue directly, with a statement that cannot fail: this
+      // runs inside the transaction of a write, and on PostgreSQL a failed
+      // statement aborts the whole transaction. (DB\System\Manage is not used
+      // here for that reason: building it probes for a spatial extension.)
+      try {
+        if ($this->getEngine() === 'sqlite') {
+          $cols = array_column($this->query('PRAGMA table_info(bdus_versions)', [], 'read') ?: [], 'name');
+          $this->versionsProvenance = in_array('channel', $cols, true);
+        } else {
+          $this->versionsProvenance = !empty($this->query(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = ? AND column_name = ?",
+            ['bdus_versions', 'channel'],
+            'read'
+          ));
+        }
+      } catch (\Throwable) {
+        $this->versionsProvenance = false;
+      }
+    }
+    return $this->versionsProvenance;
   }
 
   /**
@@ -375,8 +410,23 @@ class DB implements DBInterface
    */
   public function beginTransaction(): void
   {
+    // A transaction begun inside another joins it: the outer one decides. This
+    // lets a caller wrap several writes that each open their own transaction
+    // (Record\Persist) into one all-or-nothing unit.
+    if ($this->txDepth > 0 && $this->pdo->inTransaction()) {
+      $this->txDepth++;
+      return;
+    }
     $this->pdo->beginTransaction();
+    $this->txDepth  = 1;
+    $this->txDoomed = false;
   }
+
+  /** Open transactions, nested ones included (see beginTransaction()). */
+  private int $txDepth = 0;
+
+  /** A nested transaction was rolled back: the outer one cannot commit any more. */
+  private bool $txDoomed = false;
 
   /**
    * Commits a started transaction
@@ -385,6 +435,18 @@ class DB implements DBInterface
    */
   public function commit(): void
   {
+    if ($this->txDepth > 1) {
+      $this->txDepth--;
+      return;
+    }
+    $this->txDepth = 0;
+    if ($this->txDoomed) {
+      $this->txDoomed = false;
+      if ($this->pdo->inTransaction()) {
+        $this->pdo->rollBack();
+      }
+      throw new \RuntimeException('Transaction rolled back: a nested transaction failed.');
+    }
     $this->pdo->commit();
   }
 
@@ -405,6 +467,15 @@ class DB implements DBInterface
    */
   public function rollBack(): void
   {
+    // Rolling back a nested transaction dooms the outer one, which stays open
+    // until its own rollBack() (or commit(), which then refuses).
+    if ($this->txDepth > 1) {
+      $this->txDepth--;
+      $this->txDoomed = true;
+      return;
+    }
+    $this->txDepth  = 0;
+    $this->txDoomed = false;
     $this->pdo->rollBack();
   }
 

@@ -2,7 +2,7 @@
 # Phase 11 — Record version history
 #
 # Tests the full version lifecycle:
-#   11a.  Insert a record (no versions yet)
+#   11a.  Insert a record (one entry: its creation)
 #   11b.  getVersions → empty list
 #   11c.  Update the record (creates snapshot v1)
 #   11d.  Update again (creates snapshot v2)
@@ -21,7 +21,7 @@
 #   11q.  Cleanup: delete the re-created record
 # ════════════════════════════════════════════════════════════════════
 
-# ── 11a. Insert a new record (no versions yet) ───────────────────────
+# ── 11a. Insert a new record (one entry: its creation) ───────────────────────
 POST {{base_url}}/{{app_name}}/api/record/crud_test
 Authorization: Bearer {{jwt}}
 Content-Type: application/json
@@ -41,14 +41,15 @@ jsonpath "$.id"     isInteger
 vh_id: jsonpath "$.id"
 
 
-# ── 11b. getVersions → empty immediately after insert ────────────────
+# ── 11b. getVersions → only the creation entry after insert ────────────────
 GET {{base_url}}/{{app_name}}/api/record/crud_test/{{vh_id}}/versions
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 jsonpath "$.status"   == "success"
-jsonpath "$.versions" isCollection
-jsonpath "$.versions" isEmpty
+jsonpath "$.versions" count == 1
+jsonpath "$.versions[0].operation" == "create"
+jsonpath "$.versions[0].channel" == "web"
 
 
 # ── 11c. Update (first edit — creates snapshot v1) ───────────────────
@@ -86,7 +87,7 @@ HTTP 200
 [Asserts]
 jsonpath "$.status"          == "success"
 jsonpath "$.versions"        isCollection
-jsonpath "$.versions"        count == 2
+jsonpath "$.versions"        count == 3
 jsonpath "$.versions[0].id"  isInteger
 jsonpath "$.versions[0].userid"    isInteger
 jsonpath "$.versions[0].time"      isString
@@ -163,7 +164,7 @@ GET {{base_url}}/{{app_name}}/api/record/crud_test/{{vh_id}}/versions
 Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
-jsonpath "$.versions" count == 3
+jsonpath "$.versions" count == 4
 # Newest entry is the pre-restore snapshot with operation='restore'
 jsonpath "$.versions[0].operation" == "restore"
 

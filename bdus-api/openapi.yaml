@@ -6260,7 +6260,9 @@ paths:
         open with `initialize`.
 
         Methods: `initialize`, `ping`, `server/discover`, `tools/list`,
-        `tools/call`. Tools: `guide`, `schema`, `vocabulary`, `records_read`,
+        `tools/call`, `prompts/list`, `prompts/get` (the application's prompts, written by a super
+        admin through `/api/mcp-prompts`; `prompts/get` needs the `Mcp-Name` header in revision
+        `2026-07-28`; an unknown prompt or a bad argument is `-32602`). Tools: `guide`, `schema`, `vocabulary`, `records_read`,
         `aggregate`, `resolve`, `history`, `records_validate`, `records_write`
         (needs `mcp.write` and the token `records_validate` returns),
         `records_delete` (needs `mcp.delete`). Every tool sees only the tables and rows the principal may
@@ -6352,6 +6354,122 @@ paths:
           description: MCP is not enabled for the application, or unknown method (revision 2026-07-28)
         '429':
           description: Rate limit exceeded (`Retry-After` header)
+
+  /api/mcp-prompts:
+    get:
+      operationId: getMcpPrompts
+      tags: [mcp]
+      summary: List the MCP prompts of the application (super admin)
+      description: |
+        The prompts an MCP client sees through `prompts/list`, with their template, in the
+        administrator's order. Empty until the first one is written (and before migration M054).
+      responses:
+        '200':
+          description: Prompt list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      prompts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/McpPrompt'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: postMcpPrompts
+      tags: [mcp]
+      summary: Create an MCP prompt (super admin)
+      description: |
+        A prompt is a text template with `{{argument}}` placeholders; every placeholder must be a
+        declared argument. Refusals answer `200` with an error `code`: `invalid_prompt_name`,
+        `invalid_prompt_title`, `invalid_prompt_description`, `invalid_prompt_template`,
+        `invalid_prompt_arguments`, `undeclared_prompt_placeholder` (`detail` lists them),
+        `prompt_name_taken`, `too_many_prompts` (50 at most).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/McpPromptInput'
+      responses:
+        '200':
+          description: The saved prompt, or an error code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpPromptResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/mcp-prompts/order:
+    put:
+      operationId: putMcpPromptsOrder
+      tags: [mcp]
+      summary: Set the order of the MCP prompts (super admin)
+      description: The listed ids come first, in that order; the others keep their relative order after them. Unknown ids are ignored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Order saved (`ok_mcp_prompts_reordered`), or `parameter_missing`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/mcp-prompt/{id}:
+    put:
+      operationId: putMcpPromptById
+      tags: [mcp]
+      summary: Replace the content of an MCP prompt (super admin)
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/McpPromptInput'
+      responses:
+        '200':
+          description: The saved prompt, `prompt_not_found`, or a refusal code (see POST)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/McpPromptResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      operationId: deleteMcpPromptById
+      tags: [mcp]
+      summary: Delete an MCP prompt (super admin)
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Deleted (`ok_mcp_prompt_deleted`) or `prompt_not_found`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   # ── Widgets ───────────────────────────────────────────────────────────────────
 
@@ -8112,6 +8230,60 @@ components:
               type: integer
 
     # ── API Keys ───────────────────────────────────────────────────────────
+
+    McpPromptInput:
+      type: object
+      required: [name, template]
+      properties:
+        name:
+          type: string
+          pattern: '^[a-z0-9][a-z0-9_-]{0,63}$'
+          description: Unique within the application; the name MCP clients use.
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        arguments:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+                pattern: '^[a-z_][a-z0-9_]{0,31}$'
+              description:
+                type: string
+                maxLength: 200
+              required:
+                type: boolean
+        template:
+          type: string
+          maxLength: 20000
+          description: Text with `{{argument}}` placeholders; each must be a declared argument.
+
+    McpPrompt:
+      allOf:
+        - $ref: '#/components/schemas/McpPromptInput'
+        - type: object
+          properties:
+            id:
+              type: integer
+            sort:
+              type: integer
+
+    McpPromptResult:
+      oneOf:
+        - allOf:
+            - $ref: '#/components/schemas/CodedSuccess'
+            - type: object
+              properties:
+                prompt:
+                  $ref: '#/components/schemas/McpPrompt'
+        - $ref: '#/components/schemas/Error'
 
     ApiKey:
       type: object

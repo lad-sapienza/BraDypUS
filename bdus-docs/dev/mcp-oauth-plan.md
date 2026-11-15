@@ -9,7 +9,7 @@ Design document. Implemented so far: the prerequisite refactor (decision D1)
 and most of phase 1 — protocol layer, settings (M052), the ten tools of
 section 4, the validation token, provenance and `create` entries in the history
 (M053). The read tools were checked with Claude Code on the demo application.
-The settings page (system configuration → MCP) exists. Still missing in phase 1: prompts, the user
+The settings page (system configuration → MCP) exists. Prompts (M054) are served and can be written through REST. Still missing in phase 1: a page to edit them, the user
 guide. What exists is described in
 [MCP server](./mcp). Everything else here is still a plan.
 Written 2026-11-15 against v5.23.1. Statements about external projects (MCP

@@ -177,6 +177,11 @@ class Router
         'Bdus\\Controllers\\Api::createKey'                        => 'admin',
         'Bdus\\Controllers\\Api::revokeKey'                        => 'admin',
         'Bdus\\Controllers\\Api::deleteKey'                        => 'admin',
+        'Bdus\\Controllers\\McpPrompts::listPrompts'               => 'super_admin',
+        'Bdus\\Controllers\\McpPrompts::createPrompt'              => 'super_admin',
+        'Bdus\\Controllers\\McpPrompts::updatePrompt'              => 'super_admin',
+        'Bdus\\Controllers\\McpPrompts::deletePrompt'              => 'super_admin',
+        'Bdus\\Controllers\\McpPrompts::reorderPrompts'            => 'super_admin',
 
         // ── Groups & permissions (#78) — admin only ──────────────────────────
         'Bdus\\Controllers\\Groups::listGroups'                    => 'admin',
@@ -618,6 +623,13 @@ class Router
             $r->addRoute('POST',   '/api/api-keys',                 ['Bdus\\Controllers\\Api', 'createKey']);
             $r->addRoute('POST',   '/api/api-key/{id:\d+}/revoke',  ['Bdus\\Controllers\\Api', 'revokeKey']);
             $r->addRoute('DELETE', '/api/api-key/{id:\d+}',         ['Bdus\\Controllers\\Api', 'deleteKey']);
+
+            // MCP prompts (super_admin)
+            $r->addRoute('GET',    '/api/mcp-prompts',              ['Bdus\\Controllers\\McpPrompts', 'listPrompts']);
+            $r->addRoute('POST',   '/api/mcp-prompts',              ['Bdus\\Controllers\\McpPrompts', 'createPrompt']);
+            $r->addRoute('PUT',    '/api/mcp-prompts/order',        ['Bdus\\Controllers\\McpPrompts', 'reorderPrompts']);
+            $r->addRoute('PUT',    '/api/mcp-prompt/{id:\d+}',      ['Bdus\\Controllers\\McpPrompts', 'updatePrompt']);
+            $r->addRoute('DELETE', '/api/mcp-prompt/{id:\d+}',      ['Bdus\\Controllers\\McpPrompts', 'deletePrompt']);
 
             // Groups & permissions (#78)
             $r->addRoute('GET',    '/api/groups',                   ['Bdus\\Controllers\\Groups', 'listGroups']);

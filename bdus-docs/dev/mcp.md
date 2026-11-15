@@ -15,7 +15,7 @@ and what is still to come (write tools, history, OAuth) are in the
 
 | Built | Not yet |
 |---|---|
-| Protocol layer, settings (and their page: system configuration → MCP, `McpPanel.vue`), the ten tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete`, `prompts/list` and `prompts/get` | Editing prompts (REST endpoints and a page), a tool for stratigraphic relations, OAuth |
+| Protocol layer, settings (and their page: system configuration → MCP, `McpPanel.vue`), the ten tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete`, `prompts/list` and `prompts/get`, the REST endpoints that edit prompts | A page to edit prompts, a tool for stratigraphic relations, OAuth |
 
 ## Request flow
 
@@ -184,6 +184,12 @@ sheet entry". `Mcp\Prompts` is the store: validation on write, order, rendering.
   `params.name` (`400`, `-32020` otherwise). An unknown prompt, a missing required argument,
   an undeclared argument or a value that is not text answer `-32602`.
 - **Before M054** `prompts/list` answers an empty list instead of failing.
+- **Administration.** Super admin only, through `Bdus\Controllers\McpPrompts`:
+  `GET|POST /api/mcp-prompts`, `PUT /api/mcp-prompts/order`,
+  `PUT|DELETE /api/mcp-prompt/{id}`. A refusal is `200` with a code
+  (`invalid_prompt_name`, `invalid_prompt_template`, `invalid_prompt_arguments`,
+  `undeclared_prompt_placeholder`, `prompt_name_taken`, `too_many_prompts`,
+  `prompt_not_found`). Tests: `McpPromptsTest`, `McpPromptsCtrlTest`, hurl phase 56.
 
 ## Access and rate limits
 
@@ -208,4 +214,6 @@ sheet entry". `Mcp\Prompts` is the store: validation on write, order, rendering.
   principal, expiry), all-or-nothing writes and deletes, what is left in the
   history, nested transactions.
 - `tests/api/55_mcp.hurl` — the endpoint over HTTP: 401, 404 while off, 405 on
-  GET, handshake, modern headers, `Origin`.
+  GET, handshake, modern headers, `Origin`, prompts without any prompt written.
+- `tests/api/56_mcp_prompts.hurl` — prompts written through the REST endpoints and read
+  back as an MCP client reads them.

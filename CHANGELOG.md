@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`PUT /api/config/app` with `{ "mcp": { "enabled", "write", "delete", "guide" } }`; migration
   M052), or from the new "MCP (AI assistants)" page of the system configuration. Developer docs: `dev/mcp`, plan in
   `dev/mcp-oauth-plan`; hurl phase 55.
+- **MCP prompts.** An administrator can write text templates with arguments ("end-of-season
+  report", "context sheet entry") that MCP clients offer to their users (`prompts/list`,
+  `prompts/get`). Endpoints `GET|POST /api/mcp-prompts`, `PUT /api/mcp-prompts/order`,
+  `PUT|DELETE /api/mcp-prompt/{id}` (super admin; migration M054). A prompt is only text: it
+  grants nothing and MCP clients cannot write prompts.
 - **The history says who created a record, and where every change came from.** Creating a record
   now leaves a `creation` entry in its version history (who, when; no content, so it cannot be
   compared or restored), and every entry records the channel of the change — interface, API key,

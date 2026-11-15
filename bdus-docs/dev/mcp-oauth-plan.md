@@ -538,7 +538,7 @@ Checked on the Directus documentation, 2026-11-15 (MCP requires v11.12+).
 
 1. A `create` row in the history for every insert: **yes, metadata only**.
 2. The data import through `Record\Save`: **yes**.
-3. Validation token before `records_write`: **yes**.
+3. Validation token before `records_write`: **yes**. Single-use? **No** (2026-11-15): it is a signature over the payload, not a stored nonce; a repeated creation is stopped only by `no_dupl`, documented in the user guide; a store in the cache directory is the option if duplicates appear.
 4. First release read-only: **no — full cycle**, read and write together.
 5. Dedicated tools: **yes for stratigraphic relations, wait for geometries**.
 

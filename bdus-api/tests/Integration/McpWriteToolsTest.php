@@ -214,6 +214,33 @@ class McpWriteToolsTest extends BdusTestCase
         $this->assertFalse($res['__isError'], json_encode($res));
     }
 
+    public function testTheTokenIsNotSingleUseSoOnlyAUniqueFieldStopsAReplay(): void
+    {
+        // Decision of the project owner: the token proves what was validated, it is not a nonce
+        // (nothing is stored). Sending the same call again within its 15 minutes writes again;
+        // a `no_dupl` field is what turns the second creation into a refusal. Documented in the
+        // user guide and in dev/mcp.md: if this test changes, so must they.
+        $unique = [['core' => ['name' => 'replay-unique', 'status' => 'active']]];
+        $check  = $this->tool('records_validate', ['table' => 'items', 'records' => $unique]);
+        $args   = ['table' => 'items', 'records' => $unique, 'validation_token' => $check['validation_token']];
+
+        $first = $this->tool('records_write', $args);
+        $this->assertFalse($first['__isError'], json_encode($first));
+        $again = $this->tool('records_write', $args);
+        $this->assertTrue($again['__isError']);
+        $this->assertSame('write_refused', $again['code']);
+        $this->assertSame('validation_failed', $again['detail']['code'] ?? null, 'stopped by no_dupl on name, not by the token');
+
+        // an update replays harmlessly: same values again
+        $id     = $first['results'][0]['id'];
+        $change = [['id' => $id, 'core' => ['description' => 'replayed']]];
+        $check  = $this->tool('records_validate', ['table' => 'items', 'records' => $change]);
+        $args   = ['table' => 'items', 'records' => $change, 'validation_token' => $check['validation_token']];
+        $this->assertFalse($this->tool('records_write', $args)['__isError']);
+        $this->assertFalse($this->tool('records_write', $args)['__isError']);
+        $this->assertSame('replayed', static::$db->query('SELECT description FROM items WHERE id = ?', [$id], 'read')[0]['description']);
+    }
+
     public function testTokenIsBoundToThePrincipal(): void
     {
         $records = [['core' => ['name' => 'Other principal']]];

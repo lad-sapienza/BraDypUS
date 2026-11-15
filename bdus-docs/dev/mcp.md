@@ -147,7 +147,15 @@ same validation, same history. Three rules are added for a client that is a mode
    application secret (`JwtManager::deriveKey(APP, 'mcp-validation')`). It is
    valid 15 minutes and nothing is stored. It proves the payload was validated,
    **not** that the user agreed: that is the client's confirmation, which the
-   `destructiveHint` annotation asks for.
+   `destructiveHint` annotation asks for. **It is not single-use** (decision of the
+   project owner, 2026-11-15, over a stored nonce): within its 15 minutes the same call
+   can be sent again and writes again. An update replays harmlessly (same values); a
+   creation is repeated unless a `no_dupl` field refuses the second one — the case to
+   expect is a client that retries after losing the answer. The 500-records-per-hour
+   budget bounds the damage. If duplicates show up in real use, the way out is a store of
+   used tokens in the cache directory (like `Auth\RateLimiter`, no schema, failing open),
+   answering `validation_token_used`. Pinned by
+   `McpWriteToolsTest::testTheTokenIsNotSingleUseSoOnlyAUniqueFieldStopsAReplay`.
 2. **All or nothing.** A call is one transaction (see *Nested transactions* in
    [Database layer](./database)): if a record is refused, nothing is written and
    the answer names the failing index (`write_refused`) or id (`delete_refused`).

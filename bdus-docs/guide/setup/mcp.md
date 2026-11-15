@@ -133,7 +133,13 @@ locks. On top of that:
 
 1. **Validate first.** `records_validate` checks the records without saving them and
    returns, for a change, the stored values next to the new ones. Only when everything
-   passes does it return a short-lived token, valid for exactly that content.
+   passes does it return a short-lived token, valid for exactly that content. The token
+   proves what was checked; it is **not single-use**: for 15 minutes the same call can be
+   repeated and is carried out again. Changes repeat harmlessly, but a **creation made
+   twice makes two records** — for example when the assistant retries after an answer got
+   lost — unless a field with the `no_dupl` rule (for instance the inventory number)
+   refuses the second one. Give identifier fields that rule ([Fields](./adding-columns)),
+   and look at the history if a record seems doubled.
 2. **You confirm.** The assistant must show you what will be written and wait. Do not
    switch on any "approve everything" option of your client for these tools.
 3. **All or nothing.** One call is one transaction of up to 50 records: if one is

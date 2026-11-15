@@ -17,8 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   delete 500 records per hour through MCP (`BRADYPUS_RATE_MCP_WRITE_ROWS`). Everything is off by
   default: an administrator enables the endpoint, writing and deleting separately, per application
   (`PUT /api/config/app` with `{ "mcp": { "enabled", "write", "delete", "guide" } }`; migration
-  M052), or from the new "MCP (AI assistants)" page of the system configuration. Developer docs: `dev/mcp`, plan in
-  `dev/mcp-oauth-plan`; hurl phase 55.
+  M052), or from the new "MCP (AI assistants)" page of the system configuration. User guide:
+  "AI assistants (MCP)" under Setup; developer docs: `dev/mcp`, plan in `dev/mcp-oauth-plan`; hurl phase 55.
 - **MCP prompts.** An administrator can write text templates with arguments ("end-of-season
   report", "context sheet entry") that MCP clients offer to their users (`prompts/list`,
   `prompts/get`). Endpoints `GET|POST /api/mcp-prompts`, `PUT /api/mcp-prompts/order`,

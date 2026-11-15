@@ -111,6 +111,7 @@ function guideSidebar() {
         { text: 'Groups & locks',      link: '/guide/setup/groups' },
         { text: 'Record layouts per group', link: '/guide/setup/record-layouts' },
         { text: 'SQL views as tables', link: '/guide/setup/views' },
+        { text: 'AI assistants (MCP)', link: '/guide/setup/mcp' },
         { text: 'Accents, case and indexes', link: '/guide/setup/text-search' },
         { text: 'Validation',          link: '/guide/setup/finalizing-setup' },
         { text: 'DBML import/export',  link: '/guide/setup/dbml' },

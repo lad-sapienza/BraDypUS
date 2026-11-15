@@ -42,6 +42,12 @@ Each key has a privilege level: 30 (reader) keys can only read data, 25 keys can
 also create and write, 10 keys are admin keys. A key can also belong to a
 [group](../setup/groups) — see below.
 
+#### AI assistants <Badge type="tip" text="next release" />
+
+An API key can also be given to an AI assistant through the MCP endpoint
+`POST /{app}/api/mcp` (off until an administrator switches it on): the assistant sees
+and changes what the key may, and nothing else. See [AI assistants (MCP)](../setup/mcp).
+
 #### API keys with a group <Badge type="tip" text="new" />
 
 A key at level **Enter** (39) has no access of its own; its **group** decides

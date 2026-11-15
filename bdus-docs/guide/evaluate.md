@@ -41,6 +41,12 @@ versions of every record, files, maps and print templates on top of them.
 - You work with **stratigraphy**, radiocarbon dates, skeletal inventories, Zotero
   bibliographies or Pleiades places: these are built in
   ([system plugins](/guide/system-plugins/)).
+- You would like an **AI assistant** to answer questions about the data, draft reports
+  from counts and breakdowns, or help enter records from a description. BraDypUS offers
+  an optional, off-by-default [MCP endpoint](/guide/setup/mcp): the assistant sees and
+  changes only what its API key and group allow, writes are checked like in the interface
+  and need your confirmation, and every change is in the history. Everything it reads goes
+  to the provider of the model, so do not connect data you may not share with it.
 - Files (photos, documents) have to be **attached to records**, in bulk if needed
   ([files](/guide/usage/files), [import](/guide/usage/import)). A separate frontend or
   website can ask for them in **smaller sizes** (thumbnails, previews): you define named

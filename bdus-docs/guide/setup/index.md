@@ -23,6 +23,7 @@ The Config panel is divided into sections, selectable from the left sidebar:
 | **Fields** | Add and configure fields for any table |
 | **Relations** | Define cross-table links displayed in RecordView |
 | **Database objects** | Activate tables and SQL views that already exist in the database, and deactivate or delete tables (<Badge type="tip" text="v5.17.0" />) |
+| **MCP (AI assistants)** | Let an AI assistant read, and if you allow it write, through an API key: switches, instructions and ready-made prompts ([guide](./mcp), <Badge type="tip" text="next release" />) |
 | **DBML** | Export the full schema as an annotated `.dbml` file; import new tables from DBML |
 
 ## How to open Config

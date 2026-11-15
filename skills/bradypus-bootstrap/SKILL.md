@@ -205,6 +205,13 @@ the app, the schema validator (Config → Validation).
   admins are never restricted). It is only for comfort, **never for protecting data**: a field the layout leaves out is
   still readable through the API, search and export, so for confidential columns say it needs SQL views
   (`guide/setup/views.md`). A layout is the choice of a template; the template's field items can carry `label`, `readonly`, `hidden`, but these only change the form (the server still follows the group rules), so never present them as protection.
+- **AI assistants (MCP)**, optional (Config → MCP, guide: `guide/setup/mcp.md`): once the data is in,
+  the user may let an assistant (Claude Code, Cursor) question and, if allowed, change it through
+  `POST /{app}/api/mcp` with an API key. It is **off by default** and a super admin switches it on;
+  separate switches for writing and deleting. The assistant sees only what the key's level and group
+  allow, so recommend a dedicated key at level Enter with a group, and SQL views (not layouts) for
+  columns that must stay private. Everything it reads goes to the model's provider: say so. Do not
+  switch it on, enable writing or deleting, or create API keys unless the user asks.
 - Print templates, map layers (GeoFace), Zotero, Pleiades, backups.
 
 ## If you cannot call the API (plain chat, no shell, no HTTP)

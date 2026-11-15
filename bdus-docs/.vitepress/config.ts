@@ -220,6 +220,7 @@ function devSidebar() {
         { text: 'OAuth2 / SSO',        link: '/dev/oauth' },
         { text: 'Widget API',          link: '/dev/widget-api' },
         { text: 'Zotero integration',  link: '/dev/zotero' },
+        { text: 'MCP & OAuth 2.1 (plan)', link: '/dev/mcp-oauth-plan' },
       ],
     },
     {

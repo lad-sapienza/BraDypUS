@@ -85,3 +85,41 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "error"
 jsonpath "$.code"   == "parameter_missing"
+
+
+# ── 28g. Saving the layer list twice must not duplicate layers ───────
+# Regression: the JSON list body was merged twice (Router + Controller) with
+# array_merge, so every save doubled the layers.
+PUT {{base_url}}/{{app_name}}/api/config/geoface
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+[
+  { "label": "Tiles A", "type": "tiles", "path": "https://example.test/{z}/{x}/{y}.png", "layertype": "overlay" }
+]
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+PUT {{base_url}}/{{app_name}}/api/config/geoface
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+[
+  { "label": "Tiles A", "type": "tiles", "path": "https://example.test/{z}/{x}/{y}.png", "layertype": "overlay" }
+]
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+GET {{base_url}}/{{app_name}}/api/config/geoface
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.layers" count == 1
+
+
+# ── 28h. Cleanup: empty layer list ───────────────────────────────────
+PUT {{base_url}}/{{app_name}}/api/config/geoface
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+[]
+HTTP 200

@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **GeoFace layers multiplied on every save.** A JSON body that is a list (the layer list of
+  `PUT /api/config/geoface`) was merged into `$_POST` twice with `array_merge` (in `Router` and in
+  `Controller`), which renumbers and appends: each save doubled the layers. Both now use
+  `array_replace`. Regression test in hurl phase 28. Apps already affected keep their duplicated
+  layers: remove them once in Config → GeoFace and save.
+
 ## [5.23.0] - 2026-11-14
 
 ### Added

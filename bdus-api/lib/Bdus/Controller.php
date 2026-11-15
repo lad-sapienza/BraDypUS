@@ -33,7 +33,10 @@ abstract class Controller
         if (str_contains($contentType, 'application/json')) {
             $raw  = (string) file_get_contents('php://input');
             $json = json_decode($raw, true);
-            $post = is_array($json) ? array_merge($post, $json) : $post;
+            // array_replace, not array_merge: Router::mergeRequestBody() has already put
+            // the body in $_POST, and merging a JSON *list* (e.g. the geoface layers) a second
+            // time would renumber and append it, doubling every item on each save.
+            $post = is_array($json) ? array_replace($post, $json) : $post;
             // A body that is not valid JSON (or not a JSON object) is told apart
             // from an empty one, so a write endpoint can refuse it instead of
             // acting on "nothing".

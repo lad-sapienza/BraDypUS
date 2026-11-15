@@ -813,8 +813,9 @@ class Router
         if ($contentType === 'application/json') {
             $raw  = file_get_contents('php://input');
             $data = $raw ? (json_decode($raw, true) ?: []) : [];
-            $_POST    = array_merge($_POST,    $data);
-            $_REQUEST = array_merge($_REQUEST, $data);
+            // array_replace keeps list bodies (JSON arrays) intact instead of appending.
+            $_POST    = array_replace($_POST,    $data);
+            $_REQUEST = array_replace($_REQUEST, $data);
         }
         // application/x-www-form-urlencoded and multipart/form-data are
         // already parsed by PHP into $_POST automatically.

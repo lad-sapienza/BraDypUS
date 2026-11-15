@@ -15,7 +15,7 @@ and what is still to come (write tools, history, OAuth) are in the
 
 | Built | Not yet |
 |---|---|
-| Protocol layer, settings (and their page: system configuration → MCP, `McpPanel.vue`), the ten tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete`, `prompts/list` and `prompts/get`, the REST endpoints that edit prompts | A page to edit prompts, a tool for stratigraphic relations, OAuth |
+| Protocol layer, settings (and their page: system configuration → MCP, `McpPanel.vue`), the ten tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `records_validate`, `records_write`, `records_delete`, `prompts/list` and `prompts/get`, the REST endpoints and the page that edit prompts (system configuration → MCP, `McpPromptsEditor.vue`, with a button that adds two example prompts in the interface language) | A tool for stratigraphic relations, OAuth |
 
 ## Request flow
 

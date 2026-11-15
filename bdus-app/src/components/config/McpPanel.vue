@@ -64,6 +64,8 @@
         <small class="hint">{{ t('mcp_guide_hint') }}</small>
         <ATextArea v-model:value="form.guide" :rows="8" :maxlength="20000" show-count />
       </section>
+
+      <McpPromptsEditor />
     </div>
   </div>
 </template>
@@ -76,6 +78,7 @@ import { Button as AButton, Switch as ASwitch, Alert as AAlert, Input } from 'an
 import { useToast } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
+import McpPromptsEditor from '@/components/config/McpPromptsEditor.vue'
 
 const ATextArea = Input.TextArea
 

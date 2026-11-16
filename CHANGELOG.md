@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Zotero notes are a text area.** The notes of a bibliographic reference were a one-line input, too small for real annotations. In edit mode it is now a text area that grows with its content, and line breaks are kept when reading.
+
 ## [5.24.2] - 2026-11-16
 
 ### Fixed

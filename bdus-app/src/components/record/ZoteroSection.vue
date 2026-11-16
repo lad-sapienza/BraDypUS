@@ -48,7 +48,7 @@
               <span v-if="link.pages" class="meta-chip">
                 <FileTextOutlined /> {{ link.pages }}
               </span>
-              <span v-if="link.notes" class="meta-chip">
+              <span v-if="link.notes" class="meta-chip meta-chip--notes">
                 <CommentOutlined /> {{ link.notes }}
               </span>
             </template>
@@ -60,11 +60,11 @@
                 class="meta-input"
                 @blur="saveMetaField(link, 'pages')"
               />
-              <AInput
+              <ATextArea
                 v-model:value="link._notes"
                 :placeholder="t('notes')"
-                size="small"
-                class="meta-input meta-input--notes"
+                :auto-size="{ minRows: 2, maxRows: 10 }"
+                class="meta-input--notes"
                 @blur="saveMetaField(link, 'notes')"
               />
             </template>
@@ -190,6 +190,7 @@ import { useI18n }   from '@/i18n'
 
 const AInput       = Input
 const AInputSearch = Input.Search
+const ATextArea    = Input.TextArea
 
 const { t }  = useI18n()
 const toast  = useToast()
@@ -501,7 +502,13 @@ async function selectResult(result) {
   width: 9rem;
 }
 .meta-input--notes {
-  width: 14rem;
+  flex: 1 0 100%;   /* its own row, full width of the entry */
+  max-width: 28rem;
+}
+/* notes can have several lines: keep the line breaks in read mode */
+.meta-chip--notes {
+  white-space: pre-wrap;
+  align-items: flex-start;
 }
 
 /* ── External Zotero link ── */

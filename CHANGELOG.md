@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`_empty` / `_nempty` on numeric columns failed on PostgreSQL.** The operators compared the column with `''`, which PostgreSQL rejects for an integer (`invalid input syntax for type integer: ""`): a filter such as `chrono_from` is empty returned a database error. On a column that is not text (integer, real, date…, and the `chrono_from` / `chrono_to` / `chrono_certainty` columns) they now only test NULL.
 - **Validation report aborted on a configured table missing from the database.** The check of fields (`cfgColsHasDb`) asked the database for the columns of every configured table, so one table present in the configuration but not in the database made the whole report fail with `Error on getting column list for table …`. The table is now reported as missing and the report goes on.
 - **System columns cannot be deleted.** `DELETE /api/config/table/{tb}/field/{fld}` now refuses `id`, `creator` and `id_link` (`system_field_not_deletable`): it used to remove them from the configuration and drop the real column.
 - **DBML export without `id`.** Tables whose `id` is not a configured field (the usual case) were written without the `id integer [pk, increment]` line, so every `ref:` pointed at a column that did not exist and the file was rejected as a syntax error. The export now always writes `id` first.

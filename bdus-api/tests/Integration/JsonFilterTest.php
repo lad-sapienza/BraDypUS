@@ -51,6 +51,23 @@ class JsonFilterTest extends BdusTestCase
         $this->assertSame(['inactive'], $vals);
     }
 
+    public function testEmptyOnTextColumnComparesWithEmptyString(): void
+    {
+        [$sql] = $this->f->toSql(['name' => ['_empty' => true]]);
+        $this->assertStringContainsString("items.name IS NULL OR items.name = ''", $sql);
+        [$sql] = $this->f->toSql(['name' => ['_nempty' => true]]);
+        $this->assertStringContainsString("items.name IS NOT NULL AND items.name != ''", $sql);
+    }
+
+    public function testEmptyOnNonTextColumnOnlyTestsNull(): void
+    {
+        // `= ''` on an integer column is "invalid input syntax for type integer" on PostgreSQL.
+        [$sql] = $this->f->toSql(['id' => ['_empty' => true]]);
+        $this->assertSame('(items.id IS NULL)', $sql);
+        [$sql] = $this->f->toSql(['id' => ['_nempty' => true]]);
+        $this->assertSame('(items.id IS NOT NULL)', $sql);
+    }
+
     public function testLt(): void
     {
         [$sql, $vals] = $this->f->toSql(['score' => ['_lt' => '5']]);

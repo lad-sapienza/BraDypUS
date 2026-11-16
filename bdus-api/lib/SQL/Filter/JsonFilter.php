@@ -163,7 +163,7 @@ class JsonFilter
                         if ($op === '_chrono_overlap') {
                             [$sql, $vals] = $this->buildChronoOverlap($field, $val);
                         } else {
-                            [$sql, $vals] = $this->buildCondition($col, $op, $val);
+                            [$sql, $vals] = $this->buildCondition($col, $op, $val, !$this->isTextColumn($this->tb, $field));
                         }
                         $parts[]  = $sql;
                         $values   = array_merge($values, $vals);
@@ -339,7 +339,7 @@ class JsonFilter
                 // Field condition: { field: { _op: val } }
                 $this->validatePluginField($relatedTb, $key);
                 foreach ($opArr as $op => $val) {
-                    [$condSql, $condVals] = $this->buildCondition($key, $op, $val);
+                    [$condSql, $condVals] = $this->buildCondition($key, $op, $val, !$this->isTextColumn($relatedTb, $key));
                     $subParts[]  = $condSql;
                     $subValues   = array_merge($subValues, $condVals);
                 }
@@ -498,10 +498,13 @@ class JsonFilter
      *
      * @param string $col  Qualified column (e.g. 'us.status') or bare field name
      *                     when used inside a subquery context.
+     * @param bool $nonText The column is not a text column (integer, real, date…):
+     *                     comparing it with '' is a type error on PostgreSQL, so
+     *                     `_empty` / `_nempty` reduce to the NULL tests.
      * @return array{0: string, 1: array}
      * @throws FilterException on unknown operator or invalid value shape
      */
-    private function buildCondition(string $col, string $op, mixed $val): array
+    private function buildCondition(string $col, string $op, mixed $val, bool $nonText = false): array
     {
         if (!in_array($op, self::ALLOWED_OPS, true)) {
             throw new FilterException("Unknown filter operator: {$op}");
@@ -528,13 +531,34 @@ class JsonFilter
             '_nin'         => $this->buildIn($col, (array) $val, true),
             '_null'        => $this->isTruthy($val) ? ["{$col} IS NULL",     []] : ["{$col} IS NOT NULL", []],
             '_nnull'       => $this->isTruthy($val) ? ["{$col} IS NOT NULL", []] : ["{$col} IS NULL",     []],
-            '_empty'       => ["({$col} IS NULL OR {$col} = '')",        []],
-            '_nempty'      => ["({$col} IS NOT NULL AND {$col} != '')",  []],
+            '_empty'       => $nonText ? ["{$col} IS NULL", []]     : ["({$col} IS NULL OR {$col} = '')",        []],
+            '_nempty'      => $nonText ? ["{$col} IS NOT NULL", []] : ["({$col} IS NOT NULL AND {$col} != '')",  []],
             '_between'     => $this->buildBetween($col, $val),
         };
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
+
+    /**
+     * Whether $field of $tb holds text. Anything with a declared non-text db_type
+     * (INTEGER, REAL, DATE, TIMESTAMP…) is not: the fuzzy-date chrono_from /
+     * chrono_to / chrono_certainty columns and `id` are integers even when the
+     * configuration does not list them.
+     */
+    private function isTextColumn(string $tb, string $field): bool
+    {
+        if ($field === 'id' || in_array($field, ['chrono_from', 'chrono_to', 'chrono_certainty'], true)) {
+            return false;
+        }
+        $fields = $this->cfg->get("tables.{$tb}.fields") ?? [];
+        foreach ((is_array($fields) ? $fields : []) as $f) {
+            if (($f['name'] ?? null) === $field) {
+                $dbType = strtoupper((string) ($f['db_type'] ?? ''));
+                return $dbType === '' || (bool) preg_match('/^(TEXT|VARCHAR|CHAR|CLOB|JSON)/', $dbType);
+            }
+        }
+        return true;
+    }
 
     private function isTruthy(mixed $val): bool
     {

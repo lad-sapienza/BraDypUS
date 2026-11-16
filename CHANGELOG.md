@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.24.2] - 2026-11-16
+
 ### Fixed
 
 - **`_empty` / `_nempty` on numeric columns failed on PostgreSQL.** The operators compared the column with `''`, which PostgreSQL rejects for an integer (`invalid input syntax for type integer: ""`): a filter such as `chrono_from` is empty returned a database error. On a column that is not text (integer, real, date…, and the `chrono_from` / `chrono_to` / `chrono_certainty` columns) they now only test NULL.

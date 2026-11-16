@@ -712,6 +712,14 @@ class Config extends \Bdus\Controller
 
     if ($this->rejectIfView($tb)) return;
 
+    // System columns every table relies on (primary key, record owner, plugin
+    // attachment): removing one from the config *and* the database would break
+    // reads, writes and every relation pointing at it.
+    if (in_array($fld, ['id', 'creator', 'id_link'], true)) {
+      $this->returnJson(['status' => 'error', 'code' => 'system_field_not_deletable']);
+      return;
+    }
+
     try {
       $this->cfg->deleteFld($tb, $fld);
 

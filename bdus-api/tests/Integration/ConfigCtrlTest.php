@@ -355,6 +355,21 @@ class ConfigCtrlTest extends BdusTestCase
         $this->assertSame('error', $res['status']);
     }
 
+    public function testSystemColumnsCannotBeDeleted(): void
+    {
+        $inspect = new \DB\Inspect(static::$db);
+        foreach (['id', 'creator', 'id_link'] as $fld) {
+            $before = array_column($inspect->tableColumns(self::TB), 'fld');
+            $res = $this->callController(
+                $this->makeController('Bdus\\Controllers\\Config', ['tb' => self::TB, 'fld' => $fld]),
+                'delete_column'
+            );
+            $this->assertSame('system_field_not_deletable', $res['code'], $fld);
+            $this->assertSame($before, array_column($inspect->tableColumns(self::TB), 'fld'), "$fld column must be untouched");
+        }
+        $this->assertContains('id', array_column($inspect->tableColumns(self::TB), 'fld'));
+    }
+
     // ── activateFuzzyDate / deactivateFuzzyDate ───────────────────────────
 
     public function testActivateFuzzyDateReturnsSuccess(): void

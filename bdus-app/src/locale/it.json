@@ -599,6 +599,7 @@
   "warning_delete_column": "Attenzione prego. Cancellando la colonna verranno cancellati tutte le configurazioni ed anche i dati nella banca dati. Non sarà più possibile recuperare i dati perduti.",
   "ok_cfg_column_delete": "La colonna è stata cancellata con successo",
   "error_cfg_clumn_delete": "C'è stato un problema e non è stato possibile cancellare la colonna",
+  "system_field_not_deletable": "È una colonna di sistema (chiave primaria, creatore o legame del plugin) e non può essere eliminata",
   "cfg_validate_app": "Valida l'applicazione",
   "show_only_errors": "Mostra solo gli errori",
   "ok_creating_table": "La tabella è stata creata",

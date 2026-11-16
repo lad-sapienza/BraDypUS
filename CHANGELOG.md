@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **System columns cannot be deleted.** `DELETE /api/config/table/{tb}/field/{fld}` now refuses `id`, `creator` and `id_link` (`system_field_not_deletable`): it used to remove them from the configuration and drop the real column.
 - **DBML export without `id`.** Tables whose `id` is not a configured field (the usual case) were written without the `id integer [pk, increment]` line, so every `ref:` pointed at a column that did not exist and the file was rejected as a syntax error. The export now always writes `id` first.
 
 ## [5.24.1] - 2026-11-16

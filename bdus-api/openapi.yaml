@@ -3282,6 +3282,7 @@ paths:
       operationId: deleteConfigTableFieldByTbAndFld
       tags: [config]
       summary: Delete a field
+      description: Refuses the system columns `id`, `creator` and `id_link` (error code `system_field_not_deletable`).
       parameters:
         - $ref: '#/components/parameters/tb'
         - $ref: '#/components/parameters/fld'

@@ -81,7 +81,7 @@ will not save until all required values are provided.
 
 ## Editing a record
 
-Open a record in RecordView and click **Edit** in the header, or press **E** <Badge type="tip" text="v5.25.0" />
+Open a record in RecordView and click **Edit** in the header, or press **E** <Badge type="tip" text="v5.24.3" />
 (as long as no field has the focus). The same form used for creation opens with
 current values pre-filled. **Ctrl+S** / **Cmd+S** saves and keeps the form open.
 

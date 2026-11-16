@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`E` opens a record in edit mode.** On the record page, pressing `E` (no modifiers, no field focused, only for users who can edit) does the same as the Edit button, which now shows the hint in its tooltip. The rule lives in `utils/recordShortcuts.js`, with unit tests.
+
 ### Fixed
 
 - **Zotero notes are a text area.** The notes of a bibliographic reference were a one-line input, too small for real annotations. In edit mode it is now a text area that grows with its content, and line breaks are kept when reading.

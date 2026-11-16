@@ -67,7 +67,7 @@
             <template #icon><CopyOutlined /></template>
             {{ t('duplicate') }}
           </AButton>
-          <AButton v-if="record.metadata?.can_edit" type="primary" size="small" @click="enterEditMode">
+          <AButton v-if="record.metadata?.can_edit" type="primary" size="small" :title="`${t('edit')} (E)`" @click="enterEditMode">
             <template #icon><EditOutlined /></template>
             {{ t('edit') }}
           </AButton>
@@ -356,6 +356,7 @@ import OsteologySection       from '@/components/record/osteology/OsteologySecti
 import ChronoDensityPanel     from '@/components/record/ChronoDensityPanel.vue'
 import RecordVersionsDrawer   from '@/components/record/RecordVersionsDrawer.vue'
 import { validateField }      from '@/utils/fieldValidation'
+import { isEditShortcut }     from '@/utils/recordShortcuts'
 
 const { t }   = useI18n()
 const route   = useRoute()
@@ -413,6 +414,22 @@ function handleNavShortcut(e) {
   if (el !== document.body && !(el instanceof Element && el.closest('.record-nav'))) return
   e.preventDefault()
   goToNeighbour(e.key === 'ArrowLeft' ? nav.value.prev : nav.value.next)
+}
+
+// E opens the record in edit mode — same focus rule as the arrows above: only
+// from the page body (or the record navigation), never from a field, a modal
+// or a drawer, so typing an "e" is never intercepted.
+function handleEditShortcut(e) {
+  const el = e.target
+  const focusFree = el === document.body || (el instanceof Element && !!el.closest('.record-nav'))
+  if (!isEditShortcut(e, {
+    mode:      mode.value,
+    canEdit:   !!record.value?.metadata?.can_edit,
+    hasRecord: !!record.value,
+    focusFree,
+  })) return
+  e.preventDefault()
+  enterEditMode()
 }
 
 // ── State ────────────────────────────────────────────────────────
@@ -1073,6 +1090,7 @@ function handleSaveShortcut(e) {
 onMounted(async () => {
   window.addEventListener('keydown', handleSaveShortcut)
   window.addEventListener('keydown', handleNavShortcut)
+  window.addEventListener('keydown', handleEditShortcut)
   loadListNavigation()
   await loadAvailableTemplates()
   loadColsPreference()
@@ -1082,6 +1100,7 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleSaveShortcut)
   window.removeEventListener('keydown', handleNavShortcut)
+  window.removeEventListener('keydown', handleEditShortcut)
 })
 
 // Reload when route params change (navigating record→record)

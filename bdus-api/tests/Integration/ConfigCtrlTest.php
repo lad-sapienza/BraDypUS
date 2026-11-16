@@ -563,6 +563,19 @@ class ConfigCtrlTest extends BdusTestCase
         $this->assertNotEmpty($res['report']);
     }
 
+    public function testValidationReportSurvivesConfiguredTableMissingFromDb(): void
+    {
+        static::$cfg->setTable(['name' => 'ghost_tb', 'label' => 'Ghost', 'order' => 'id', 'id_field' => 'id', 'preview' => ['id']]);
+        try {
+            $res = $this->callController($this->makeController('Bdus\\Controllers\\Config'), 'getValidationReport');
+            $this->assertSame('success', $res['status']);
+            $texts = array_column($res['report'], 'text');
+            $this->assertContains('Configuration table ghost_tb does not exist in database', $texts);
+        } finally {
+            static::$cfg->deleteTb('ghost_tb');
+        }
+    }
+
     public function testGetValidationReportItemsHaveRequiredKeys(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config');

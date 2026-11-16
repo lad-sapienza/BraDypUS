@@ -122,8 +122,14 @@ class DbCfgAlign
         $cfg = $this->cfg->get('tables.*');
 
         foreach ($cfg as $tb => $tb_data) {
-            
-            $cfg_cols = array_keys($tb_data['fields']);
+            // A configured table that is not in the database is reported by
+            // cfgHasDb(); asking for its columns would throw and abort the whole
+            // report instead of showing it.
+            if (!$this->inspect->tableExists($tb)) {
+                continue;
+            }
+
+            $cfg_cols = array_keys($tb_data['fields'] ?? []);
             $db_cols = array_map(function($el){
                 return $el['fld'];
             }, $this->inspect->tableColumns($tb));

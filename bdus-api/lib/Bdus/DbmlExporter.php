@@ -112,6 +112,12 @@ class DbmlExporter
         $lines[] = "Table $tbName {";
 
         $fields = $tbData['fields'] ?? [];
+        // `id` is implicit in many apps (not among the configured fields), but every
+        // table has it and every `ref:` points at it: without the line the DBML is
+        // invalid ("ref" to an unknown column), so it is always written, first.
+        if (!array_key_exists('id', $fields)) {
+            $lines[] = '  id integer [pk, increment]';
+        }
         foreach ($fields as $fldName => $fld) {
             $lines[] = '  ' . $this->renderColumn($fldName, $fld, $relations[$fldName] ?? null);
         }

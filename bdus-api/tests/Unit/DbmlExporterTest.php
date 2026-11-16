@@ -53,6 +53,26 @@ class DbmlExporterTest extends TestCase
         $this->assertStringContainsString('name varchar', $out);
     }
 
+    public function testAlwaysEmitsIdPkWhenIdIsNotAConfiguredField(): void
+    {
+        $tables = [
+            'sites' => [
+                'label' => 'Sites', 'preview' => ['name'], 'order' => 'name', 'id_field' => 'name',
+                'fields' => ['name' => ['name' => 'name', 'label' => 'Name', 'type' => 'text', 'db_type' => 'TEXT']],
+            ],
+            'finds' => [
+                'label' => 'Finds', 'preview' => ['name'], 'order' => 'name', 'id_field' => 'name',
+                'fields' => ['site' => ['name' => 'site', 'label' => 'Site', 'type' => 'select', 'db_type' => 'INTEGER', 'id_from_tb' => 'sites']],
+            ],
+        ];
+
+        $out = $this->exporter->export($tables, []);
+        $this->assertSame(2, substr_count($out, "  id integer [pk, increment]\n"));
+        // id comes first in each table
+        $this->assertMatchesRegularExpression('/Table sites \{\n  id integer \[pk, increment\]\n  name /', $out);
+        $this->assertStringContainsString('ref: > sites.id', $out);
+    }
+
     public function testRendersTableNote(): void
     {
         $tables = [

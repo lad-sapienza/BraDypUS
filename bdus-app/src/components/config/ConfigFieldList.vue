@@ -29,10 +29,12 @@
         >
           <BarsOutlined v-if="!isView" class="cfg-fld-drag" :title="t('drag_to_sort')" @click.stop />
           <div class="cfg-fld-item-main">
-            <span class="cfg-fld-name">{{ fld.name }}</span>
-            <span class="cfg-fld-label">{{ fld.label }}</span>
+            <span class="cfg-fld-name" :title="fld.name">{{ fld.name }}</span>
+            <span class="cfg-fld-sub">
+              <span class="cfg-fld-type">{{ fld.type }}</span>
+              <span class="cfg-fld-label" :title="fld.label">{{ fld.label }}</span>
+            </span>
           </div>
-          <span class="cfg-fld-type">{{ fld.type }}</span>
           <div v-if="!isView" class="cfg-fld-item-actions">
             <button
               class="cfg-icon-btn"
@@ -374,9 +376,10 @@ onMounted(load)
   margin: -0.6rem 0 -0.6rem -0.4rem;
 }
 
-/* Phones: list and editor take turns instead of sharing a 230px + clipped split */
+/* Phones: list and editor take turns instead of sharing a narrow list + clipped split */
 @media (max-width: 767px) {
-  .cfg-fld-list { width: 100%; border-right: none; }
+  /* .cfg-fld-shell prefix: this block comes before the base rule below and must win */
+  .cfg-fld-shell .cfg-fld-list { width: 100%; border-right: none; }
   .cfg-fld-shell--detail .cfg-fld-list { display: none; }
   .cfg-fld-shell:not(.cfg-fld-shell--detail) .cfg-fld-editor { display: none; }
   .cfg-fld-back { display: inline-flex; }
@@ -387,7 +390,8 @@ onMounted(load)
 
 /* ── Left pane ──────────────── */
 .cfg-fld-list {
-  width: 230px;
+  /* wide enough to read names on a laptop, never more than a third of the panel */
+  width: clamp(250px, 26vw, 380px);
   flex-shrink: 0;
   border-right: 1px solid var(--p-content-border-color);
   overflow-y: auto;
@@ -425,12 +429,19 @@ onMounted(load)
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.cfg-fld-sub {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
 .cfg-fld-label {
   font-size: 0.72rem;
   color: var(--p-text-muted-color);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 .cfg-fld-type {
   font-size: 0.65rem;

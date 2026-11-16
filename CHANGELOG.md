@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Config → Fields: the field list was too narrow to read names.** The list was a fixed 230 px and the type badge (`combo_select`…) took a third of each row, cutting names to "cla…". It now scales with the window (250–380 px), shows the type under the name next to the label, and has the full name in a tooltip.
 - **Zotero notes are a text area.** The notes of a bibliographic reference were a one-line input, too small for real annotations. In edit mode it is now a text area that grows with its content, and line breaks are kept when reading.
 
 ## [5.24.2] - 2026-11-16

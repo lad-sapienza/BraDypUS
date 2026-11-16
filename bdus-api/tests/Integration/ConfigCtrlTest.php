@@ -422,6 +422,24 @@ class ConfigCtrlTest extends BdusTestCase
         );
     }
 
+    public function testFuzzyDateFlagSurvivesTableFormSave(): void
+    {
+        $C = 'Bdus\\Controllers\\Config';
+        $this->callController($this->makeController($C, ['tb' => self::TB]), 'activateFuzzyDate');
+        $this->assertTrue((bool) static::$cfg->get('tables.' . self::TB . '.fuzzy_date'));
+
+        // The table form does not post plugin flags: a plain save must keep them.
+        $label = static::$cfg->get('tables.' . self::TB . '.label') ?: 'Label';
+        $res = $this->callController($this->makeController($C, ['tb' => self::TB], [
+            'name' => self::TB, 'label' => $label, 'order' => 'id', 'id_field' => 'id',
+            'preview' => ['id'], 'is_plugin' => 0,
+        ]), 'save_tb_data');
+        $this->assertSame('success', $res['status']);
+        $this->assertTrue((bool) static::$cfg->get('tables.' . self::TB . '.fuzzy_date'));
+
+        $this->callController($this->makeController($C, ['tb' => self::TB]), 'deactivateFuzzyDate');
+    }
+
     public function testDeactivateFuzzyDateClearsFieldDefsPreservesColumns(): void
     {
         // Activate first

@@ -95,6 +95,17 @@ class Config extends \Bdus\Controller
         $post['view_writable'] = $this->cfg->get("tables.{$post['name']}.view_writable") ?: 'none';
       }
 
+      // Plugin flags (fuzzy_date, osteology, pleiades) are switched on/off by
+      // their own endpoints, and the table form does not post them: setTable()
+      // replaces the whole entry, so without this a plain "Save" right after
+      // activating a plugin would silently switch it off again.
+      foreach (['fuzzy_date', 'osteology', 'pleiades'] as $flag) {
+        unset($post[$flag]);
+        if ($this->cfg->get("tables.{$post['name']}.{$flag}")) {
+          $post[$flag] = true;
+        }
+      }
+
       $this->cfg->setTable($post);
 
       // Keep bdus_cfg_relations in sync with plugin_of: this is the generic

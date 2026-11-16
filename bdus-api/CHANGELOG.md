@@ -5,6 +5,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.24.1] - 2026-11-16
+
+### Fixed
+
+- **Missing UI strings (#79).** Eight translation keys (`created_at`, `copy`, `api_key`, `optional`, `error`, `import_step_config`, `notes`, `value`) were in neither locale file, so raw identifiers showed in the API keys table, Zotero libraries, Import steps and a few toasts. Added to `en.json` and `it.json`, with a frontend test that fails when a literal `t('…')` key is missing from either file.
+- **Plugin flags lost on table save.** Activating the fuzzy-date (or osteology / Pleiades) plugin and then saving the table form switched it off again: the form does not post those flags and the save replaced the whole table entry. The save now keeps them.
+
 ## [5.24.0] - 2026-11-16
 
 Four additive migrations (M052–M055), applied by the minor update (`bin/upgrade-app.php`, or

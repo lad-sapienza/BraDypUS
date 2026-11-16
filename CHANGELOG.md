@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.24.3] - 2026-11-16
+
 ### Added
 
 - **`E` opens a record in edit mode.** On the record page, pressing `E` (no modifiers, no field focused, only for users who can edit) does the same as the Edit button, which now shows the hint in its tooltip. The rule lives in `utils/recordShortcuts.js`, with unit tests.

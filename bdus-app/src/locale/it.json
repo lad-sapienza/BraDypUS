@@ -1710,5 +1710,13 @@
   "tmpl_item_readonly": "Sola lettura",
   "tmpl_item_readonly_hint": "Mostra il valore senza editor in questo template. Solo interfaccia: il server continua a seguire le regole dei gruppi",
   "tmpl_item_hidden": "Nascosto",
-  "tmpl_item_hidden_hint": "Esclude il campo da questo template. Solo interfaccia: i dati restano raggiungibili da API, ricerca ed esportazione"
+  "tmpl_item_hidden_hint": "Esclude il campo da questo template. Solo interfaccia: i dati restano raggiungibili da API, ricerca ed esportazione",
+  "created_at": "Creata il",
+  "copy": "Copia",
+  "api_key": "Chiave API",
+  "optional": "facoltativa",
+  "error": "Errore",
+  "import_step_config": "Configurazione",
+  "notes": "Note",
+  "value": "Valore"
 }

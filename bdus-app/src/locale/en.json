@@ -1710,5 +1710,13 @@
   "tmpl_item_readonly": "Read-only",
   "tmpl_item_readonly_hint": "Shows the value without an editor in this template. Interface only: the server still follows the group rules",
   "tmpl_item_hidden": "Hidden",
-  "tmpl_item_hidden_hint": "Leaves the field out of this template. Interface only: the data stays reachable through the API, search and export"
+  "tmpl_item_hidden_hint": "Leaves the field out of this template. Interface only: the data stays reachable through the API, search and export",
+  "created_at": "Created",
+  "copy": "Copy",
+  "api_key": "API key",
+  "optional": "optional",
+  "error": "Error",
+  "import_step_config": "Configuration",
+  "notes": "Notes",
+  "value": "Value"
 }

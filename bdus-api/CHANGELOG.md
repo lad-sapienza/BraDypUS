@@ -5,6 +5,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.24.0] - 2026-11-16
+
+Four additive migrations (M052–M055), applied by the minor update (`bin/upgrade-app.php`, or
+`bdus update` / the login prompt). MCP stays **off** in every application until an administrator
+switches it on.
+
+### Added
+
+- **MCP endpoint.** `POST /{app}/api/mcp` lets an AI client that speaks the Model Context Protocol
+  (Claude Code, Cursor…) work on the database through thirteen generic tools, parameterised by
+  table: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate` (counts and breakdowns for
+  reports), `resolve`, `history`, `rs_read` (stratigraphic relations of a record) and, to change
+  data, `records_validate`, `records_write`, `rs_validate`, `rs_write` (add and remove
+  stratigraphic relations, with the same dry run) and `records_delete`. A client sees and changes
+  exactly what its API key (level and group) may through the REST API. Writes go through the same
+  validation as the interface, need a dry run first (the validate tool returns a token that the
+  write tool asks for) and are all-or-nothing per call (50 records at most). An API key may write or
+  delete 500 records per hour through MCP (`BRADYPUS_RATE_MCP_WRITE_ROWS`) and a request may not
+  exceed 1 MB. Everything is off by default: an administrator enables the endpoint, writing and
+  deleting separately, per application, from the new **MCP (AI assistants)** page of the system
+  configuration (or `PUT /api/config/app` with `{ "mcp": { "enabled", "write", "delete", "guide" } }`;
+  migration M052). User guide: "AI assistants (MCP)" under Setup; developer docs: `dev/mcp`; hurl
+  phase 55.
+- **MCP prompts.** An administrator can write text templates with arguments ("end-of-season
+  report", "context sheet entry") that MCP clients offer to their users (`prompts/list`,
+  `prompts/get`), from the "Prompts" section of the MCP page (which can add two example prompts) or
+  with `GET|POST /api/mcp-prompts`, `PUT /api/mcp-prompts/order`, `PUT|DELETE /api/mcp-prompt/{id}`
+  (super admin; migration M054). A prompt is only text: it grants nothing and MCP clients cannot
+  write prompts.
+- **The history says who created a record, and where every change came from.** Creating a record
+  now leaves a `creation` entry in its version history (who, when; no content, so it cannot be
+  compared or restored), and every entry records the channel of the change (interface, API key,
+  MCP) and the API key that made it (migration M053). The version history drawer shows the channel
+  next to the user. Records created before this release have no creation entry. Stratigraphic
+  relations are still not part of the history ([#78](https://github.com/lad-sapienza/BraDypUS/issues/78)).
+- **API keys can be edited and switched off.** In Config → API Keys, a key's name, privilege level
+  and group can be changed without recreating it (`PUT /api/api-key/{id}`, same rules as creation;
+  the change applies from the key's next request), and a key can be disabled and enabled again
+  (`POST /api/api-key/{id}/disable|enable`; migration M055 adds `disabled_at`). Revoking stays final
+  and now asks for confirmation. The key list works before the migration has run.
+
+### Changed
+
+- **Adding a stratigraphic relation is checked.** `POST /api/record/{tb}/rs` accepted anything:
+  records that do not exist, relation codes outside 1–10, a record related to itself, tables
+  without the `rs` plugin. It now refuses them (`record_not_found`, `invalid_relation`,
+  `relation_with_itself`, `rs_not_configured`). The logic moved to `Record\Rs`, shared with MCP.
+- **Record write path moved out of the controller** (no change in behaviour or in the API). What
+  `POST /api/record/{tb}` does (access gate, payload shape, enforced values, validation, write) is
+  now `Record\Save`, with `Record\Validator` (validation only, never writes), `Auth\WriteGate`
+  (may the principal write to this record) and `Record\Delete` for deletions; the table schema and
+  the field options sent to clients are `Config\TableSchema` and `Record\FieldOptions`.
+  `Bdus\Controllers\Record` only reads the request and calls them, so other entry points can share
+  the same rules. Developer docs updated (record lifecycle, lib map).
+
+### Fixed
+
+- **Updating a record could change its `creator`.** `POST /api/record/{tb}` with an `id` took an
+  `id` or `creator` from the request body, so whoever could edit a record could hand it to another
+  user or forge its author. Both are now dropped on update, as they already were on create.
+- **Saving a record that no longer exists** (`POST /api/record/{tb}` with an `id` that is not there)
+  answered `success_saved` without writing anything. It now answers `record_not_found`.
+
 ## [5.23.1] - 2026-11-15
 
 ### Added

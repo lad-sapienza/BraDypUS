@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.24.0] - 2026-11-16
+
 Four additive migrations (M052–M055), applied by the minor update (`bin/upgrade-app.php`, or
 `bdus update` / the login prompt). MCP stays **off** in every application until an administrator
 switches it on.

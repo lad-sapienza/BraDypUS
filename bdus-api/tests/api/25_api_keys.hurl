@@ -5,6 +5,8 @@
 #   GET    /api/api-keys          list keys for current app
 #   POST   /api/api-keys          create a new key
 #   POST   /api/api-key/{id}/revoke  revoke (deactivate) a key
+#   PUT    /api/api-key/{id}      edit label, level, group (immediate)
+#   POST   /api/api-key/{id}/disable|enable  switch a key off and on (revoke is final)
 #   DELETE /api/api-key/{id}      permanently delete a key
 # ════════════════════════════════════════════════════════════════════
 
@@ -154,6 +156,123 @@ HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 jsonpath "$.code"   == "ok_api_key_deleted"
+
+
+# ── 25m. Edit, disable and enable a key without recreating it ───────
+# A reader key cannot even list keys; the keys endpoints are the probe because
+# they need no data and change none.
+POST {{base_url}}/{{app_name}}/api/api-keys
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "label": "to be edited", "privilege": 30 }
+HTTP 200
+[Captures]
+ek_id: jsonpath "$.id"
+ek_raw: jsonpath "$.key"
+
+GET {{base_url}}/{{app_name}}/api/api-keys
+Authorization: Bearer {{ek_raw}}
+HTTP 403
+[Asserts]
+jsonpath "$.code" == "not_enough_privilege"
+
+# the same secret, promoted: the next request already sees the new level
+PUT {{base_url}}/{{app_name}}/api/api-key/{{ek_id}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "privilege": 10, "label": "promoted" }
+HTTP 200
+[Asserts]
+jsonpath "$.status"    == "success"
+jsonpath "$.code"      == "ok_api_key_updated"
+jsonpath "$.privilege" == 10
+jsonpath "$.label"     == "promoted"
+
+GET {{base_url}}/{{app_name}}/api/api-keys
+Authorization: Bearer {{ek_raw}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# switched off: refused as unauthenticated; switched on: back, same secret
+POST {{base_url}}/{{app_name}}/api/api-key/{{ek_id}}/disable
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "ok_api_key_disabled"
+
+GET {{base_url}}/{{app_name}}/api/api-keys
+Authorization: Bearer {{ek_raw}}
+HTTP 401
+
+GET {{base_url}}/{{app_name}}/api/api-keys
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.keys[?(@.id=={{ek_id}})].is_disabled" == true
+jsonpath "$.keys[?(@.id=={{ek_id}})].is_active" == false
+
+POST {{base_url}}/{{app_name}}/api/api-key/{{ek_id}}/enable
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "ok_api_key_enabled"
+
+GET {{base_url}}/{{app_name}}/api/api-keys
+Authorization: Bearer {{ek_raw}}
+HTTP 200
+
+# an edit follows the rules of creation: Enter needs a group, an unknown group is refused
+PUT {{base_url}}/{{app_name}}/api/api-key/{{ek_id}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "privilege": 39 }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "group_required"
+
+PUT {{base_url}}/{{app_name}}/api/api-key/{{ek_id}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "group_id": 999999 }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "group_not_found"
+
+PUT {{base_url}}/{{app_name}}/api/api-key/999999
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "label": "ghost" }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "not_found"
+
+# revoking is final: a revoked key can be neither enabled nor edited
+POST {{base_url}}/{{app_name}}/api/api-key/{{ek_id}}/revoke
+Authorization: Bearer {{jwt}}
+HTTP 200
+
+POST {{base_url}}/{{app_name}}/api/api-key/{{ek_id}}/enable
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "api_key_revoked"
+
+PUT {{base_url}}/{{app_name}}/api/api-key/{{ek_id}}
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "label": "revived?" }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "api_key_revoked"
+
+GET {{base_url}}/{{app_name}}/api/api-keys
+Authorization: Bearer {{ek_raw}}
+HTTP 401
+
+DELETE {{base_url}}/{{app_name}}/api/api-key/{{ek_id}}
+Authorization: Bearer {{jwt}}
+HTTP 200
 
 
 # ── 25z. Keys scoped by a group (#78) ────────────────────────────────

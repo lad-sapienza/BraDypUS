@@ -38,27 +38,25 @@ class ApiKeyAuth
 
         $keyHash = hash('sha256', $key);
 
-        try {
-            $rows = $db->query(
-                "SELECT id, label, privilege, group_id FROM bdus_api_keys
-                  WHERE key_hash = ? AND revoked_at IS NULL LIMIT 1",
-                [$keyHash],
-                'read'
-            );
-        } catch (\Throwable $e) {
-            // `group_id` is added by M046: before that migration has run, keys
-            // keep working on their tier alone.
+        // Newest shape first. `disabled_at` is added by M055 and `group_id` by M046: until a
+        // migration has run, keys keep working on what the table has. A table that does
+        // not exist yet (migrations not run) means no key.
+        $queries = [
+            'SELECT id, label, privilege, group_id FROM bdus_api_keys WHERE key_hash = ? AND revoked_at IS NULL AND disabled_at IS NULL LIMIT 1',
+            'SELECT id, label, privilege, group_id FROM bdus_api_keys WHERE key_hash = ? AND revoked_at IS NULL LIMIT 1',
+            'SELECT id, label, privilege FROM bdus_api_keys WHERE key_hash = ? AND revoked_at IS NULL LIMIT 1',
+        ];
+        $rows = null;
+        foreach ($queries as $sql) {
             try {
-                $rows = $db->query(
-                    "SELECT id, label, privilege FROM bdus_api_keys
-                      WHERE key_hash = ? AND revoked_at IS NULL LIMIT 1",
-                    [$keyHash],
-                    'read'
-                );
-            } catch (\Throwable $e2) {
-                // Table may not exist yet (migrations not run) — treat as no key.
-                return false;
+                $rows = $db->query($sql, [$keyHash], 'read');
+                break;
+            } catch (\Throwable $e) {
+                // try the shape of the table before the next migration
             }
+        }
+        if ($rows === null) {
+            return false;
         }
 
         if (empty($rows)) {

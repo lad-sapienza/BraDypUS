@@ -374,7 +374,7 @@ All through `DB\System\Manage` (structure JSON + migration), on the three engine
 | M053 | 1 | `bdus_versions`: `channel` (TEXT: `web`, `api`, `mcp`, `import`, `cli`), `key_id` (INTEGER), `client_id` (TEXT), all nullable. ✅ |
 | — | 1 | `bdus_cfg_tables.extra`: optional table `description` (JSON, no migration needed); read by `schema` already, not yet editable in the interface |
 | M054 | 1 | `bdus_mcp_prompts`: `id`, `name`, `title`, `description`, `arguments` (JSON), `template`, `sort` |
-| M055 | 3 | `bdus_oauth_clients`, `bdus_oauth_codes`, `bdus_oauth_tokens` (access and refresh, hashed id, `user_id`, `client_id`, `scopes`, `resource`, `expires_at`, `revoked_at`, `last_used_at`), `bdus_oauth_consents` |
+| M056 | 3 | `bdus_oauth_clients`, `bdus_oauth_codes`, `bdus_oauth_tokens` (access and refresh, hashed id, `user_id`, `client_id`, `scopes`, `resource`, `expires_at`, `revoked_at`, `last_used_at`), `bdus_oauth_consents` |
 
 Two gaps found while reading the code, both decided:
 
@@ -416,7 +416,7 @@ Two gaps found while reading the code, both decided:
 | **0 — write path in `lib/`** | D1 | ✅ tests pass on three engines |
 | **1 — full cycle with API keys** | M052–M054, `Mcp\Server`, the ten tools of section 4 (`aggregate` on `SQL\Aggregate`, extracted from `Chart::getData`), validation token, provenance and `create` rows in the history, prompts, settings UI, user and developer docs | Claude Code and Claude Desktop connect with a level-39 group key; a key sees through MCP exactly the tables and rows it sees through REST (test); an end-of-season report and a context-sheet entry both run end to end on the demo; a refused record rolls the batch back; every MCP change is in the history with `channel = 'mcp'`; three engines pass |
 | **2 — import and relations** | Data import through `Record\Save`; `rs_write` tool for stratigraphic relations | An import with an invalid row reports the row and writes nothing; imported rows are in the history; a context sheet is entered with its relations in one conversation |
-| **3 — OAuth** | M055, authorization server, consent page, "Authorised applications", `/.well-known` routing in nginx and `bdus-ops` | claude.ai (web and mobile) connects with CIMD, Cursor with dynamic registration; revoking a grant stops the next request; a waiting user cannot authorise |
+| **3 — OAuth** | M056, authorization server, consent page, "Authorised applications", `/.well-known` routing in nginx and `bdus-ops` | claude.ai (web and mobile) connects with CIMD, Cursor with dynamic registration; revoking a grant stops the next request; a waiting user cannot authorise |
 | **4 — other clients** | Loopback redirect for QGIS/scripts; decision on the Vue app | A QGIS plugin obtains a token without an API key |
 
 Each phase is released on its own and updates `CHANGELOG.md`, `openapi.yaml`

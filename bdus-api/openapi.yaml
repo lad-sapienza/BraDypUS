@@ -4839,6 +4839,43 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/api-key/{id}/disable:
+    post:
+      operationId: postApiKeyDisableById
+      tags: [api-keys]
+      summary: Switch an API key off (reversible)
+      description: |
+        The key is refused (`401`) until it is enabled again. Unlike revoking this can be undone;
+        a revoked key answers `api_key_revoked`. Needs migration M055 (`error_saved` before it). Admin only.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Result (`ok_api_key_disabled`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/api-key/{id}/enable:
+    post:
+      operationId: postApiKeyEnableById
+      tags: [api-keys]
+      summary: Switch a disabled API key back on
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Result (`ok_api_key_enabled`), or `api_key_revoked` for a revoked key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /api/api-key/{id}/revoke:
     post:
       operationId: postApiKeyRevokeById
@@ -4857,6 +4894,41 @@ paths:
           $ref: '#/components/responses/Forbidden'
 
   /api/api-key/{id}:
+    put:
+      operationId: putApiKeyById
+      tags: [api-keys]
+      summary: Edit an API key (label, level, group) without recreating it
+      description: |
+        Only what is sent changes; `group_id` null or empty removes the group. The result must follow
+        the rules of creation (a level-39 key needs a group, an admin key takes none, the group must
+        exist): `invalid_privilege`, `group_required`, `group_not_found`. The change applies from the
+        key's next request: rights are read from the table at every request. A revoked key cannot be
+        edited (`api_key_revoked`); an unknown id answers `not_found`. Admin only.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+                privilege:
+                  type: integer
+                  enum: [10, 25, 30, 39]
+                group_id:
+                  type: [integer, "null"]
+      responses:
+        '200':
+          description: The key as saved (`ok_api_key_updated`), or an error code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodedResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     delete:
       operationId: deleteApiKeyById
       tags: [api-keys]
@@ -8310,8 +8382,16 @@ components:
         group_name:
           type: [string, "null"]
         is_active:
-          type: integer
-          enum: [0, 1]
+          type: boolean
+          description: Neither revoked nor disabled.
+        is_disabled:
+          type: boolean
+          description: Switched off (`disabled_at`, M055); reversible, unlike revoking.
+        is_revoked:
+          type: boolean
+          description: Revoked for good.
+        disabled_at:
+          type: [integer, "null"]
         created_at:
           type: integer
         last_used_at:

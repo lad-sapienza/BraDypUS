@@ -93,19 +93,32 @@
               <span v-else>—</span>
             </template>
             <template v-else-if="column.key === 'is_active'">
-              <ATag :color="record.is_active ? 'success' : 'default'">
-                {{ record.is_active ? t('active') : t('revoked') }}
+              <ATag :color="record.is_revoked ? 'default' : record.is_disabled ? 'warning' : 'success'">
+                {{ record.is_revoked ? t('revoked') : record.is_disabled ? t('disabled') : t('active') }}
               </ATag>
             </template>
             <template v-else-if="column.key === 'actions'">
-              <AButton
-                v-if="record.is_active"
-                type="text"
-                danger
-                size="small"
-                :title="t('revoke')"
-                @click="revokeKey(record.id)"
-              ><template #icon><StopOutlined /></template></AButton>
+              <!-- A revoked key is final: nothing but deleting it is left -->
+              <template v-if="!record.is_revoked">
+                <AButton type="text" size="small" :title="t('api_key_edit')" @click="openEdit(record)">
+                  <template #icon><EditOutlined /></template>
+                </AButton>
+                <AButton
+                  type="text"
+                  size="small"
+                  :title="record.is_disabled ? t('api_key_enable') : t('api_key_disable')"
+                  @click="toggleKey(record)"
+                >
+                  <template #icon><PlayCircleOutlined v-if="record.is_disabled" /><PauseCircleOutlined v-else /></template>
+                </AButton>
+                <AButton
+                  type="text"
+                  danger
+                  size="small"
+                  :title="t('revoke')"
+                  @click="confirmRevoke(record)"
+                ><template #icon><StopOutlined /></template></AButton>
+              </template>
               <AButton
                 type="text"
                 danger
@@ -118,14 +131,50 @@
         </ATable>
       </section>
     </div>
+
+    <AModal
+      v-model:open="editOpen"
+      :title="t('api_key_edit')"
+      :ok-text="t('save')"
+      :cancel-text="t('cancel')"
+      :confirm-loading="editSaving"
+      :ok-button-props="{ disabled: !editValid }"
+      @ok="saveEdit"
+    >
+      <div class="edit-form">
+        <label class="edit-field">
+          <span>{{ t('api_key_label') }}</span>
+          <AInput v-model:value="edit.label" @keydown.enter="saveEdit" />
+        </label>
+        <label class="edit-field">
+          <span>{{ t('privilege') }}</span>
+          <ASelect
+            v-model:value="edit.privilege"
+            :options="privilegeOptions"
+            @change="onEditPrivilegeChange"
+          />
+        </label>
+        <!-- Same rules as when a key is created -->
+        <label v-if="edit.privilege !== PRIV_ADMIN" class="edit-field">
+          <span>{{ t('grp_key_group') }}</span>
+          <ASelect
+            v-model:value="edit.group"
+            :options="groupOptions"
+            :placeholder="edit.privilege === PRIV_ENTER ? t('grp_key_group_required') : t('grp_key_group_optional')"
+            :allow-clear="edit.privilege !== PRIV_ENTER"
+          />
+        </label>
+        <small class="hint">{{ t('api_key_edit_hint') }}</small>
+      </div>
+    </AModal>
   </div>
 </template>
 
 <script setup>
-import { CopyOutlined, DeleteOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, StopOutlined } from '@ant-design/icons-vue'
+import { CopyOutlined, DeleteOutlined, EditOutlined, KeyOutlined, LoadingOutlined, PauseCircleOutlined, PlayCircleOutlined, PlusOutlined, StopOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
-import { Table as ATable, Button as AButton, Input as AInput, Select as ASelect, Alert as AAlert, Tag as ATag } from 'ant-design-vue'
-import { useToast } from '@/composables/useNotify'
+import { Table as ATable, Button as AButton, Input as AInput, Select as ASelect, Alert as AAlert, Tag as ATag, Modal as AModal } from 'ant-design-vue'
+import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
 import { useGroups } from '@/composables/useGroups'
@@ -133,6 +182,7 @@ import { severityToTagColor } from '@/utils/severity'
 
 const { t }  = useI18n()
 const toast  = useToast()
+const confirm = useConfirm()
 
 // Privilege levels mirror Authorization constants (lower = more privileged)
 const PRIV_ADMIN = 10
@@ -233,7 +283,77 @@ async function createKey() {
   }
 }
 
+// ── Edit, disable / enable ────────────────────────────────────────────────
+
+const editOpen   = ref(false)
+const editSaving = ref(false)
+const edit       = ref({ id: null, label: '', privilege: PRIV_READ, group: null })
+
+// The rules of creation: Enter needs a group, an admin key takes none.
+const editValid = computed(() =>
+  edit.value.label.trim() !== '' && (edit.value.privilege !== PRIV_ENTER || !!edit.value.group)
+)
+
+function openEdit(record) {
+  edit.value = { id: record.id, label: record.label, privilege: record.privilege, group: record.group_id ?? null }
+  editOpen.value = true
+}
+
+function onEditPrivilegeChange(value) {
+  if (value === PRIV_ADMIN) edit.value.group = null
+}
+
+async function saveEdit() {
+  if (!editValid.value) return
+  editSaving.value = true
+  try {
+    const e = edit.value
+    const res = await api.put(`/api/api-key/${e.id}`, {
+      label:     e.label.trim(),
+      privilege: e.privilege,
+      group_id:  e.privilege === PRIV_ADMIN ? null : (e.group ?? null),
+    })
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: api.responseMessage(res, t) || t('error_saved'), life: 5000 })
+      return
+    }
+    toast.add({ severity: 'success', summary: t('ok_api_key_updated'), life: 4000 })
+    editOpen.value = false
+    await load()
+  } catch (err) {
+    toast.add({ severity: 'error', summary: err.message, life: 5000 })
+  } finally {
+    editSaving.value = false
+  }
+}
+
+async function toggleKey(record) {
+  const action = record.is_disabled ? 'enable' : 'disable'
+  try {
+    const res = await api.post(`/api/api-key/${record.id}/${action}`)
+    toast.add({
+      severity: res.status === 'success' ? 'success' : 'error',
+      summary:  res.status === 'success' ? t(res.code) : (api.responseMessage(res, t) || t('error_saved')),
+      life: 4000,
+    })
+    await load()
+  } catch (err) {
+    toast.add({ severity: 'error', summary: err.message, life: 5000 })
+  }
+}
+
 // ── Revoke ────────────────────────────────────────────────────────────────
+
+// Final, unlike disabling: ask first, and say so.
+function confirmRevoke(record) {
+  confirm.require({
+    header:   t('revoke'),
+    message:  t('api_key_revoke_confirm', record.label),
+    severity: 'danger',
+    accept:   () => revokeKey(record.id),
+  })
+}
+
 
 async function revokeKey(id) {
   try {
@@ -377,4 +497,9 @@ onMounted(async () => {
   color: var(--p-text-muted-color);
   padding: 0.5rem 0;
 }
+
+.edit-form { display: flex; flex-direction: column; gap: 1rem; }
+.edit-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.edit-field > span { font-weight: 600; }
+.edit-field :deep(.ant-select) { width: 100%; }
 </style>

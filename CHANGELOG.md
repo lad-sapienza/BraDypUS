@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **API keys can be edited and switched off.** In Config → API Keys, a key's name, privilege level
+  and group can be changed without recreating it (`PUT /api/api-key/{id}`, same rules as creation;
+  the change applies from the key's next request), and a key can be disabled and enabled again
+  (`POST /api/api-key/{id}/disable|enable`, migration M055 adds `disabled_at`). Revoking stays
+  final and now asks for confirmation. The key list works before the migration has run.
+
 - **MCP endpoint.** `POST /{app}/api/mcp` lets an AI client that speaks the Model Context Protocol
   work on the database through thirteen generic tools, parameterised by table: `guide`, `schema`,
   `vocabulary`, `records_read`, `aggregate` (counts and breakdowns for reports), `resolve`,

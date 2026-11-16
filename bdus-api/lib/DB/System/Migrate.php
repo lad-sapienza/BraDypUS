@@ -63,6 +63,7 @@ use DB\System\Migrations\M051_AddLayoutsToGroups;
 use DB\System\Migrations\M052_AddMcpSettingsToCfgApp;
 use DB\System\Migrations\M053_AddProvenanceToVersions;
 use DB\System\Migrations\M054_CreateMcpPrompts;
+use DB\System\Migrations\M055_AddDisabledAtToApiKeys;
 use Monolog\Logger;
 
 /**
@@ -162,6 +163,7 @@ class Migrate
         M052_AddMcpSettingsToCfgApp::class,
         M053_AddProvenanceToVersions::class,
         M054_CreateMcpPrompts::class,
+        M055_AddDisabledAtToApiKeys::class,
     ];
 
     /**

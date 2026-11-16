@@ -177,6 +177,9 @@ class Router
         'Bdus\\Controllers\\Api::createKey'                        => 'admin',
         'Bdus\\Controllers\\Api::revokeKey'                        => 'admin',
         'Bdus\\Controllers\\Api::deleteKey'                        => 'admin',
+        'Bdus\\Controllers\\Api::editKey'                          => 'admin',
+        'Bdus\\Controllers\\Api::disableKey'                       => 'admin',
+        'Bdus\\Controllers\\Api::enableKey'                        => 'admin',
         'Bdus\\Controllers\\McpPrompts::listPrompts'               => 'super_admin',
         'Bdus\\Controllers\\McpPrompts::createPrompt'              => 'super_admin',
         'Bdus\\Controllers\\McpPrompts::updatePrompt'              => 'super_admin',
@@ -623,6 +626,9 @@ class Router
             $r->addRoute('POST',   '/api/api-keys',                 ['Bdus\\Controllers\\Api', 'createKey']);
             $r->addRoute('POST',   '/api/api-key/{id:\d+}/revoke',  ['Bdus\\Controllers\\Api', 'revokeKey']);
             $r->addRoute('DELETE', '/api/api-key/{id:\d+}',         ['Bdus\\Controllers\\Api', 'deleteKey']);
+            $r->addRoute('PUT',    '/api/api-key/{id:\d+}',         ['Bdus\\Controllers\\Api', 'editKey']);
+            $r->addRoute('POST',   '/api/api-key/{id:\d+}/disable', ['Bdus\\Controllers\\Api', 'disableKey']);
+            $r->addRoute('POST',   '/api/api-key/{id:\d+}/enable',  ['Bdus\\Controllers\\Api', 'enableKey']);
 
             // MCP prompts (super_admin)
             $r->addRoute('GET',    '/api/mcp-prompts',              ['Bdus\\Controllers\\McpPrompts', 'listPrompts']);

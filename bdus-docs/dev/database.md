@@ -265,7 +265,7 @@ It knows the schema of every system table (from JSON descriptors in
 ### System tables
 
 ```
-bdus_api_keys          — API keys (SHA-256 hashes)
+bdus_api_keys          — API keys (SHA-256 hashes; `revoked_at` final, `disabled_at` reversible, `privilege`, `group_id`)
 bdus_cfg_app           — App-level config properties
 bdus_cfg_fields        — Field configurations
 bdus_cfg_geoface       — GeoFace / map layer config

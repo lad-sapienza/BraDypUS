@@ -42,6 +42,24 @@ Each key has a privilege level: 30 (reader) keys can only read data, 25 keys can
 also create and write, 10 keys are admin keys. A key can also belong to a
 [group](../setup/groups) — see below.
 
+#### Changing, disabling and revoking a key <Badge type="tip" text="next release" />
+
+In **Config → API Keys** a key is not fixed once created:
+
+- **Edit** changes its name, privilege level and group without recreating it. The secret stays
+  the same and the change applies from the key's **next request** (the rights are read from the
+  database every time), so you can narrow what a key reaches the moment you decide to. The rules
+  are those of creation: a level **Enter** key needs a group, an **Admin** key takes none.
+- **Disable** switches a key off until you **enable** it again: requests with it are refused
+  (`401`). Use it to pause a key you will need again.
+- **Revoke** is final: the key can no longer be enabled or edited (it can only be deleted). Use it
+  when a key may have leaked, and make a new one.
+
+Through the API: `PUT /api/api-key/{id}`, `POST /api/api-key/{id}/disable` and `/enable`
+(administrators only; see the [API reference](/api-reference/)). Apps that were created before
+this release need the minor update that adds the `disabled_at` column
+([Updating](../install/update)) before keys can be disabled.
+
 #### AI assistants <Badge type="tip" text="next release" />
 
 An API key can also be given to an AI assistant through the MCP endpoint

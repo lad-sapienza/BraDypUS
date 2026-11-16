@@ -186,7 +186,7 @@ purpose (`McpWriteRulesTest::testWritingNeedsToBeAbleToReadTheTable`).
 ## Stratigraphic relations
 
 `Record\Rs` is the one place that adds and removes relations (`bdus_rs`: `tb`, `first`, `second`,
-`relation`, read "first <relation> second"); the REST endpoints `POST /api/record/{tb}/rs` and
+`relation`, read "first `<relation>` second"); the REST endpoints `POST /api/record/{tb}/rs` and
 `DELETE /api/rs/{id}` and the MCP tools share it. It is a pure move of what the controller did,
 plus the checks the controller never made, now enforced for both entry points:
 

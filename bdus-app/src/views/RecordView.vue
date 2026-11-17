@@ -357,6 +357,7 @@ import ChronoDensityPanel     from '@/components/record/ChronoDensityPanel.vue'
 import RecordVersionsDrawer   from '@/components/record/RecordVersionsDrawer.vue'
 import { validateField }      from '@/utils/fieldValidation'
 import { isEditShortcut }     from '@/utils/recordShortcuts'
+import { editableRowFields }  from '@/utils/pluginRows'
 
 const { t }   = useI18n()
 const route   = useRoute()
@@ -763,12 +764,7 @@ function enterEditMode() {
   Object.keys(record.value.plugins).forEach(plgTb => {
     const plgData = record.value.plugins[plgTb]?.data ?? {}
     const rows = (Array.isArray(plgData) ? plgData : Object.values(plgData)).map(row => {
-      const fields = {}
-      Object.keys(row).forEach(k => {
-        if (!['id','table_link','id_link','sort'].includes(k)) {
-          fields[k] = row[k]?.val ?? null
-        }
-      })
+      const fields = editableRowFields(row, record.value.schema?.plugins?.[plgTb]?.fields)
       return {
         _uid:    row.id?.val ?? Math.random(),
         _delete: false,

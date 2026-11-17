@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Saving a record with a plugin that has a lookup field failed (`unknown_field`).** A plugin row read from the server also carries the fields of the record its lookup field points at (e.g. `graves_bibliography.graves_id` → all the fields of `graves`). Edit mode sent them all back and the server refused them ("Server validation failed for: graves_bibliography.creator, …"). The edit form now keeps only the fields of the plugin's own schema (`utils/pluginRows.js`, with tests).
 - **Config → Fields: the field list was too narrow to read names.** The list was a fixed 230 px and the type badge (`combo_select`…) took a third of each row, cutting names to "cla…". It now scales with the window (250–380 px), shows the type under the name next to the label, and has the full name in a tooltip.
 - **Zotero notes are a text area.** The notes of a bibliographic reference were a one-line input, too small for real annotations. In edit mode it is now a text area that grows with its content, and line breaks are kept when reading.
 

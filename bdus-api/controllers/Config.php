@@ -824,6 +824,18 @@ class Config extends \Bdus\Controller
     $tb = $this->get['tb'];
     $col = $this->get['col'];
 
+    // The validation report only ever proposes fixes on the system tables, and never
+    // drops a whole table: anything else is refused, so this route cannot be used to
+    // delete a user table (that is delete_tb's job, with its guards).
+    if (!str_starts_with((string) $tb, 'bdus_')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+      return;
+    }
+    if ($action === 'delete' && !$col) {
+      $this->returnJson(['status' => 'error', 'code' => 'invalid_action']);
+      return;
+    }
+
     $sys_manage = new Manage($this->db);
 
     // Create table: yes create, no col

@@ -181,7 +181,7 @@ database. `LoadFromDB::inactiveTables()` lists them; `ToDB::setActive()` flips t
 without it the table is dropped, and its `bdus_cfg_indexes` records with it (the physical indexes go with
 `DROP TABLE`). A table whose plugins are on cannot be deactivated (`table_not_deactivable`); a plugin can,
 and `Activate::parentIsOff()` refuses to switch it back on while its parent is off (`parent_table_inactive`).
-A drop is refused while the table is in the configuration (`table_active`), while plugin tables are still configured on it (`table_has_plugins`) and for `bdus_*` names.
+A drop is refused while the table is in the configuration (`table_active`), while plugin tables are still configured on it (`table_has_plugins`) and for `bdus_*` names. `POST /api/config/validation/fix` only touches `bdus_*` tables and never drops a whole table.
 Things that name a table without being part of its configuration (saved queries, charts, group rules)
 are not touched and simply stop working while it is off.
 

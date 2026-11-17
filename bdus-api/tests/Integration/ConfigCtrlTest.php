@@ -370,6 +370,20 @@ class ConfigCtrlTest extends BdusTestCase
         $this->assertContains('id', array_column($inspect->tableColumns(self::TB), 'fld'));
     }
 
+    public function testValidationFixNeverDropsAUserTable(): void
+    {
+        $C = 'Bdus\\Controllers\\Config';
+        $inspect = new \DB\Inspect(static::$db);
+        // the validation report proposes fixes on the system tables only
+        $res = $this->callController($this->makeController($C, ['action' => 'delete', 'tb' => self::TB, 'col' => '']), 'fix');
+        $this->assertSame('not_found', $res['code']);
+        $this->assertTrue($inspect->tableExists(self::TB));
+        // …and it never drops a whole table, system ones included
+        $res = $this->callController($this->makeController($C, ['action' => 'delete', 'tb' => 'bdus_log', 'col' => '']), 'fix');
+        $this->assertSame('invalid_action', $res['code']);
+        $this->assertTrue($inspect->tableExists('bdus_log'));
+    }
+
     // ── activateFuzzyDate / deactivateFuzzyDate ───────────────────────────
 
     public function testActivateFuzzyDateReturnsSuccess(): void

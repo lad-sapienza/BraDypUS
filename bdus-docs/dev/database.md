@@ -178,7 +178,10 @@ leaves it out, so every reader, and the relation guard that skips relations to a
 table that does not exist, while its configuration (fields, relations, templates) stays in the
 database. `LoadFromDB::inactiveTables()` lists them; `ToDB::setActive()` flips the flag.
 `DELETE /api/config/table/{tb}?keep_data=1` removes only the configuration (no `DROP`, FKs kept);
-without it the table is dropped. Plugin tables and tables that have plugins cannot be deactivated.
+without it the table is dropped, and its `bdus_cfg_indexes` records with it (the physical indexes go with
+`DROP TABLE`). A table whose plugins are on cannot be deactivated (`table_not_deactivable`); a plugin can,
+and `Activate::parentIsOff()` refuses to switch it back on while its parent is off (`parent_table_inactive`).
+A drop is refused while the table is in the configuration (`table_active`), while plugin tables are still configured on it (`table_has_plugins`) and for `bdus_*` names.
 Things that name a table without being part of its configuration (saved queries, charts, group rules)
 are not touched and simply stop working while it is off.
 

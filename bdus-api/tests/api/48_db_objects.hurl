@@ -139,7 +139,23 @@ HTTP 200
 jsonpath "$.status" == "success"
 jsonpath "$.kind"   == "table"
 
-# delete: the table is dropped
+# delete: refused while the table is part of the configuration …
+DELETE {{base_url}}/{{app_name}}/api/config/table/tmp_lifecycle
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "table_active"
+
+PUT {{base_url}}/{{app_name}}/api/config/table/tmp_lifecycle/active
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "active": false }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "table_deactivated"
+
+# … and the table is dropped once it is off
 DELETE {{base_url}}/{{app_name}}/api/config/table/tmp_lifecycle
 Authorization: Bearer {{jwt}}
 HTTP 200

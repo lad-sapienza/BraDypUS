@@ -17,7 +17,8 @@ export const dboReasonKey = reason => `dbo_reason_${reason}`
  * GET /api/config/db-objects. Returns locale keys, not text.
  *
  *  - a deactivated table can be reactivated, have its configuration removed,
- *    and (tables only, never views) be dropped — the one irreversible step;
+ *    and (tables only, never views) be dropped — the one irreversible step; a table
+ *    that is only in the database (its configuration was removed) can be dropped too;
  *  - a `missing` entry (deactivated, but its database object is gone) can only
  *    have its saved configuration removed.
  */
@@ -33,20 +34,21 @@ export function dbObjectActions(o) {
     inactiveTag:   inactive,
     reasonKey:     o.activatable || !o.reason ? null : dboReasonKey(o.reason),
     removeConfig:  inactive,
-    drop:          inactive && kind === 'table',
+    // Deactivated, or already without configuration: only a table, never a view, and
+    // never a `missing` entry (there is nothing left in the database to drop).
+    drop:          kind === 'table',
   }
 }
 
 /**
- * A plugin table, and a table that has plugins, cannot be deactivated on their
- * own (the server answers `table_not_deactivable`): the button is disabled.
- * `table` is the object of GET /api/config/table/{tb}.
+ * A table whose plugins are still on cannot be deactivated (the server answers
+ * `table_not_deactivable`): the button is disabled until they are switched off.
+ * A plugin table itself can be deactivated. `table` is the object of
+ * GET /api/config/table/{tb}; `plugin` lists only the plugins that are on.
  */
 export function cannotDeactivate(table) {
   if (!table) return false
-  const isPlugin = table.is_plugin === '1' || table.is_plugin === 1 || table.is_plugin === true
-  const plugins  = (table.plugin ?? []).filter(Boolean)
-  return isPlugin || plugins.length > 0
+  return (table.plugin ?? []).filter(Boolean).length > 0
 }
 
 /** What the table settings and fields panels hide for a registered SQL view. */

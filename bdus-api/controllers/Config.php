@@ -341,7 +341,8 @@ class Config extends \Bdus\Controller
   /**
    * Switches a table on or off. Off = deactivated: its configuration is kept, but
    * the application behaves as if the table were not there (see LoadFromDB).
-   * Plugin tables and tables that have plugins cannot be switched off on their own.
+   * A table whose plugins are still on cannot be switched off; a plugin table can, and
+   * can be switched back on only while its parent is on.
    *
    * PUT /api/config/table/{tb}/active   body: { active: bool }
    */
@@ -370,6 +371,10 @@ class Config extends \Bdus\Controller
           return;
         }
         $this->requireObjectInDatabase($tb);
+        if (\Config\Activate::parentIsOff($this->db, $this->cfg, $tb)) {
+          $this->returnJson(['status' => 'error', 'code' => 'parent_table_inactive']);
+          return;
+        }
         \Config\ToDB::setActive($this->db, $tb, true);
         $this->returnJson(['status' => 'success', 'code' => 'table_reactivated']);
         return;
@@ -379,7 +384,10 @@ class Config extends \Bdus\Controller
         $this->returnJson(['status' => 'error', 'code' => 'not_found']);
         return;
       }
-      if ($this->cfg->get("tables.$tb.is_plugin") || !empty($this->cfg->get("tables.$tb.plugin"))) {
+      // A table whose plugins are still on cannot go off: they would stay attached to a
+      // parent that does not exist. `plugin` only lists the plugins that are on, so
+      // switching them off first is enough. A plugin table can be switched off on its own.
+      if (!empty($this->cfg->get("tables.$tb.plugin"))) {
         $this->returnJson(['status' => 'error', 'code' => 'table_not_deactivable']);
         return;
       }
@@ -666,6 +674,10 @@ class Config extends \Bdus\Controller
   {
     if (!$this->requireSuperAdmin()) return;
     $tb = $this->get['tb'];
+    if (str_starts_with((string) $tb, 'bdus_')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+      return;
+    }
     try {
       $alter = new Alter($this->db);
       // A registered view is only *unregistered*: configuration goes, the view
@@ -686,6 +698,23 @@ class Config extends \Bdus\Controller
         [$tb],
         'read'
       ) ?: [];
+      // A table that is part of the configuration is in use: it is deactivated
+      // (PUT …/active) or taken out of the configuration (?keep_data=1) first. The
+      // interface already works this way; the API must not be a way around it.
+      if (!$keepData && !$isView && $this->cfg->get("tables.{$tb}.name")) {
+        $this->returnJson(['status' => 'error', 'code' => 'table_active']);
+        return;
+      }
+      // Dropping a table whose plugin tables are still configured (on or off) would
+      // leave them attached to nothing: they go first.
+      if (!$keepData && !$isView) {
+        foreach ($children as $child) {
+          if ($child['from_col'] === 'id_link') {
+            $this->returnJson(['status' => 'error', 'code' => 'table_has_plugins', 'detail' => $child['from_tb']]);
+            return;
+          }
+        }
+      }
       if (!$keepData) {
         foreach ($children as $child) {
           $alter->dropForeignKey($child['from_tb'], $child['from_col']);
@@ -696,6 +725,9 @@ class Config extends \Bdus\Controller
       // Drop table from database
       if (!$isView && !$keepData) {
         $alter->dropTable($tb);
+        // The user-defined indexes went with the table: forget their records too
+        // (otherwise a table created later under the same name inherits them).
+        $this->db->query('DELETE FROM bdus_cfg_indexes WHERE tb = ?', [$tb], 'boolean');
       }
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_tb_delete']);
     } catch (\Throwable $th) {

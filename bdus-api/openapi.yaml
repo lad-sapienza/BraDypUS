@@ -3073,6 +3073,11 @@ paths:
         With `keep_data=1` only the configuration is removed: the table, its rows and its
         foreign keys stay in the database, and it can be activated again from
         `GET /api/config/db-objects`.
+        A drop also deletes the table's index records (`bdus_cfg_indexes`). It is refused with
+        `table_active` while the table is part of the configuration (deactivate it first with
+        `PUT …/active`, or remove only its configuration with `keep_data=1`), with
+        `table_has_plugins` while plugin tables are still configured on it, and `bdus_*` names
+        answer `not_found`.
       parameters:
         - $ref: '#/components/parameters/tb'
         - name: keep_data
@@ -3098,9 +3103,11 @@ paths:
         A deactivated table keeps its configuration but the application behaves as if it
         did not exist (it is left out of the loaded configuration). It shows up again in
         `GET /api/config/db-objects` as `inactive`, and activating it there (or `active: true`
-        here) switches the saved configuration back on. Plugin tables and tables that have
-        plugins cannot be deactivated on their own (`table_not_deactivable`).
-        Codes: `table_deactivated`, `table_reactivated`, `not_found`, `parameter_missing`.
+        here) switches the saved configuration back on. A table whose plugins are still on
+        cannot be deactivated (`table_not_deactivable`); a plugin table can, and can be
+        reactivated only while its parent table is on (`parent_table_inactive`).
+        Codes: `table_deactivated`, `table_reactivated`, `table_not_deactivable`,
+        `parent_table_inactive`, `not_found`, `parameter_missing`.
       parameters:
         - $ref: '#/components/parameters/tb'
       requestBody:

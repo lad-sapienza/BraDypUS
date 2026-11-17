@@ -7,14 +7,14 @@ import { DBO_REASONS, dboReasonKey, dbObjectActions, cannotDeactivate, viewRestr
 const table = (over = {}) => ({ name: 'sites', kind: 'table', activatable: true, inactive: false, reason: null, view_writable: null, ...over })
 const view  = (over = {}) => ({ name: 'v', kind: 'view', activatable: true, inactive: false, reason: null, view_writable: 'none', ...over })
 
-test('a new table offers preview and activate, and nothing destructive', () => {
+test('a table only in the database offers preview/activate and can be dropped (never silently)', () => {
   const a = dbObjectActions(table())
   assert.equal(a.previewLabel, 'dbo_preview_activate')
   assert.equal(a.primary, true)
   assert.equal(a.kindTag, 'db_kind_table')
   assert.equal(a.writableTag, null)
-  assert.equal(a.removeConfig, false)
-  assert.equal(a.drop, false)
+  assert.equal(a.removeConfig, false, 'there is no configuration to remove')
+  assert.equal(a.drop, true, 'its configuration is already gone: it can be deleted from the database')
   assert.equal(a.reasonKey, null)
 })
 
@@ -51,11 +51,11 @@ test('a deactivated table whose database object is gone can only be unregistered
   assert.equal(a.reasonKey, 'dbo_reason_missing_in_database')
 })
 
-test('plugin tables and tables with plugins cannot be deactivated alone', () => {
+test('only a table whose plugins are still on cannot be deactivated; a plugin table can', () => {
   assert.equal(cannotDeactivate(null), false)
   assert.equal(cannotDeactivate({ is_plugin: '', plugin: [''] }), false, 'the form pads plugin with an empty string')
   assert.equal(cannotDeactivate({ is_plugin: '', plugin: [] }), false)
-  assert.equal(cannotDeactivate({ is_plugin: '1', plugin: [] }), true)
+  assert.equal(cannotDeactivate({ is_plugin: '1', plugin: [] }), false, 'a plugin table can be switched off on its own')
   assert.equal(cannotDeactivate({ is_plugin: '', plugin: ['sites_radiocarbon'] }), true)
 })
 

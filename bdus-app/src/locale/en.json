@@ -1340,10 +1340,10 @@
   "deactivate_table_hint": "The table stays in the database and its configuration is kept, but BraDypUS behaves as if it did not exist. Switch it back on from Database objects.",
   "remove_from_config": "Remove from configuration",
   "warning_remove_from_config": "The configuration of the table is deleted. The table and its data stay in the database and can be activated again from Database objects, but labels and field settings are lost.",
-  "delete_table_where": "To delete the table and its data, deactivate it first, then use Database objects.",
+  "delete_table_where": "To delete the table and its data, deactivate it (or remove it from the configuration), then use Database objects.",
   "table_deactivated": "The table was deactivated",
   "table_reactivated": "The table was reactivated",
-  "table_not_deactivable": "Plugin tables, and tables that have plugins, cannot be deactivated on their own.",
+  "table_not_deactivable": "A table whose plugins are still on cannot be deactivated: deactivate its plugins first.",
   "not_found": "Not found",
   "missing_id_column": "It has no 'id' column, which BraDypUS needs to identify records.",
   "missing_creator_column": "It can be written but has no 'creator' column, which BraDypUS needs to record who created a record.",
@@ -1719,5 +1719,8 @@
   "error": "Error",
   "import_step_config": "Configuration",
   "notes": "Notes",
-  "value": "Value"
+  "value": "Value",
+  "parent_table_inactive": "The parent table of this plugin is not active: activate the parent table first.",
+  "table_has_plugins": "The table still has plugin tables: delete them first.",
+  "dbo_drop_indexes": "These indexes will be deleted with the table:"
 }

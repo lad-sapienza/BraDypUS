@@ -1340,10 +1340,10 @@
   "deactivate_table_hint": "La tabella resta nel database e la sua configurazione viene conservata, ma BraDypUS si comporta come se non esistesse. Si riattiva da Oggetti del database.",
   "remove_from_config": "Rimuovi dalla configurazione",
   "warning_remove_from_config": "La configurazione della tabella viene cancellata. La tabella e i suoi dati restano nel database e si possono attivare di nuovo da Oggetti del database, ma etichette e impostazioni dei campi vanno perse.",
-  "delete_table_where": "Per eliminare la tabella e i suoi dati, disattivala prima, poi usa Oggetti del database.",
+  "delete_table_where": "Per eliminare la tabella e i suoi dati, disattivala (o rimuovila dalla configurazione), poi usa Oggetti del database.",
   "table_deactivated": "La tabella è stata disattivata",
   "table_reactivated": "La tabella è stata riattivata",
-  "table_not_deactivable": "Le tabelle plugin, e le tabelle che hanno plugin, non si possono disattivare da sole.",
+  "table_not_deactivable": "Una tabella con plugin ancora attivi non si può disattivare: disattiva prima i suoi plugin.",
   "not_found": "Non trovato",
   "missing_id_column": "Non ha la colonna 'id', che BraDypUS richiede per identificare i record.",
   "missing_creator_column": "È scrivibile ma non ha la colonna 'creator', che BraDypUS richiede per registrare chi ha creato un record.",
@@ -1719,5 +1719,8 @@
   "error": "Errore",
   "import_step_config": "Configurazione",
   "notes": "Note",
-  "value": "Valore"
+  "value": "Valore",
+  "parent_table_inactive": "La tabella madre di questo plugin non è attiva: attiva prima la tabella madre.",
+  "table_has_plugins": "La tabella ha ancora delle tabelle plugin: eliminale prima.",
+  "dbo_drop_indexes": "Questi indici vengono eliminati insieme alla tabella:"
 }

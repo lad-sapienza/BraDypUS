@@ -32,13 +32,11 @@
             <AButton v-if="act(o).preview" size="small" :type="act(o).primary ? 'primary' : 'default'" @click="openPreview(o.name)">
               {{ t(act(o).previewLabel) }}
             </AButton>
-            <template v-if="act(o).removeConfig">
-              <AButton size="small" danger @click="removeConfig(o.name)">{{ t('remove_from_config') }}</AButton>
-              <AButton v-if="act(o).drop" size="small" danger @click="openDrop(o.name)">
-                <template #icon><DeleteOutlined /></template>
-                {{ t('delete_table') }}
-              </AButton>
-            </template>
+            <AButton v-if="act(o).removeConfig" size="small" danger @click="removeConfig(o.name)">{{ t('remove_from_config') }}</AButton>
+            <AButton v-if="act(o).drop" size="small" danger @click="openDrop(o.name)">
+              <template #icon><DeleteOutlined /></template>
+              {{ t('delete_table') }}
+            </AButton>
           </div>
         </div>
       </div>
@@ -103,9 +101,15 @@
       </template>
     </AModal>
 
-    <!-- ── Drop a deactivated table: type its name ─────────────────────── -->
+    <!-- ── Drop a table that is off or has no configuration: type its name ─ -->
     <AModal v-model:open="dropVisible" :title="t('delete_table') + ': ' + dropName" width="460px" :footer="null">
       <AAlert type="error" show-icon :closable="false" :message="t('dbo_drop_warning')" class="dbo-block" />
+      <div v-if="dropIndexes.length" class="dbo-block">
+        <p class="dbo-drop-label">{{ t('dbo_drop_indexes') }}</p>
+        <ul class="dbo-drop-indexes">
+          <li v-for="ix in dropIndexes" :key="ix.id"><code>{{ ix.name }}</code> ({{ ix.columns.join(', ') }})</li>
+        </ul>
+      </div>
       <label class="dbo-drop-label">{{ t('dbo_drop_type_name') }} <code>{{ dropName }}</code></label>
       <AInput v-model:value="dropTyped" size="small" autofocus @keyup.enter="confirmDrop" />
       <div class="dbo-footer">
@@ -220,16 +224,23 @@ function removeConfig(name) {
   })
 }
 
-// ── Drop a deactivated table: the one irreversible action, name to be typed ─
+// ── Drop a table that is off or has no configuration: the one irreversible action ─
 const dropVisible = ref(false)
 const dropName    = ref('')
 const dropTyped   = ref('')
 const dropping    = ref(false)
 
-function openDrop(name) {
+const dropIndexes = ref([])   // the indexes that go with the table: listed before confirming
+
+async function openDrop(name) {
   dropName.value    = name
   dropTyped.value   = ''
+  dropIndexes.value = []
   dropVisible.value = true
+  try {
+    const res = await api.get(`/api/config/table/${encodeURIComponent(name)}/indexes`)
+    if (res.status === 'success') dropIndexes.value = res.data ?? []
+  } catch { /* the list is informational: the table is dropped with its indexes anyway */ }
 }
 
 async function confirmDrop() {

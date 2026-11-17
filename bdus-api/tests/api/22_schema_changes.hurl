@@ -253,6 +253,22 @@ jsonpath "$.core.col_a.val" == "First record"
 
 
 # ── 22m. Delete table ────────────────────────────────────────────────
+# A table that is part of the configuration is not dropped (`table_active`):
+# switch it off first.
+DELETE {{base_url}}/{{app_name}}/api/config/table/tmp_renamed
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "table_active"
+
+PUT {{base_url}}/{{app_name}}/api/config/table/tmp_renamed/active
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "active": false }
+HTTP 200
+[Asserts]
+jsonpath "$.code" == "table_deactivated"
+
 DELETE {{base_url}}/{{app_name}}/api/config/table/tmp_renamed
 Authorization: Bearer {{jwt}}
 HTTP 200

@@ -161,6 +161,22 @@ class Activate
         ];
     }
 
+        /**
+     * A plugin table needs its parent: true when $name is a plugin whose parent is not
+     * part of the configuration (switched off or removed), so switching the plugin on
+     * would leave it attached to nothing.
+     */
+    public static function parentIsOff(DB $db, Config $cfg, string $name): bool
+    {
+        $rows = $db->query(
+            "SELECT to_tb FROM bdus_cfg_relations WHERE from_tb = ? AND from_col = 'id_link'",
+            [$name],
+            'read'
+        );
+        $parent = $rows[0]['to_tb'] ?? null;
+        return $parent !== null && !$cfg->get("tables.{$parent}.name");
+    }
+
     /**
      * Writes the configuration for $name. Never touches the table/view itself.
      *
@@ -179,6 +195,9 @@ class Activate
 
         // A table that was deactivated keeps its whole configuration: switch it back on.
         if ($plan['inactive']) {
+            if (self::parentIsOff($db, $cfg, $name)) {
+                return ['status' => 'error', 'code' => 'parent_table_inactive'];
+            }
             ToDB::setActive($db, $name, true);
             return ['status' => 'success', 'code' => 'table_reactivated', 'tb' => $name, 'kind' => $plan['kind']];
         }

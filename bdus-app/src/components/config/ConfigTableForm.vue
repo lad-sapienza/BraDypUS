@@ -375,7 +375,7 @@ async function recheckView() {
   }
 }
 
-const cannotDeactivate = computed(() => cannotDeactivateTable(table.value) || isPlugin.value)
+const cannotDeactivate = computed(() => cannotDeactivateTable(table.value))
 
 // is_plugin as boolean for ToggleSwitch (#20)
 const isPluginBool = computed({

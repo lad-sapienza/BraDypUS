@@ -241,8 +241,9 @@ what they should see after each click.
 - Ask before **destructive** actions (deleting tables or records). Table deletion cannot
   be undone; make a backup first (`guide/usage/backup.md`).
 - **Never call `DELETE {base}/{app}/api/config/table/{tb}` without the user's explicit
-  consent**: without `?keep_data=1` it drops the table and its data at once (the web app makes
-  a person deactivate first and type the name; the API does not). To take a table out of use
+  consent**: without `?keep_data=1` it drops the table and its data (the server refuses it with
+  `table_active` while the table is in the configuration; the web app also makes a person type
+  the name). To take a table out of use
   without losing anything, deactivate it (`PUT …/table/{tb}/active {"active": false}`) or remove
   only its configuration (`DELETE …/table/{tb}?keep_data=1`); both leave the data in the database.
 - A registered SQL view cannot be altered from BraDypUS (`view_not_alterable`) and may be

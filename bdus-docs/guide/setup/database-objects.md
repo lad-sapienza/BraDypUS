@@ -95,8 +95,12 @@ work for every table, not only for the ones you activated.
 - **Deactivate** and **Remove from configuration** are in the *Danger zone* of the table
   settings. A deactivated table is in **Database objects** with a *deactivated* tag, and
   **Reactivate** switches it back on.
-- **Delete table** is offered only in **Database objects**, only for a table that was
-  deactivated first, and asks you to type the table name.
+- **Delete table** is offered only in **Database objects**, for a table that is deactivated
+  or that has no configuration any more (after *Remove from configuration*). A table with an
+  active configuration is never deleted. The dialog lists the **indexes** that go with the
+  table, and asks you to type the table name.
+- A **plugin table** goes through the same three steps as any other table. To delete the
+  parent of a plugin, delete the plugin first (`table_has_plugins`).
 - A view is never dropped by BraDypUS: for a view there are only the first two.
 
 ![A deactivated table in Database objects, with Reactivate, Remove from configuration and Delete table](/images/v5/setup/db-objects-deactivated.png)
@@ -113,8 +117,9 @@ saved queries, charts, assemblage analyses, templates, group rules and locks.
 
 Two limits:
 
-- A **plugin table**, and a table that **has plugins**, cannot be deactivated on their own
-  (`table_not_deactivable`): deactivating the parent would orphan its plugins.
+- A table whose **plugins are still on** cannot be deactivated (`table_not_deactivable`):
+  deactivate its plugins first, then the table. A plugin can be deactivated on its own, but
+  can be reactivated only while its parent table is active (`parent_table_inactive`).
 - A new table, or a DBML import, cannot take the name of a deactivated table.
 
 ## For scripts and assistants
@@ -131,12 +136,15 @@ All routes need the super-admin token.
 | `DELETE /api/config/table/{tb}?keep_data=1` | Remove from configuration, keep the table |
 | `DELETE /api/config/table/{tb}` | **Drop the table and its data** |
 
-::: warning The last route does not ask
-`DELETE /api/config/table/{tb}` without `keep_data` drops the table at once. The interface
-makes you deactivate first and type the name; the API does not. A script, or an assistant
-using the API, must not call it without the explicit consent of the person who owns the data.
+::: warning The last route is irreversible
+`DELETE /api/config/table/{tb}` without `keep_data` drops the table and its data. The server
+refuses it while the table is **part of the configuration** (`table_active`): it must be
+deactivated first (`PUT …/active`) or removed from the configuration (`keep_data=1`), the same
+steps as in the interface. It does not ask for the name to be typed, and it cannot be undone:
+a script, or an assistant using the API, must not call it without the explicit consent of the
+person who owns the data. Other refusals: `table_has_plugins` (delete the plugin tables first)
+and `not_found` for `bdus_*` names.
 :::
-
 The same names appear in the [OpenAPI description](/api-reference/).
 
 ## Keeping it consistent

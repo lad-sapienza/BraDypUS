@@ -109,15 +109,82 @@ class TableLifecycleTest extends BdusTestCase
         $this->assertNotEmpty($this->reload()->get('tables.lc_finds.link'));
     }
 
-    public function testPluginTablesAndTablesWithPluginsCannotBeDeactivated(): void
+    public function testPluginTableCanBeSwitchedOffAndOnWhileItsParentIsOn(): void
     {
         ToDB::upsertTable(static::$db, ['name' => 'lc_plg', 'label' => 'Plugin', 'is_plugin' => 1]);
+        static::$db->exec('CREATE TABLE lc_plg (id INTEGER PRIMARY KEY AUTOINCREMENT, id_link INTEGER, note TEXT)');
         static::$db->query('INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete, on_update) VALUES (?,?,?,?,?,?)',
             ['lc_plg', 'id_link', 'lc_solo2', 'id', 'RESTRICT', 'CASCADE'], 'boolean');
         static::$cfg = $this->reload();
+        $this->assertSame(['lc_plg'], $this->reload()->get('tables.lc_solo2.plugin'));
 
-        $this->assertSame('table_not_deactivable', $this->call('setTableActive', ['tb' => 'lc_plg'], ['active' => false])['code']);
+        // a table whose plugins are on cannot go off …
         $this->assertSame('table_not_deactivable', $this->call('setTableActive', ['tb' => 'lc_solo2'], ['active' => false])['code']);
+        // … the plugin can, and then it is no longer one of its parent's plugins
+        $this->assertSame('table_deactivated', $this->call('setTableActive', ['tb' => 'lc_plg'], ['active' => false])['code']);
+        $this->assertEmpty($this->reload()->get('tables.lc_solo2.plugin'));
+        $this->assertContains('lc_plg', array_column($this->call('listDbObjects')['objects'], 'name'));
+
+        // with no active plugin left the parent can go off, but then the plugin cannot come back
+        $this->assertSame('table_deactivated', $this->call('setTableActive', ['tb' => 'lc_solo2'], ['active' => false])['code']);
+        $this->assertSame('parent_table_inactive', $this->call('setTableActive', ['tb' => 'lc_plg'], ['active' => true])['code']);
+        // Database objects reactivates through activateDbObject: same rule
+        $this->assertSame('parent_table_inactive', $this->call('activateDbObject', ['name' => 'lc_plg'])['code']);
+
+        // parent back on, then the plugin
+        $this->assertSame('table_reactivated', $this->call('setTableActive', ['tb' => 'lc_solo2'], ['active' => true])['code']);
+        $this->assertSame('table_reactivated', $this->call('setTableActive', ['tb' => 'lc_plg'], ['active' => true])['code']);
+        $this->assertSame(['lc_plg'], $this->reload()->get('tables.lc_solo2.plugin'));
+    }
+
+    public function testActiveTableCannotBeDropped(): void
+    {
+        // lc_solo2 (with its plugin lc_plg) is part of the configuration: not even the API drops it
+        $res = $this->call('delete_tb', ['tb' => 'lc_solo2']);
+        $this->assertSame('table_active', $res['code']);
+        $this->assertSame('table_active', $this->call('delete_tb', ['tb' => 'lc_plg'])['code']);
+        $this->assertTrue((new \DB\Inspect(static::$db))->tableExists('lc_solo2'));
+        $this->assertTrue((new \DB\Inspect(static::$db))->tableExists('lc_plg'));
+        $this->assertSame('lc_solo2', $this->reload()->get('tables.lc_solo2.name'), 'configuration untouched');
+    }
+
+    public function testTableWithPluginsCannotBeDroppedPluginsGoFirst(): void
+    {
+        // both off, the plugin still configured on the parent
+        $this->call('setTableActive', ['tb' => 'lc_plg'], ['active' => false]);
+        $this->call('setTableActive', ['tb' => 'lc_solo2'], ['active' => false]);
+        $res = $this->call('delete_tb', ['tb' => 'lc_solo2']);
+        $this->assertSame('table_has_plugins', $res['code']);
+        $this->assertSame('lc_plg', $res['detail']);
+        $this->assertTrue((new \DB\Inspect(static::$db))->tableExists('lc_solo2'));
+
+        $this->assertSame('ok_cfg_tb_delete', $this->call('delete_tb', ['tb' => 'lc_plg'])['code']);
+        $this->assertFalse((new \DB\Inspect(static::$db))->tableExists('lc_plg'));
+    }
+
+    public function testKeepDataAndViewsAreNotAffectedByTheActiveGuard(): void
+    {
+        // taking an active table out of the configuration (data stays) is always allowed
+        $this->call('add_new_tb', [], ['name' => 'lc_keep', 'label' => 'Keep', 'is_plugin' => '0']);
+        $this->assertSame('ok_cfg_tb_delete', $this->call('delete_tb', ['tb' => 'lc_keep', 'keep_data' => '1'])['code']);
+        $this->assertTrue((new \DB\Inspect(static::$db))->tableExists('lc_keep'));
+        // …and then the table, no longer configured, can be dropped
+        $this->assertSame('ok_cfg_tb_delete', $this->call('delete_tb', ['tb' => 'lc_keep'])['code']);
+        $this->assertFalse((new \DB\Inspect(static::$db))->tableExists('lc_keep'));
+    }
+
+    public function testDropForgetsTheIndexRecordsAndRefusesSystemTables(): void
+    {
+        $this->call('add_new_tb', [], ['name' => 'lc_idx', 'label' => 'Idx', 'is_plugin' => '0']);
+        $this->call('saveIndex', ['tb' => 'lc_idx'], ['name' => 'idx_lc_idx_id', 'columns' => ['id']]);
+        $this->assertSame(1, (int) static::$db->query("SELECT COUNT(*) AS n FROM bdus_cfg_indexes WHERE tb='lc_idx'", [], 'read')[0]['n']);
+
+        $this->call('setTableActive', ['tb' => 'lc_idx'], ['active' => false]);
+        $this->assertSame('ok_cfg_tb_delete', $this->call('delete_tb', ['tb' => 'lc_idx'])['code']);
+        $this->assertSame(0, (int) static::$db->query("SELECT COUNT(*) AS n FROM bdus_cfg_indexes WHERE tb='lc_idx'", [], 'read')[0]['n']);
+
+        $this->assertSame('not_found', $this->call('delete_tb', ['tb' => 'bdus_users'])['code']);
+        $this->assertTrue((new \DB\Inspect(static::$db))->tableExists('bdus_users'));
     }
 
     public function testSwitchValidation(): void
@@ -154,6 +221,7 @@ class TableLifecycleTest extends BdusTestCase
 
     public function testDeleteDropsTheTable(): void
     {
+        // lc_solo2 has been off since the plugins test: only a table that is off is dropped
         $res = $this->call('delete_tb', ['tb' => 'lc_solo2']);
         $this->assertSame('ok_cfg_tb_delete', $res['code']);
         $this->assertFalse((new \DB\Inspect(static::$db))->tableExists('lc_solo2'));

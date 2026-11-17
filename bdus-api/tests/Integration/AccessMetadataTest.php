@@ -75,4 +75,31 @@ class AccessMetadataTest extends BdusTestCase
             $this->assertSame('success', $this->call('Chart', 'listCharts')['status'], "tier $tier");
         }
     }
+
+    public function testFileListOfAGroupLimitedPrincipalHoldsOnlyFilesOfReadableTables(): void
+    {
+        // Files 1 and 2 are linked to items (readable); file 3 only to tags (not readable);
+        // file 4 is an orphan.
+        static::$db->exec("INSERT INTO bdus_files (id, creator, ext, filename) VALUES (903, 1, 'png', 'tag903'), (904, 1, 'png', 'orphan904')");
+        static::$db->exec("INSERT INTO bdus_file_links (file_id, table_name, record_id, sort) VALUES (903, 'tags', 1, 1)");
+
+        try {
+            $res = $this->call('File', 'getFiles');
+            $this->assertSame('success', $res['status']);
+            $ids = array_column($res['files'], 'id');
+            $this->assertSame([], array_intersect([903, 904], $ids), 'files of other tables and orphans stay hidden');
+            $this->assertContains(1, $ids);
+            foreach ($res['files'] as $f) {
+                foreach ($f['links'] as $l) {
+                    $this->assertSame('items', $l['tb']);
+                }
+            }
+
+            $this->actAs(40);
+            $this->assertSame('not_enough_privilege', $this->call('File', 'getFiles')['code']);
+        } finally {
+            static::$db->exec('DELETE FROM bdus_file_links WHERE file_id IN (903, 904)');
+            static::$db->exec('DELETE FROM bdus_files WHERE id IN (903, 904)');
+        }
+    }
 }

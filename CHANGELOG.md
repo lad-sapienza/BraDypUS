@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Group-scoped API keys can read the advanced-search field list.** `GET /{app}/api/search/{tb}/config` answered `403 not_enough_privilege` to a read-only key tied to a group (tier 39 + group), because the route was missing from `Router::GROUP_KEY_ROUTES` (`search/{tb}/values` was there). The controller still checks the table against the group's read rules, so only tables the group may read are described. `GET /{app}/api/files` is now open to such keys (and to users limited by group rules) too, but lists only files linked to records they may read, with only those links; orphan files stay hidden.
+
 ## [5.24.4] - 2026-11-17
 
 ## [5.24.3] - 2026-11-16

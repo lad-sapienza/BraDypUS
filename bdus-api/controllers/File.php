@@ -43,7 +43,10 @@ class File extends \Bdus\Controller
 	 */
 	public function getFiles(): void
 	{
-		if (!\Auth\Authorization::can('read')) {
+		// A principal whose tier does not read everything (a group-scoped API key,
+		// a user limited by group rules) sees only the files linked to records it may read.
+		$restricted = !\Auth\Authorization::can('read');
+		if ($restricted && !\Auth\Authorization::canOnSomeTable('read')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
@@ -75,6 +78,32 @@ class File extends \Bdus\Controller
 				}
 				$conditions[] = '(' . implode(' OR ', $searchOr) . ')';
 				$params = array_merge($params, $searchVal);
+			}
+
+			if ($restricted) {
+				$access = $this->access();
+				$parts  = [];
+				$vals   = [];
+				foreach ((array)$this->cfg->get('tables.*.name') as $tb) {
+					if (!$access->can('read', $tb)) {
+						continue;
+					}
+					[$rowSql, $rowVals] = $access->rowCondition('read', $tb);
+					if ($rowSql === '1=0') {
+						continue;
+					}
+					if ($rowSql === '1=1') {
+						$parts[] = '(fl.table_name = ?)';
+						$vals[]  = $tb;
+					} else {
+						$parts[] = "(fl.table_name = ? AND fl.record_id IN (SELECT {$tb}.id FROM {$tb} WHERE {$rowSql}))";
+						$vals    = array_merge($vals, [$tb], $rowVals);
+					}
+				}
+				$conditions[] = $parts
+					? 'EXISTS (SELECT 1 FROM bdus_file_links fl WHERE fl.file_id = f.id AND (' . implode(' OR ', $parts) . '))'
+					: '1=0';
+				$params = array_merge($params, $vals);
 			}
 
 			$whereSql = $conditions ? ('WHERE ' . implode(' AND ', $conditions)) : '';
@@ -136,6 +165,22 @@ class File extends \Bdus\Controller
 				$ids,
 				'read'
 			) ?: [];
+
+			if ($restricted) {
+				// Show only the links to records the principal may read.
+				$byTable = [];
+				foreach ($linkRows as $lr) {
+					$byTable[$lr['table_name']][] = (int)$lr['record_id'];
+				}
+				$ok = [];
+				foreach ($byTable as $tb => $rids) {
+					$ok[$tb] = array_flip($this->access()->readableIds($tb, $rids));
+				}
+				$linkRows = array_values(array_filter(
+					$linkRows,
+					fn($lr) => isset($ok[$lr['table_name']][(int)$lr['record_id']])
+				));
+			}
 
 			$linkMap   = [];
 			foreach ($linkRows as $lr) {

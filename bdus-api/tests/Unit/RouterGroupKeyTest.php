@@ -29,7 +29,7 @@ class RouterGroupKeyTest extends TestCase
         foreach (Router::GROUP_KEY_ROUTES as $route) {
             $this->assertStringNotContainsString('Api::', $route);
             $this->assertStringNotContainsString('User::', $route);
-            $this->assertStringNotContainsString('Config', $route);
+            $this->assertStringNotContainsString('Controllers\\Config::', $route);
             $this->assertStringNotContainsString('SearchReplace', $route);
         }
     }
@@ -59,6 +59,18 @@ class RouterGroupKeyTest extends TestCase
         $this->assertTrue(Router::apiKeyMayReach(self::CTRL, 'getRecords', 'read', 39, 5));
         $this->assertTrue(Router::apiKeyMayReach(self::CTRL, 'saveRecord', 'edit', 39, 5));
         $this->assertTrue(Router::apiKeyMayReach(self::CTRL, 'saveRecord', 'edit', 30, 5));
+    }
+
+    public function testAGroupKeyReachesTheSearchFieldListAndValues(): void
+    {
+        // The advanced-search field list is the schema of a table the key may read:
+        // the controller checks that table against the group's rules.
+        $ctrl = 'Bdus\\Controllers\\Search';
+        $this->assertTrue(Router::apiKeyMayReach($ctrl, 'getAdvancedConfig', 'read', 39, 5));
+        $this->assertTrue(Router::apiKeyMayReach($ctrl, 'getUsedValues', 'read', 39, 5));
+        $this->assertFalse(Router::apiKeyMayReach($ctrl, 'getAdvancedConfig', 'read', 39, null));
+        // the file list is filtered by the controller to the records the group may read
+        $this->assertTrue(Router::apiKeyMayReach('Bdus\\Controllers\\File', 'getFiles', 'read', 39, 5));
     }
 
     public function testAGroupDoesNotOpenOtherRoutes(): void

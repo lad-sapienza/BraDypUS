@@ -11,19 +11,26 @@ namespace Config;
  * The `char_palette` setting of a long_text / md field: the buttons of the strip
  * under the editor that insert a character (or a short text) at the cursor.
  *
- * Accepted in the configuration, and always handed to clients as a list of
- * `{label, value}`:
+ * Clients always get a list of `{label, value}`. In the configuration the setting
+ * is the NAME of a char map: one of the built-in presets (PRESETS) or one of the
+ * application's own (`bdus_cfg_app.char_maps`, passed as $custom). A char map is
+ * written as one of:
  *
- *   "greek-polytonic"                      a built-in preset, by name
  *   "α β γ"                                characters separated by spaces
  *   ["α", "β", {"label": "ᾱ", "value": "ᾱ"}]   a list (string or {label?, value})
  *   {"alpha": "α", "eta": "η"}             a map label → value
+ *
+ * A field may also carry such a char map inline instead of a name (what the first
+ * version of the setting did): still understood.
  */
 final class CharPalette
 {
   public const MAX_ITEMS = 300;
+  public const MAX_CUSTOM = 50;
   private const MAX_LABEL = 24;
   private const MAX_VALUE = 80;
+  /** What a char map name looks like; a string that does is never read as characters. */
+  private const NAME = '/^[a-z][a-z0-9-]{1,39}$/';
 
   /** Built-in presets: characters separated by spaces. */
   public const PRESETS = [
@@ -35,14 +42,25 @@ final class CharPalette
   ];
 
   /**
+   * @param mixed                $raw    the field's `char_palette`
+   * @param array<string, mixed> $custom the application's own char maps, by name
    * @return array<int, array{label: string, value: string}>|null  null when there is nothing to show
    */
-  public static function normalize(mixed $raw): ?array
+  public static function normalize(mixed $raw, array $custom = []): ?array
   {
     if (is_string($raw)) {
       $name = trim($raw);
-      $raw  = isset(self::PRESETS[$name]) ? self::PRESETS[$name] : $name;
-      $raw  = preg_split('/\s+/u', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+      if (array_key_exists($name, $custom)) {
+        return self::normalize($custom[$name]);      // a custom map is never a reference to another
+      }
+      if (isset(self::PRESETS[$name])) {
+        $raw = self::PRESETS[$name];
+      } elseif (preg_match(self::NAME, $name)) {
+        return null;                                  // a name that does not exist (any more)
+      } else {
+        $raw = $name;
+      }
+      $raw = preg_split('/\s+/u', $raw, -1, PREG_SPLIT_NO_EMPTY) ?: [];
     }
     if (!is_array($raw)) {
       return null;
@@ -75,5 +93,55 @@ final class CharPalette
     }
 
     return $items ?: null;
+  }
+
+  /**
+   * The built-in presets, as buttons: `name => [{label, value}, ...]`.
+   *
+   * @return array<string, array<int, array{label: string, value: string}>>
+   */
+  public static function systemMaps(): array
+  {
+    $out = [];
+    foreach (array_keys(self::PRESETS) as $name) {
+      $out[$name] = self::normalize($name) ?? [];
+    }
+    return $out;
+  }
+
+  /**
+   * Checks the application's own char maps before they are saved.
+   *
+   * @param  array<string, mixed> $maps name => list | map | string
+   * @return array<string, mixed> the maps to store (same shape, names kept in order)
+   * @throws \InvalidArgumentException with a message that names the offending map
+   */
+  public static function validateCustom(array $maps): array
+  {
+    if (count($maps) > self::MAX_CUSTOM) {
+      throw new \InvalidArgumentException('too many char maps (max ' . self::MAX_CUSTOM . ')');
+    }
+    $clean = [];
+    foreach ($maps as $name => $raw) {
+      $name = (string) $name;
+      if (!preg_match(self::NAME, $name)) {
+        throw new \InvalidArgumentException("{$name}: a name is 2-40 characters: lowercase letters, digits and hyphens, starting with a letter");
+      }
+      if (isset(self::PRESETS[$name])) {
+        throw new \InvalidArgumentException("{$name}: this name belongs to a built-in preset");
+      }
+      if (is_string($raw)) {
+        $raw = trim($raw);
+      }
+      // A char map is not a reference: a bare name here would be read as characters, not followed.
+      if (is_string($raw) && (isset(self::PRESETS[$raw]) || preg_match(self::NAME, $raw))) {
+        throw new \InvalidArgumentException("{$name}: write the characters, not the name of another map");
+      }
+      if (!is_string($raw) && !is_array($raw) || self::normalize($raw) === null) {
+        throw new \InvalidArgumentException("{$name}: no usable characters");
+      }
+      $clean[$name] = $raw;
+    }
+    return $clean;
   }
 }

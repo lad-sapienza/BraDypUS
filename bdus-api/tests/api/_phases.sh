@@ -502,6 +502,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "57"; then
+    header "Phase 57 — Char maps"
+    run_phase "Char maps" "57_char_maps.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

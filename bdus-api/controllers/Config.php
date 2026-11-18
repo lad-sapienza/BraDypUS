@@ -1492,6 +1492,54 @@ class Config extends \Bdus\Controller
   }
 
   /**
+   * The char map presets: the built-in ones and the application's own.
+   *
+   * GET /api/config/char-maps
+   *
+   * Response: { status, system: { name: [{label, value}] }, custom: { name: list | map | string } }
+   * `custom` is as written (and as saved), `system` is already expanded into buttons.
+   */
+  public function getCharMaps(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+    $this->returnJson([
+      'status' => 'success',
+      'system' => \Config\CharPalette::systemMaps(),
+      'custom' => (object) \Config\AppSettings::getCharMaps($this->db),
+    ]);
+  }
+
+  /**
+   * Replaces the application's own char map presets.
+   *
+   * PUT /api/config/char-maps   { custom: { name: list | map | string } }
+   *
+   * A map still used by a field may be changed or removed: the field then shows
+   * the new characters, or no strip.
+   */
+  public function saveCharMaps(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+    $custom = $this->post['custom'] ?? null;
+    if (!is_array($custom)) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_invalid']);
+      return;
+    }
+    try {
+      $clean = \Config\CharPalette::validateCustom($custom);
+    } catch (\InvalidArgumentException $e) {
+      $this->returnJson(['status' => 'error', 'code' => 'invalid_char_maps', 'detail' => $e->getMessage()]);
+      return;
+    }
+    if (!\Config\AppSettings::saveCharMaps($this->db, $clean)) {
+      // M056 has not been applied yet
+      $this->returnJson(['status' => 'error', 'code' => 'upgrade_required']);
+      return;
+    }
+    $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated', 'custom' => (object) $clean]);
+  }
+
+  /**
    * Returns app-level settings, user list, DB engines and available languages.
    *
    * GET ?obj=config_ctrl&method=getAppProperties
@@ -2158,11 +2206,16 @@ class Config extends \Bdus\Controller
         'list-of-system-defined-vocabularies-here',
         'list-of-available-tables-here',
         'list-of-available-widgets-here',
+        'list-of-char-maps-here',
       ],
       [
         implode('","', $allVoc),
         implode('","', $tableNames),
         implode('","', $widgetNames),
+        implode('","', array_merge(
+          array_keys(\Config\CharPalette::PRESETS),
+          array_keys(\Config\AppSettings::getCharMaps($this->db))
+        )),
       ],
       $raw
     );

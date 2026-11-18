@@ -81,6 +81,7 @@ class Config
                 $this->cfg['main']['imageQuality']  = (int) ($appSettings['image_quality'] ?? 85);
                 $this->cfg['main']['imageDpi']      = (int) ($appSettings['image_dpi']     ?? 72);
                 $this->cfg['main']['imagePresets']  = AppSettings::getImagePresets($db);
+                $this->cfg['main']['charMaps']      = AppSettings::getCharMaps($db);
             }
 
             // Table/field definitions: DB if available, JSON otherwise.

@@ -97,6 +97,7 @@ const ConfigValidation = defineAsyncComponent(() => import('@/components/config/
 const ConfigGeoface    = defineAsyncComponent(() => import('@/components/config/ConfigGeoface.vue'))
 const ConfigApiKeys    = defineAsyncComponent(() => import('@/components/config/ApiKeysPanel.vue'))
 const ConfigMcp        = defineAsyncComponent(() => import('@/components/config/McpPanel.vue'))
+const ConfigCharMaps   = defineAsyncComponent(() => import('@/components/config/CharMapsPanel.vue'))
 const ConfigRelations  = defineAsyncComponent(() => import('@/components/config/ConfigRelations.vue'))
 const ConfigTableForm  = defineAsyncComponent(() => import('@/components/config/ConfigTableForm.vue'))
 const ConfigFieldList  = defineAsyncComponent(() => import('@/components/config/ConfigFieldList.vue'))
@@ -110,7 +111,7 @@ const route  = useRoute()
 const router = useRouter()
 
 // ── Navigation state derived from URL ─────────────────────────────────
-// panel: 'app' | 'validation' | 'geoface' | 'apikeys' | 'mcp' | 'relations' | 'table' | 'fields' | null
+// panel: 'app' | 'validation' | 'geoface' | 'charmaps' | 'apikeys' | 'mcp' | 'relations' | 'table' | 'fields' | null
 const panel         = computed(() => route.params.panel ?? null)
 const selectedTable = computed(() => route.params.tb    ?? null)
 
@@ -135,6 +136,7 @@ const PANEL_LABEL_KEY = {
   app:        'app_settings',
   validation: 'validate_app',
   geoface:    'geoface',
+  charmaps:   'char_maps_title',
   apikeys:    'api_keys',
   mcp:        'mcp_title',
   relations:  'cfg_relations',
@@ -156,6 +158,7 @@ const activeComponent = computed(() => {
   if (panel.value === 'app')        return ConfigAppForm
   if (panel.value === 'validation') return ConfigValidation
   if (panel.value === 'geoface')    return ConfigGeoface
+  if (panel.value === 'charmaps')   return ConfigCharMaps
   if (panel.value === 'apikeys')    return ConfigApiKeys
   if (panel.value === 'mcp')        return ConfigMcp
   if (panel.value === 'relations')  return ConfigRelations

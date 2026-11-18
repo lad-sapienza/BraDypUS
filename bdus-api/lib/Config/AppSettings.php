@@ -187,6 +187,47 @@ class AppSettings
         }
     }
 
+    // ── Char maps ─────────────────────────────────────────────────────────────
+
+    /**
+     * The application's own char map presets, `name => list | map | string`
+     * (see Config\CharPalette). Empty until M056 has been applied.
+     *
+     * @return array<string, mixed>
+     */
+    public static function getCharMaps(DBInterface $db): array
+    {
+        try {
+            $rows = $db->query(
+                'SELECT char_maps FROM ' . self::TABLE . ' WHERE id = ?',
+                [self::ROW_ID],
+                'read'
+            );
+            $decoded = json_decode((string) ($rows[0]['char_maps'] ?? ''), true);
+            return is_array($decoded) ? $decoded : [];
+        } catch (\Throwable) {
+            return []; // column not yet added by M056
+        }
+    }
+
+    /**
+     * Persists the char map presets; they must already be validated
+     * (CharPalette::validateCustom()). Returns false until M056 has been applied.
+     */
+    public static function saveCharMaps(DBInterface $db, array $maps): bool
+    {
+        try {
+            $db->query(
+                'UPDATE ' . self::TABLE . ' SET char_maps = ? WHERE id = ?',
+                [$maps ? json_encode($maps, JSON_UNESCAPED_UNICODE) : null, self::ROW_ID],
+                'boolean'
+            );
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     // ── Write ─────────────────────────────────────────────────────────────────
 
     /**

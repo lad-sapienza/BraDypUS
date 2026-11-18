@@ -77,21 +77,35 @@ Min / Max value and Regex pattern need no check: they apply as soon as they are 
 
 ### Special characters strip <Badge type="tip" text="v5.25.0" />
 
-For `long_text` and `md` fields, **Special characters strip** shows a row of buttons under the
-editor: a click inserts the character at the cursor (the field keeps the focus, and Ctrl+Z undoes
-it). Useful for Greek with diacritics, transliteration marks, symbols or formulas that are not on the keyboard.
+For `long_text` and `md` fields, **Special characters strip** shows buttons under the editor: a click
+inserts the character at the cursor (the field keeps the focus, and Ctrl+Z undoes it). Useful for Greek
+with diacritics, transliteration marks, symbols or formulas that are not on the keyboard.
 
-What to write in the setting:
+The setting is a drop-down with the names of the **char maps** of the application; leave it empty for no
+strip. A short list is shown under the field; a long one hides behind a **Special characters** button
+that opens it (the buttons scroll inside the strip, so a narrow column is not filled with them).
+The inserted text is always in Unicode NFC form (`ῆ` as one character), so the same letter is always
+stored the same way.
+
+### Char maps <Badge type="tip" text="v5.25.0" />
+
+A char map is a named set of characters. They are listed in **Config → Char maps** (super admin), in two groups:
+
+- **Built-in** — shipped with BraDypUS, read only. Today: `greek-polytonic` (Greek vowels with breathings,
+  accents and iota subscript). Press **Duplicate as your own** to start from one and change it.
+- **Your own** — created and edited here, a few per application at most; changing one changes every field that
+  uses it, and deleting one leaves those fields without a strip.
+
+A map of your own is written as text, with a live preview of the buttons under it:
 
 | Written | Result |
 |---|---|
-| `greek-polytonic` | A built-in preset: Greek vowels with breathings, accents and iota subscript |
-| `α β γ` | One button per character, separated by spaces |
+| `Α Β Γ` | One button per character, separated by spaces |
 | `["α", {"label": "η̂", "value": "ῆ"}]` | A JSON list; an item can have a label different from the inserted text |
 | `{"a=": "ᾱ", "[…]": "[…]"}` | A JSON map: button label → inserted text |
 
-Leave it empty for no strip. Many buttons in a narrow column scroll inside the strip. The inserted
-text is always in Unicode NFC form (`ῆ` as one character), so the same letter is always stored the same way.
+Names are 2–40 characters: lowercase letters, digits and hyphens, starting with a letter; they cannot be the
+name of a built-in map. Updating from an earlier version needs the pending minor upgrade (migration M056).
 
 ## Value sources for select fields
 

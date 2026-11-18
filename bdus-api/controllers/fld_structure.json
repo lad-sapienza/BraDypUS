@@ -113,8 +113,11 @@
         "required": false
     },
     "char_palette": {
-        "type": "palette",
-        "help": "Only for `long_text` and `md`: a strip of buttons under the editor that insert characters at the cursor. Write the name of a preset (`greek-polytonic`), or the characters separated by spaces (`α β γ`). Advanced: a JSON list (`[\"α\", {\"label\": \"η\", \"value\": \"ῆ\"}]`) or a JSON map label → text (`{\"a=\": \"ᾱ\"}`). Leave empty for no strip.",
+        "type": "select",
+        "values": [
+            "list-of-char-maps-here"
+        ],
+        "help": "Only for `long_text` and `md`: a strip of buttons under the editor that insert characters at the cursor. Pick a char map; the built-in ones and your own are listed under Config → Char maps. Leave empty for no strip.",
         "required": false
     },
     "widget": {

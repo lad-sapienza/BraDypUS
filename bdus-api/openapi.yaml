@@ -2762,6 +2762,67 @@ paths:
 
   # ── Config ───────────────────────────────────────────────────────────────
 
+  /api/config/char-maps:
+    get:
+      operationId: getConfigCharMaps
+      tags: [config]
+      summary: Char map presets (built-in and the application's own)
+      description: |
+        A char map is a named set of characters for the strip under `long_text` / `md`
+        fields (the field's `char_palette` is the name of one). `system` is expanded into
+        buttons; `custom` is as written: a string of characters separated by spaces, a list,
+        or a map label to inserted text.
+      responses:
+        '200':
+          description: The presets
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      system:
+                        type: object
+                        additionalProperties:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              label: { type: string }
+                              value: { type: string }
+                      custom:
+                        type: object
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      operationId: putConfigCharMaps
+      tags: [config]
+      summary: Replace the application's own char map presets
+      description: |
+        Names are 2-40 characters (lowercase letters, digits, hyphens; starting with a
+        letter) and cannot be those of a built-in preset. Every map must hold at least one
+        usable character. Answers `invalid_char_maps` (with `detail`) otherwise.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [custom]
+              properties:
+                custom:
+                  type: object
+      responses:
+        '200':
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /api/config/app:
     get:
       operationId: getConfigApp

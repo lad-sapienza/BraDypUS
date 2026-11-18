@@ -32,6 +32,15 @@
       </button>
       <button
         class="cfg-action-btn"
+        :class="{ active: active === 'charmaps' }"
+        @click="$emit('select', 'charmaps')"
+        :title="t('char_maps_title')"
+      >
+        <FontSizeOutlined />
+        <span>{{ t('char_maps_title') }}</span>
+      </button>
+      <button
+        class="cfg-action-btn"
         :class="{ active: active === 'apikeys' }"
         @click="$emit('select', 'apikeys')"
         :title="t('api_keys')"
@@ -136,7 +145,7 @@
 </template>
 
 <script setup>
-import { ApartmentOutlined, BarsOutlined, BookOutlined, CheckCircleOutlined, CompassOutlined, DatabaseOutlined, ExportOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, RobotOutlined, SettingOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
+import { ApartmentOutlined, BarsOutlined, BookOutlined, CheckCircleOutlined, CompassOutlined, DatabaseOutlined, ExportOutlined, FontSizeOutlined, KeyOutlined, LoadingOutlined, PlusOutlined, RobotOutlined, SettingOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { ref, watch, onBeforeUnmount } from 'vue'
 import Sortable       from 'sortablejs'
 import { useConfigStore } from '@/stores/config'

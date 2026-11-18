@@ -94,7 +94,7 @@ class TableSchema
 
       // Strip of buttons under a long_text / md editor (see Config\CharPalette).
       if (in_array($schema['type'], ['long_text', 'md'], true)) {
-        $palette = CharPalette::normalize($fld['char_palette'] ?? null);
+        $palette = CharPalette::normalize($fld['char_palette'] ?? null, (array) ($this->cfg->get('main.charMaps') ?? []));
         if ($palette) {
           $schema['char_palette'] = $palette;
         }

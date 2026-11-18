@@ -36,6 +36,7 @@ without going through a lib/ abstraction.
 | `Config\ToFiles` | `lib/Config/ToFiles.php` | Config → JSON file writer (legacy fallback) |
 | `Config\AppSettings` | `lib/Config/AppSettings.php` | App-level settings reader |
 | `Config\GeofaceConfig` | `lib/Config/GeofaceConfig.php` | GeoFace / map layer config |
+| `Config\CharPalette` | `lib/Config/CharPalette.php` | Char maps (strip of special characters under long_text / md): built-in presets, name resolution, validation of the application's own (`bdus_cfg_app.char_maps`, M056) |
 | `Config\ConfigException` | `lib/Config/ConfigException.php` | Config-specific exception |
 | `DB\DB` | `lib/DB/DB.php` | PDO wrapper (SQLite / MySQL / PostgreSQL) |
 | `DB\DBInterface` | `lib/DB/DBInterface.php` | DB contract |

@@ -52,19 +52,23 @@
         class="field-input w-full"
       />
       <div v-else class="md-preview" v-html="marked.parse(String(modelValue ?? ''))" />
+      <CharPalette v-if="showPalette && !mdPreview" :items="schema.char_palette" :get-el="mdTextareaEl" />
     </div>
 
     <!-- long_text -->
-    <ATextarea
-      v-else-if="schema.type === 'long_text'"
-      :value="modelValue"
-      @update:value="onInput"
-      :dir="schema.direction || 'ltr'"
-      :maxlength="schema.max_length || undefined"
-      :autoSize="{ minRows: 3 }"
-      :status="showError ? 'error' : undefined"
-      class="field-input w-full"
-    />
+    <div v-else-if="schema.type === 'long_text'">
+      <ATextarea
+        ref="longTextRef"
+        :value="modelValue"
+        @update:value="onInput"
+        :dir="schema.direction || 'ltr'"
+        :maxlength="schema.max_length || undefined"
+        :autoSize="{ minRows: 3 }"
+        :status="showError ? 'error' : undefined"
+        class="field-input w-full"
+      />
+      <CharPalette v-if="showPalette" :items="schema.char_palette" :get-el="longTextEl" />
+    </div>
 
     <!-- boolean -->
     <div v-else-if="schema.type === 'boolean'" class="bool-switch-wrap">
@@ -230,6 +234,7 @@ import { api }     from '@/api'
 import { useI18n } from '@/i18n'
 import { validateField } from '@/utils/fieldValidation'
 import { normalizeOptions, selectedValues, withSelected } from '@/utils/fieldOptions'
+import CharPalette from './CharPalette.vue'
 import { onMounted, watch } from 'vue'
 
 const AInput = Input
@@ -253,6 +258,13 @@ const mdPreview = ref(false)
 
 // ── Markdown formatting toolbar ─────────────────────────────────
 const mdTextareaRef = ref(null)
+const longTextRef  = ref(null)
+
+/** The strip of special characters under a long_text / md field (`char_palette` in the field's configuration). */
+const showPalette = computed(() => !props.schema.readonly && !!props.schema.char_palette?.length)
+function longTextEl() {
+  return longTextRef.value?.resizableTextArea?.textArea ?? null
+}
 
 function mdTextareaEl() {
   return mdTextareaRef.value?.resizableTextArea?.textArea ?? null

@@ -75,6 +75,24 @@ Min / Max value and Regex pattern need no check: they apply as soon as they are 
 | `combo_select` | Free text + vocabulary suggestions |
 | `slider` | Integer within a min/max range |
 
+### Special characters strip <Badge type="tip" text="v5.25.0" />
+
+For `long_text` and `md` fields, **Special characters strip** shows a row of buttons under the
+editor: a click inserts the character at the cursor (the field keeps the focus, and Ctrl+Z undoes
+it). Useful for Greek with diacritics, transliteration marks, symbols or formulas that are not on the keyboard.
+
+What to write in the setting:
+
+| Written | Result |
+|---|---|
+| `greek-polytonic` | A built-in preset: Greek vowels with breathings, accents and iota subscript |
+| `α β γ` | One button per character, separated by spaces |
+| `["α", {"label": "η̂", "value": "ῆ"}]` | A JSON list; an item can have a label different from the inserted text |
+| `{"a=": "ᾱ", "[…]": "[…]"}` | A JSON map: button label → inserted text |
+
+Leave it empty for no strip. Many buttons in a narrow column scroll inside the strip. The inserted
+text is always in Unicode NFC form (`ῆ` as one character), so the same letter is always stored the same way.
+
 ## Value sources for select fields
 
 Fields of type `select`, `multi_select` and `combo_select` need a source for their

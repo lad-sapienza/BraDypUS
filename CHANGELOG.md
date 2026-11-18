@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A strip of special characters under `long_text` and `md` fields.** A field can show buttons that insert a character (Greek with diacritics, symbols, short formulas) at the cursor; clicking keeps the focus and the selection, and the insertion can be undone with Ctrl+Z. Set it in **Config → Fields → Special characters strip** (only for `long_text` and `md`): the name of a preset (`greek-polytonic`), the characters separated by spaces (`α β γ`), or, for labels different from the inserted text, a JSON list or map (`{"a=": "ᾱ"}`). Inserted text is Unicode NFC. The setting lives in the field's configuration (`char_palette`); the DBML export does not carry it, like `def_value` or `max_length`.
+
 ### Changed
 
 - **Long suggestion lists come in pages.** In the record form, the options of a field that takes its values from a column (`get_values_from_tb`) or from a lookup table (`id_from_tb`) were all loaded at once, however many. `GET /{app}/api/record/{tb}/field-options` now returns at most `limit` of them (default 100, max 500; the most used values first, lookup records by label) plus `truncated`; the select shows «Partial list: type to search among all values» and, while typing, searches all of them on the server. A list within the limit is unchanged (same order), the value already stored in the record is always kept in the list, and vocabularies and static lists are never cut. New query parameters `limit`, `q`, `include`; `openapi.yaml` documents them (and the field parameter is `fld`).

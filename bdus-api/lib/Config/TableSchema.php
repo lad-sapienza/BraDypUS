@@ -92,6 +92,14 @@ class TableSchema
         $schema['options_source'] = ['type' => 'static', 'items' => (array)$fld['dic']];
       }
 
+      // Strip of buttons under a long_text / md editor (see Config\CharPalette).
+      if (in_array($schema['type'], ['long_text', 'md'], true)) {
+        $palette = CharPalette::normalize($fld['char_palette'] ?? null);
+        if ($palette) {
+          $schema['char_palette'] = $palette;
+        }
+      }
+
       $result[] = $schema;
     }
 

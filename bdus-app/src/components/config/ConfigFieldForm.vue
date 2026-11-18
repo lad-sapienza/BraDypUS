@@ -86,6 +86,20 @@
             <small v-if="errors[key]" class="cfg-fld-err-msg">{{ errors[key] }}</small>
           </div>
 
+          <!-- ── palette: text in, string / JSON out (see utils/charPaletteConfig) ── -->
+          <div v-else-if="meta.type === 'palette'" class="cfg-fld-field cfg-fld-span2">
+            <label>{{ t('fld_' + key) }}</label>
+            <ATextarea
+              v-model:value="paletteText"
+              :auto-size="{ minRows: 2, maxRows: 6 }"
+              size="small"
+              :status="errors[key] ? 'error' : undefined"
+              @blur="validatePalette(key)"
+            />
+            <small v-if="meta.help" class="cfg-fld-help">{{ meta.help }}</small>
+            <small v-if="errors[key]" class="cfg-fld-err-msg">{{ errors[key] }}</small>
+          </div>
+
           <!-- ── single select ──────────────────────────────────── -->
           <div v-else-if="meta.type === 'select'" class="cfg-fld-field" :class="{ required: meta.required }">
             <label>
@@ -144,10 +158,16 @@ import { Button as AButton, Input as AInput, Select as ASelect, Switch as ASwitc
 import { useToast } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
+import { paletteToText, textToPalette } from '@/utils/charPaletteConfig'
+
+const ATextarea = AInput.TextArea
 
 // Keys that are only relevant for select-family types
 const SELECT_TYPES     = ['select', 'combo_select', 'multi_select']
 const SELECT_ONLY_KEYS = ['vocabulary_set', 'get_values_from_tb', 'id_from_tb']
+// Keys that only make sense for the free-text types
+const TEXT_TYPES       = ['long_text', 'md']
+const TEXT_ONLY_KEYS   = ['char_palette']
 
 // Keys rendered together in a titled fieldset (consecutive keys of the structure)
 const FIELD_GROUPS = {
@@ -181,6 +201,7 @@ const sections = computed(() => {
 })
 
 const origName = ref('')
+const paletteText = ref('') // char_palette as typed; parsed into form.char_palette on validate/submit
 const form     = ref({})
 const errors   = ref({})
 const saving   = ref(false)
@@ -206,6 +227,9 @@ function shouldShow(key) {
   if (SELECT_ONLY_KEYS.includes(key)) {
     return SELECT_TYPES.includes(form.value.type)
   }
+  if (TEXT_ONLY_KEYS.includes(key)) {
+    return TEXT_TYPES.includes(form.value.type)
+  }
   return true
 }
 
@@ -219,6 +243,7 @@ function initForm(fieldData) {
     }
   }
   form.value     = f
+  paletteText.value = paletteToText(f.char_palette)
   origName.value = fieldData?.name ?? ''
   errors.value   = {}
   error.value    = null
@@ -277,7 +302,15 @@ function selectOptions(meta) {
   })
 }
 
+function validatePalette(key) {
+  if (!shouldShow(key)) { delete errors.value[key]; return }
+  const res = textToPalette(paletteText.value)
+  if (res.error) errors.value[key] = t('char_palette_invalid_json')
+  else delete errors.value[key]
+}
+
 function validate(key, meta) {
+  if (meta.type === 'palette') { validatePalette(key); return }
   if (meta.required && !form.value[key]) {
     errors.value[key] = `${t('fld_' + key)} ${t('is_required') || 'is required'}`
   } else if (meta.pattern && form.value[key] && !new RegExp(meta.pattern).test(form.value[key])) {
@@ -307,6 +340,10 @@ async function submit() {
   try {
     const isNew   = !origName.value
     const payload = { ...form.value }
+    // char_palette: typed text → string / list / map; dropped when empty or not for this type
+    const pal = shouldShow('char_palette') ? textToPalette(paletteText.value).value : null
+    if (pal === null || pal === undefined) delete payload.char_palette
+    else payload.char_palette = pal
 
     let res
     if (isNew) {

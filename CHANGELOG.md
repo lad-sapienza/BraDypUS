@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **PostgreSQL: free search no longer fails when a column declared `TEXT` is a `date` in the database.** The free-text search compared each textual column with `ILIKE`, which does not exist for `date` (`operator does not exist: date ~~* unknown`). On PostgreSQL the columns are now compared as `CAST(col AS TEXT)`, whatever their real type.
+
 ## [5.25.0] - 2026-11-18
 
 ### Added

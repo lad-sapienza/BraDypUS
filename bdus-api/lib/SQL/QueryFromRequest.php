@@ -423,7 +423,13 @@ class QueryFromRequest
       if (!$this->isTextualDbType($dbType)) {
         continue;
       }
-      $array_query_core[] = $this->tb . '.' . $field . ' ' . $like . ' ?';
+      // On PostgreSQL the real column type can differ from the configured db_type (a `date` column
+      // declared TEXT): there is no `date ILIKE text`, so the column is compared as text.
+      $col = $this->tb . '.' . $field;
+      if ($this->db->getEngine() === 'pgsql') {
+        $col = "CAST({$col} AS TEXT)";
+      }
+      $array_query_core[] = $col . ' ' . $like . ' ?';
       $this->values[] = $needle;
     }
     // join partial statements; no textual field at all → match nothing

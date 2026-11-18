@@ -93,7 +93,7 @@ class QueryFromRequestTest extends BdusTestCase
     {
         [$where] = $this->qfrOnEngine('pgsql', ['type' => 'fast', 'string' => 'imp'])->getWhereClause();
 
-        $this->assertStringContainsString('items.name ILIKE ?', $where);
+        $this->assertStringContainsString('CAST(items.name AS TEXT) ILIKE ?', $where);
         $this->assertDoesNotMatchRegularExpression('/(?<!I)LIKE \?/', $where);
     }
 

@@ -406,7 +406,9 @@ function openWizard(chart) {
  */
 function applyWizardState(chart, context = null) {
   editingChart.value = chart
-  fromSearch.value   = !chart && !!context
+  // `context` is always an object on /charts/new (tb/filter may be undefined):
+  // the table is locked only when a search really picked one.
+  fromSearch.value   = !chart && !!context?.tb
   wizardTb.value      = chart?.definition?.tb ?? context?.tb ?? ''
   originalFilter.value = chart?.definition?.filter ?? context?.filter ?? null
   showFilterJson.value = false

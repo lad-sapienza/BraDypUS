@@ -66,22 +66,6 @@
         </div>
 
         <template v-if="!isNew && group">
-          <!-- Members -->
-          <h4>{{ t('grp_members') }}</h4>
-          <div class="gp-row">
-            <ASelect
-              v-model:value="memberIds"
-              mode="multiple"
-              class="gp-grow"
-              :options="userOptions"
-              :placeholder="t('grp_members_placeholder')"
-              option-filter-prop="label"
-            />
-            <AButton :disabled="!membersDirty" :loading="busy.members" @click="saveMembers">
-              {{ t('grp_save_members') }}
-            </AButton>
-          </div>
-
           <!-- Permissions -->
           <h4>{{ t('grp_permissions') }}</h4>
           <GroupPermissionsGrid
@@ -104,6 +88,22 @@
             :error="layoutsError"
             @save="saveLayouts"
           />
+
+          <!-- Members: last, the list can grow long and push the settings out of sight -->
+          <h4>{{ t('grp_members') }}</h4>
+          <div class="gp-row">
+            <ASelect
+              v-model:value="memberIds"
+              mode="multiple"
+              class="gp-grow"
+              :options="userOptions"
+              :placeholder="t('grp_members_placeholder')"
+              option-filter-prop="label"
+            />
+            <AButton :disabled="!membersDirty" :loading="busy.members" @click="saveMembers">
+              {{ t('grp_save_members') }}
+            </AButton>
+          </div>
         </template>
       </div>
 

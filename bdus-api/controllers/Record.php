@@ -539,9 +539,12 @@ class Record extends \Bdus\Controller
   /**
    * Returns select options for a field (select / combo_select / multi_select).
    *
-   * GET ?obj=record_ctrl&method=getFieldOptions&tb=TABLE&fld=FIELD
+   * GET /api/record/{tb}/field-options?fld=FIELD[&q=TEXT][&limit=N][&include=ID;ID]
    *
-   * Response: [{ value, label }, ...]
+   * Response: { status, options: [{ value, label }, ...], truncated: bool }
+   * The values of a column and the records of a lookup table are limited to
+   * `limit` (default 100, max 500); `truncated` flags a partial list, `q`
+   * searches all of it, `include` adds selected lookup records outside the page.
    */
   public function getFieldOptions(): void
   {
@@ -554,7 +557,17 @@ class Record extends \Bdus\Controller
     }
 
     try {
-      $this->returnJson(["status" => "success", "options" => (new \Record\FieldOptions($this->db, $this->cfg, $this->access()))->resolve($tb, $fld)]);
+      // Lists that grow with the data come in pages: `limit` (default 100, max 500),
+      // `q` searches the whole list on the server, `include` keeps the selected
+      // lookup records in. `truncated` tells the client the list is partial.
+      $limit = isset($this->get['limit']) && ctype_digit((string) $this->get['limit'])
+        ? (int) $this->get['limit'] : \Record\FieldOptions::DEFAULT_LIMIT;
+      $limit = max(1, min($limit, \Record\FieldOptions::MAX_LIMIT));
+      $q       = isset($this->get['q']) && is_string($this->get['q']) ? $this->get['q'] : null;
+      $include = isset($this->get['include']) && is_string($this->get['include']) ? $this->get['include'] : null;
+
+      $page = (new \Record\FieldOptions($this->db, $this->cfg, $this->access()))->resolvePage($tb, $fld, $q, $limit, $include);
+      $this->returnJson(["status" => "success", "options" => $page['options'], "truncated" => $page['truncated']]);
     } catch (\Throwable $e) {
       $this->log->error($e);
       $this->returnJson(['status' => 'error', 'code' => 'db_error', 'detail' => $e->getMessage()]);

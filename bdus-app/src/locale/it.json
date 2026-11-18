@@ -909,6 +909,7 @@
   "value_too_small": "Il valore deve essere almeno %s",
   "value_too_large": "Il valore deve essere al massimo %s",
   "value_too_long": "Massimo %s caratteri consentiti",
+  "options_partial_hint": "Elenco parziale: digita per cercare tra tutti i valori",
   "error_loading_options": "Impossibile caricare le opzioni",
   "delete_file": "Elimina file",
   "confirm_delete_file": "Eliminare definitivamente questo file?",

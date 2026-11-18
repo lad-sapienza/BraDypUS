@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Long suggestion lists come in pages.** In the record form, the options of a field that takes its values from a column (`get_values_from_tb`) or from a lookup table (`id_from_tb`) were all loaded at once, however many. `GET /{app}/api/record/{tb}/field-options` now returns at most `limit` of them (default 100, max 500; the most used values first, lookup records by label) plus `truncated`; the select shows «Partial list: type to search among all values» and, while typing, searches all of them on the server. A list within the limit is unchanged (same order), the value already stored in the record is always kept in the list, and vocabularies and static lists are never cut. New query parameters `limit`, `q`, `include`; `openapi.yaml` documents them (and the field parameter is `fld`).
+
 ### Fixed
 
 - **New chart: the table select is enabled again.** On `/charts/new` the route handler always passed an object to the wizard, so the page believed it came from a search and locked the table select (regression since v5.12.0). The table is now locked only when a search really supplies one (`?tb=`) or a chart is being edited.

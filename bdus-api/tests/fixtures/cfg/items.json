@@ -26,7 +26,8 @@
     {
         "name": "status",
         "label": "Status",
-        "type": "select"
+        "type": "select",
+        "get_values_from_tb": "items:status"
     },
     {
         "name": "score",

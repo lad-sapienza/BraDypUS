@@ -1689,16 +1689,37 @@ paths:
       operationId: getRecordFieldOptionsByTb
       tags: [records]
       summary: Fetch async options for a select field
+      description: >
+        The distinct values of a column (`get_values_from_tb`, most used first) and the
+        records of a lookup table (`id_from_tb`, by label) come in pages of at most `limit`;
+        `truncated` says the list is partial, and `q` searches all of it. A complete list is
+        in the same order as ever. Vocabularies and static lists are never cut.
       parameters:
         - $ref: '#/components/parameters/tb'
-        - name: field
+        - name: fld
           in: query
           required: true
+          description: Field name
           schema:
             type: string
         - name: q
           in: query
-          description: Optional search string to filter options
+          description: Search text ("contains", on the label); values that start with it come first
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Page size (default 100, max 500)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+        - name: include
+          in: query
+          description: >
+            Lookup record ids (`;`-separated) to return even if outside the page — the ones
+            already selected. Only for `id_from_tb` fields.
           schema:
             type: string
       responses:
@@ -1711,6 +1732,9 @@ paths:
                   - $ref: '#/components/schemas/Success'
                   - type: object
                     properties:
+                      truncated:
+                        type: boolean
+                        description: True when the list is partial (use `q` to search all of it)
                       options:
                         type: array
                         items:

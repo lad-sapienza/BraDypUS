@@ -911,6 +911,7 @@
   "value_too_small": "Value must be at least %s",
   "value_too_large": "Value must be at most %s",
   "value_too_long": "Maximum %s characters allowed",
+  "options_partial_hint": "Partial list: type to search among all values",
   "error_loading_options": "Could not load options",
   "delete_file": "Delete file",
   "confirm_delete_file": "Delete this file permanently?",

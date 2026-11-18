@@ -110,10 +110,16 @@
           :placeholder="t('select_placeholder')"
           :status="showError ? 'error' : undefined"
           show-search
-          :filter-option="filterOption"
+          :filter-option="partialSource ? false : filterOption"
           class="field-input w-full"
-          @dropdown-visible-change="open => open && loadOptions()"
-        />
+          @search="onSearch"
+          @dropdown-visible-change="onDropdownChange"
+        >
+          <template #dropdownRender="{ menuNode }">
+            <VNodes :vnodes="menuNode" />
+            <div v-if="listPartial" class="options-partial">{{ t('options_partial_hint') }}</div>
+          </template>
+        </ASelect>
         <!-- combo_select: PrimeVue's Select has a single `editable` flag for a
              free-text + suggestions hybrid. AntD splits this into a separate
              AutoComplete component — there is no "editable Select". -->
@@ -124,10 +130,16 @@
           :options="asyncOptions"
           :placeholder="t('select_placeholder')"
           :status="showError ? 'error' : undefined"
-          :filter-option="filterOption"
+          :filter-option="partialSource ? false : filterOption"
           class="field-input w-full"
-          @dropdown-visible-change="open => open && loadOptions()"
-        />
+          @search="onSearch"
+          @dropdown-visible-change="onDropdownChange"
+        >
+          <template #dropdownRender="{ menuNode }">
+            <VNodes :vnodes="menuNode" />
+            <div v-if="listPartial" class="options-partial">{{ t('options_partial_hint') }}</div>
+          </template>
+        </AAutoComplete>
         <ASelect
           v-else-if="schema.type === 'multi_select'"
           mode="multiple"
@@ -138,10 +150,16 @@
           :placeholder="t('select_placeholder')"
           :status="showError ? 'error' : undefined"
           show-search
-          :filter-option="filterOption"
+          :filter-option="partialSource ? false : filterOption"
           class="field-input w-full"
-          @dropdown-visible-change="open => open && loadOptions()"
-        />
+          @search="onSearch"
+          @dropdown-visible-change="onDropdownChange"
+        >
+          <template #dropdownRender="{ menuNode }">
+            <VNodes :vnodes="menuNode" />
+            <div v-if="listPartial" class="options-partial">{{ t('options_partial_hint') }}</div>
+          </template>
+        </ASelect>
       </template>
     </template>
 
@@ -211,6 +229,7 @@ import { useToast } from '@/composables/useNotify'
 import { api }     from '@/api'
 import { useI18n } from '@/i18n'
 import { validateField } from '@/utils/fieldValidation'
+import { normalizeOptions, selectedValues, withSelected } from '@/utils/fieldOptions'
 import { onMounted, watch } from 'vue'
 
 const AInput = Input
@@ -362,24 +381,51 @@ function filterOption(input, option) {
 }
 
 // ── Async options (db / id_from_tb / vocabulary) ──────────────
+// The server sends at most a page of the values of a column or of the records of
+// a lookup table (`truncated` says the list is partial). When it is, the search
+// box queries the server (all the values), and a note under the list says so.
 const asyncOptions   = ref([])
 const loadingOptions = ref(false)
+const partialSource  = ref(false) // the unfiltered list was cut: search runs on the server
+const listPartial    = ref(false) // the list on screen is a partial one
 let   optionsLoaded  = false
+let   baseOptions    = []         // the unfiltered list, to go back to after a search
+let   baseTruncated  = false
+let   searched       = false
+let   searchTimer    = null
+let   requestSeq     = 0
+const knownOptions   = new Map()  // every option seen, by value (labels of what is selected)
+
+// Keeps `VNodes` out of the template's way: renders the node AntD hands to dropdownRender.
+const VNodes = (props) => props.vnodes
+VNodes.props = ['vnodes']
+
+function currentSelected() {
+  return selectedValues(props.modelValue, props.schema.type)
+}
+
+async function fetchOptions(q = '') {
+  const params = { fld: props.schema.name }
+  if (q) params.q = q
+  const sel = currentSelected()
+  if (sel.length) params.include = sel.join(';')
+  const res = await api.get(`/api/record/${props.tb}/field-options`, params)
+  const list = normalizeOptions(res?.options)
+  list.forEach(o => knownOptions.set(o.value, o))
+  return { list, truncated: !!res?.truncated }
+}
 
 async function loadOptions() {
   if (optionsLoaded || props.schema.options_source?.type === 'static') return
   loadingOptions.value = true
   try {
-    const res = await api.get(`/api/record/${props.tb}/field-options`, {
-      fld: props.schema.name,
-    })
-    // Normalize option values to strings so PrimeVue's strict === comparison
-    // works consistently across DB engines (MySQL returns int IDs, SQLite may
-    // return strings; the stored FK column could be either type).
-    asyncOptions.value = (Array.isArray(res?.options) ? res.options : []).map(o => ({
-      ...o,
-      value: o.value !== null && o.value !== undefined ? String(o.value) : o.value,
-    }))
+    const { list, truncated } = await fetchOptions()
+    baseOptions   = list
+    baseTruncated = truncated
+    partialSource.value = truncated
+    listPartial.value   = truncated
+    // A partial list must not hide the value already stored in the record.
+    asyncOptions.value  = truncated ? withSelected(list, knownOptions, currentSelected()) : list
     optionsLoaded = true
   } catch (e) {
     toast.add({
@@ -391,6 +437,45 @@ async function loadOptions() {
   } finally {
     loadingOptions.value = false
   }
+}
+
+/** Search box: with a partial list, ask the server (debounced); otherwise AntD filters locally. */
+function onSearch(text) {
+  if (!partialSource.value) return
+  clearTimeout(searchTimer)
+  const q = String(text ?? '').trim()
+  if (!q) { resetSearch(); return }
+  searchTimer = setTimeout(async () => {
+    const seq = ++requestSeq
+    loadingOptions.value = true
+    try {
+      const { list, truncated } = await fetchOptions(q)
+      if (seq !== requestSeq) return // a newer search superseded this one
+      searched = true
+      listPartial.value  = truncated
+      asyncOptions.value = withSelected(list, knownOptions, currentSelected())
+    } catch {
+      /* keep the list on screen; the next keystroke retries */
+    } finally {
+      if (seq === requestSeq) loadingOptions.value = false
+    }
+  }, 300)
+}
+
+/** Back to the unfiltered list. */
+function resetSearch() {
+  clearTimeout(searchTimer)
+  requestSeq++
+  loadingOptions.value = false
+  if (!searched) return
+  searched = false
+  listPartial.value  = baseTruncated
+  asyncOptions.value = withSelected(baseOptions, knownOptions, currentSelected())
+}
+
+function onDropdownChange(open) {
+  if (open) loadOptions()
+  else resetSearch()
 }
 
 /**
@@ -427,6 +512,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.options-partial {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  color: var(--ant-color-text-secondary, #888);
+  border-top: 1px solid var(--ant-color-border-secondary, #eee);
+}
+
 .field-editor {
   display: flex;
   flex-direction: column;

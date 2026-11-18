@@ -5,6 +5,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.25.0] - 2026-11-18
+
+### Added
+
+- **A strip of special characters under `long_text` and `md` fields, with char maps.** A field can show buttons that insert a character (Greek with diacritics, symbols, short formulas) at the cursor; clicking keeps the focus and the selection, and the insertion can be undone with Ctrl+Z. Inserted text is Unicode NFC. The field setting (`char_palette`, in **Config → Fields → Special characters strip**, only for `long_text` and `md`) is the name of a **char map**, picked from a drop-down. **Config → Char maps** lists them: the built-in ones (today `greek-polytonic`), read only and with a *Duplicate as your own* button, and the application's own, edited as text (characters separated by spaces, or a JSON list or map when the label differs from the inserted text) with a live preview. A long list hides behind a *Special characters* button instead of filling a narrow column. New migration M056 (`char_maps` column in `bdus_cfg_app`, additive); new `GET/PUT /{app}/api/config/char-maps` (super admin). A value written inline in a field's configuration (the first version of the setting) is still understood. The DBML export does not carry the setting, like `def_value` or `max_length`.
+
+### Changed
+
+- **Long suggestion lists come in pages.** In the record form, the options of a field that takes its values from a column (`get_values_from_tb`) or from a lookup table (`id_from_tb`) were all loaded at once, however many. `GET /{app}/api/record/{tb}/field-options` now returns at most `limit` of them (default 100, max 500; the most used values first, lookup records by label) plus `truncated`; the select shows «Partial list: type to search among all values» and, while typing, searches all of them on the server. A list within the limit is unchanged (same order), the value already stored in the record is always kept in the list, and vocabularies and static lists are never cut. New query parameters `limit`, `q`, `include`; `openapi.yaml` documents them (and the field parameter is `fld`).
+
+### Fixed
+
+- **New chart: the table select is enabled again.** On `/charts/new` the route handler always passed an object to the wizard, so the page believed it came from a search and locked the table select (regression since v5.12.0). The table is now locked only when a search really supplies one (`?tb=`) or a chart is being edited.
+- **Group-scoped API keys can read the advanced-search field list.** `GET /{app}/api/search/{tb}/config` answered `403 not_enough_privilege` to a read-only key tied to a group (tier 39 + group), because the route was missing from `Router::GROUP_KEY_ROUTES` (`search/{tb}/values` was there). The controller still checks the table against the group's read rules, so only tables the group may read are described. `GET /{app}/api/files` is now open to such keys (and to users limited by group rules) too, but lists only files linked to records they may read, with only those links; orphan files stay hidden.
+
 ## [5.24.4] - 2026-11-17
 
 ## [5.24.3] - 2026-11-16

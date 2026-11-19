@@ -69,7 +69,8 @@ const displayValue = computed(() => {
 
 const multiValues = computed(() => {
   if (!props.value?.val) return []
-  return String(props.value.val).split(';').map(v => v.trim()).filter(Boolean)
+  // A vocabulary with labels sends the labels in val_label, in the same order (#80).
+  return String(props.value.val_label ?? props.value.val).split(';').map(v => v.trim()).filter(Boolean)
 })
 
 function linkedText(text) {

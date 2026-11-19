@@ -712,6 +712,64 @@ EOD;
         return $this->cache['bibliography'];
     }
 
+    /**
+     * Fields that take their values from a vocabulary: when an entry has a label (#80), the
+     * record carries it as `val_label`, next to the stored `val` (which never changes).
+     * Entries without a label, and values not in the vocabulary, get no `val_label`.
+     * A multi_select (values separated by `;`) gets the labels joined the same way.
+     */
+    private function addVocabularyLabels(string $tb, array &$core): void
+    {
+        foreach ($this->cfg->get("tables.$tb.fields") ?: [] as $fld) {
+            $set  = $fld['vocabulary_set'] ?? null;
+            $name = $fld['name'] ?? null;
+            if (!$set || !$name || !isset($core[$name]) || isset($core[$name]['val_label'])) {
+                continue;
+            }
+            $val = $core[$name]['val'] ?? null;
+            if ($val === null || $val === '') {
+                continue;
+            }
+            $labels = $this->vocabularyLabels($set);
+            if (!$labels) {
+                continue;
+            }
+            $multi = ($fld['type'] ?? '') === 'multi_select';
+            $parts = $multi ? array_map('trim', explode(';', (string) $val)) : [(string) $val];
+            $any   = false;
+            $out   = [];
+            foreach ($parts as $p) {
+                if (isset($labels[$p])) {
+                    $any   = true;
+                    $out[] = $labels[$p];
+                } else {
+                    $out[] = $p;
+                }
+            }
+            if ($any) {
+                $core[$name]['val_label'] = implode($multi ? ';' : '', $out);
+            }
+        }
+    }
+
+    /** value => label of the labelled entries of a vocabulary (empty when none, or before M057). */
+    private function vocabularyLabels(string $set): array
+    {
+        if (!isset($this->cache['voc_labels'][$set])) {
+            try {
+                $rows = $this->db->query(
+                    "SELECT def, label FROM bdus_vocabularies WHERE voc = ? AND label IS NOT NULL AND label <> ''",
+                    [$set],
+                    'read'
+                ) ?: [];
+            } catch (\Throwable) {
+                $rows = [];
+            }
+            $this->cache['voc_labels'][$set] = array_column($rows, 'label', 'def');
+        }
+        return $this->cache['voc_labels'][$set];
+    }
+
     private function getTbRecord(string $tb, string $sql, array $sql_val = [], bool $return_first = false, bool $return_all_fields = false): array
     {
         $cfg = $this->cfg->get("tables.$tb.fields");
@@ -779,6 +837,7 @@ EOD;
                     $ret[str_replace('@', '', $k)]['val_label'] = $v;
                 }
             }
+            $this->addVocabularyLabels($tb, $ret);
             $return_arr[(int)$res['id']] = $ret;
         }
 

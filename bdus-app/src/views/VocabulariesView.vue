@@ -116,12 +116,32 @@
                   @blur="saveEdit(record)"
                 />
               </template>
+              <template v-else-if="column.key === 'label'">
+                <span
+                  v-if="editingLabelId !== record.id"
+                  class="def-text"
+                  :class="{ 'label-empty': !record.label }"
+                  :title="t('voc_item_label_hint')"
+                  @dblclick="startEditLabel(record)"
+                >{{ record.label || '—' }}</span>
+                <AInput
+                  v-else
+                  v-model:value="editingLabelVal"
+                  size="small"
+                  autofocus
+                  style="width: 100%"
+                  :placeholder="t('voc_item_label_placeholder')"
+                  @keyup.enter="saveLabel(record)"
+                  @keyup.escape="cancelEditLabel"
+                  @blur="saveLabel(record)"
+                />
+              </template>
               <template v-else-if="column.key === 'actions'">
                 <AButton type="text" shape="circle" size="small"
-                        @click="startEdit(record)" :disabled="editingId !== null"
+                        @click="startEdit(record)" :disabled="editingId !== null || editingLabelId !== null"
                 ><template #icon><EditOutlined /></template></AButton>
                 <AButton type="text" shape="circle" danger size="small"
-                        @click="confirmErase(record)" :disabled="editingId !== null"
+                        @click="confirmErase(record)" :disabled="editingId !== null || editingLabelId !== null"
                 ><template #icon><DeleteOutlined /></template></AButton>
               </template>
             </template>
@@ -160,6 +180,10 @@
       <div class="field">
         <label>{{ t('voc_item_def') }}</label>
         <AInput v-model:value="addItemDef" style="width: 100%" autofocus @keyup.enter="addItem" />
+      </div>
+      <div class="field">
+        <label>{{ t('voc_item_label') }}</label>
+        <AInput v-model:value="addItemLabel" style="width: 100%" :placeholder="t('voc_item_label_placeholder')" @keyup.enter="addItem" />
       </div>
       <template #footer>
         <AButton type="text" @click="addItemDialog = false">{{ t('cancel') }}</AButton>
@@ -219,11 +243,13 @@ const newVocDef = ref('')
 const addItemDialog = ref(false)
 const addItemVoc = ref('')
 const addItemDef = ref('')
+const addItemLabel = ref('')
 const addItemHeader = computed(() => `${t('voc_add_item_to')} '${addItemVoc.value}'`)
 
 const vocColumns = computed(() => [
   { title: '',                key: 'reorder', width: 40 },
   { title: t('voc_item_def'), key: 'def' },
+  { title: t('voc_item_label'), key: 'label' },
   { title: '',                key: 'actions', width: 80 },
 ])
 
@@ -284,6 +310,38 @@ async function saveEdit(item) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: t('generic_error'), life: 3000 })
   } finally {
     cancelEdit()
+  }
+}
+
+// Optional label (#80): shown in forms and in the record instead of the stored value
+const editingLabelId = ref(null)
+const editingLabelVal = ref('')
+
+function startEditLabel(item) {
+  editingLabelId.value = item.id
+  editingLabelVal.value = item.label ?? ''
+}
+
+function cancelEditLabel() {
+  editingLabelId.value = null
+  editingLabelVal.value = ''
+}
+
+async function saveLabel(item) {
+  const next = editingLabelVal.value.trim()
+  if (next === (item.label ?? '')) { cancelEditLabel(); return }
+  try {
+    const res = await api.patch(`/api/vocabulary/${item.id}`, { val: item.def, label: next })
+    if (res.status === 'success') {
+      item.label = next === '' ? null : next
+      toast.add({ severity: 'success', summary: t('saved'), life: 2000 })
+    } else {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: api.responseMessage(res, t), life: 3000 })
+    }
+  } catch {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: t('generic_error'), life: 3000 })
+  } finally {
+    cancelEditLabel()
   }
 }
 
@@ -366,6 +424,7 @@ async function createVocAndItem() {
 function openAddItemDialog(vocName) {
   addItemVoc.value = vocName
   addItemDef.value = ''
+  addItemLabel.value = ''
   addItemDialog.value = true
 }
 
@@ -373,7 +432,7 @@ async function addItem() {
   if (!addItemDef.value) return
   saving.value = true
   try {
-    const res = await api.post('/api/vocabularies', { voc: addItemVoc.value, def: addItemDef.value })
+    const res = await api.post('/api/vocabularies', { voc: addItemVoc.value, def: addItemDef.value, label: addItemLabel.value })
     if (res.status === 'success') {
       toast.add({ severity: 'success', summary: t('saved'), life: 2000 })
       addItemDialog.value = false
@@ -390,6 +449,7 @@ async function addItem() {
 </script>
 
 <style scoped>
+.label-empty { opacity: 0.45; }
 .voc-page {
   padding: 1.5rem;
   max-width: 900px;

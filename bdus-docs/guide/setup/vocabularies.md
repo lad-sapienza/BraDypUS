@@ -25,6 +25,22 @@ the values from the `periodi` list.
 2. Click **Add value** and type the new entry.
 3. The value is immediately available in the field dropdown.
 
+## Labels: a stored code and a longer name <Badge type="tip" text="v5.26.0" />
+
+An entry can have an optional **label**: the **value** is what is stored in the record
+(for example `CER`), the label is what people read (`Ceramica`). Double-click the *Label*
+column of a value, or fill it in when adding the value; leave it empty to have none.
+
+- In forms the drop-down shows the label and saves the value; in the record view the label
+  is shown in place of the value (for `multi_select`, one label per value).
+- An entry **without** a label behaves exactly as before: the value is shown and stored.
+  Existing vocabularies need no change, and no stored or exported value changes.
+- Lists of results, filters, charts and exports still show the stored **value**; the label
+  is for forms and the record view.
+- The MCP `vocabulary` tool returns `{ value, label }` pairs (the label equals the value when
+  there is none); the REST `POST /api/vocabularies` and `PATCH /api/vocabulary/{id}` accept
+  an optional `label`.
+
 ## Editing and deleting values
 
 Click any value to edit its text inline. Use the delete icon to remove it.

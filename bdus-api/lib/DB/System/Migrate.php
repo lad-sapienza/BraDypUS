@@ -65,6 +65,7 @@ use DB\System\Migrations\M053_AddProvenanceToVersions;
 use DB\System\Migrations\M054_CreateMcpPrompts;
 use DB\System\Migrations\M055_AddDisabledAtToApiKeys;
 use DB\System\Migrations\M056_AddCharMapsToCfgApp;
+use DB\System\Migrations\M057_AddLabelToVocabularies;
 use Monolog\Logger;
 
 /**
@@ -166,6 +167,7 @@ class Migrate
         M054_CreateMcpPrompts::class,
         M055_AddDisabledAtToApiKeys::class,
         M056_AddCharMapsToCfgApp::class,
+        M057_AddLabelToVocabularies::class,
     ];
 
     /**

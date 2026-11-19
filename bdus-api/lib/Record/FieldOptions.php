@@ -165,11 +165,26 @@ class FieldOptions
     }
 
     if (!empty($cfg['vocabulary_set'])) {
-      $rows = $this->db->query(
-        "SELECT def as v FROM bdus_vocabularies WHERE voc = ? ORDER BY sort",
-        [$cfg['vocabulary_set']]
-      ) ?: [];
-      return ['options' => $this->valueOptions($rows), 'truncated' => false];
+      try {
+        $rows = $this->db->query(
+          "SELECT def as v, label as l FROM bdus_vocabularies WHERE voc = ? ORDER BY sort",
+          [$cfg['vocabulary_set']]
+        ) ?: [];
+      } catch (\Throwable) {
+        // M057 (the `label` column) not applied yet: plain values, as before.
+        $rows = $this->db->query(
+          "SELECT def as v FROM bdus_vocabularies WHERE voc = ? ORDER BY sort",
+          [$cfg['vocabulary_set']]
+        ) ?: [];
+      }
+      // An entry without a label shows its value (#80).
+      return [
+        'options'   => array_map(
+          fn($r) => ['value' => $r['v'], 'label' => ($r['l'] ?? '') !== '' ? $r['l'] : $r['v']],
+          $rows
+        ),
+        'truncated' => false,
+      ];
     }
 
     if (!empty($cfg['dic'])) {

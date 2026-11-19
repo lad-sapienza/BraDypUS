@@ -4649,6 +4649,9 @@ paths:
                   type: string
                 value:
                   type: string
+                label:
+                  type: [string, "null"]
+                  description: Optional extended name shown instead of the value in forms and records (#80). Blank = none.
       responses:
         '200':
           description: Add result
@@ -4739,6 +4742,9 @@ paths:
               properties:
                 value:
                   type: string
+                label:
+                  type: [string, "null"]
+                  description: Optional extended name (#80). Sent (even blank) it replaces the entry's label, blank clears it; omitted it is left alone.
       responses:
         '200':
           description: Edit result

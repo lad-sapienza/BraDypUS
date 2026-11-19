@@ -29,6 +29,16 @@ class Vocabularies extends \Bdus\Controller
 	 *
 	 * Response: { status, usages: { vocName: [{ tb, tb_label, field, field_label }] } }
 	 */
+	/** An empty or blank label means "no label": stored as NULL, the value is shown instead. */
+	private function cleanLabel(mixed $label): ?string
+	{
+		if (!is_string($label)) {
+			return null;
+		}
+		$label = trim($label);
+		return $label === '' ? null : $label;
+	}
+
 	public function usages(): void
 	{
 		if (!\Auth\Authorization::can('read')) {
@@ -71,6 +81,7 @@ class Vocabularies extends \Bdus\Controller
 			$grouped[$row['voc']][] = [
 				'id'   => (int) $row['id'],
 				'def'  => $row['def'],
+				'label' => $row['label'] ?? null,
 				'sort' => (int) $row['sort'],
 			];
 		}
@@ -91,9 +102,16 @@ class Vocabularies extends \Bdus\Controller
 		$id = $this->get['id'];
 		$val = $this->request['val'];
 
-		$res = $this->getSysMng()->editRow('bdus_vocabularies', $id, [
-			'def' => $val
-		]);
+		// `label` is optional: sent (even empty) it replaces the entry's label, omitted it is left alone.
+		$res = $this->getSysMng()->editRow('bdus_vocabularies', $id, ['def' => $val]);
+		if ($res && array_key_exists('label', $this->request)) {
+			// Written directly: editRow() skips NULL values, and clearing a label must reach the column.
+			$res = $this->db->query(
+				'UPDATE bdus_vocabularies SET label = ? WHERE id = ?',
+				[$this->cleanLabel($this->request['label']), (int) $id],
+				'boolean'
+			);
+		}
 		
 		if ( $res ) {
 			$this->returnJson(['status' => 'success', 'code' => 'ok_def_update']);
@@ -131,8 +149,9 @@ class Vocabularies extends \Bdus\Controller
 		$def = $this->request['def'];
 
 		$res = $this->getSysMng()->addRow('bdus_vocabularies', [
-			'voc' => $voc,
-			'def' => $def
+			'voc'   => $voc,
+			'def'   => $def,
+			'label' => $this->cleanLabel($this->request['label'] ?? null),
 		]);
 
 		if ( $res ) {

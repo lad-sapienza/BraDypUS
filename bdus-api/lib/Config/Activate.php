@@ -39,7 +39,7 @@ class Activate
             return ['type' => 'date', 'db_type' => 'TIMESTAMP'];
         }
         if ($t === 'date') {
-            return ['type' => 'date', 'db_type' => 'TEXT'];
+            return ['type' => 'date', 'db_type' => 'DATE'];
         }
         // Plain TEXT is what SQLite (and many PostgreSQL schemas) use for every
         // string, short or not: it maps to a one-line `text` field. Only the
@@ -49,6 +49,11 @@ class Activate
         }
         if (str_contains($t, 'int') || str_contains($t, 'serial')) {
             return ['type' => 'text', 'db_type' => 'INTEGER'];
+        }
+        if (
+            in_array($t, ['float', 'float4', 'float8', 'double', 'double precision', 'real', 'decimal', 'numeric', 'number'], true)
+        ) {
+            return ['type' => 'text', 'db_type' => 'REAL'];
         }
         return ['type' => 'text', 'db_type' => 'TEXT'];
     }

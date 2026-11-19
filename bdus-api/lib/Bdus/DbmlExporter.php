@@ -37,6 +37,8 @@ class DbmlExporter
     private const DBTYPE_TO_DBML = [
         'TEXT'      => 'varchar',
         'INTEGER'   => 'integer',
+        'REAL'      => 'float',
+        'DATE'      => 'date',
         'TIMESTAMP' => 'timestamp',
     ];
 

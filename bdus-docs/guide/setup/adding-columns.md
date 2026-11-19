@@ -19,7 +19,7 @@ shown in the form:
 | **Field name** | Database name of the column: 2 to 15 lowercase letters and underscores (`^[a-z_]{2,15}$`, e.g. `site_name`). Required; cannot be changed afterwards except with **Rename** |
 | **Label** | Display label shown to users (spaces, uppercase and special characters allowed) |
 | **Type** | See field types below. Required |
-| **Database type** | Column type: `TEXT` (strings, long texts), `INTEGER` (numbers, booleans) or `TIMESTAMP` (dates and times). Required |
+| **Database type** | Column type: `TEXT` (strings, long texts), `INTEGER` (whole numbers, booleans), `REAL` (numbers with decimals) <Badge type="tip" text="v5.26.0" />, `DATE` (a date without a time, stored as `YYYY-MM-DD`) <Badge type="tip" text="v5.26.0" /> or `TIMESTAMP` (dates and times). An empty value in a `DATE` or `REAL` column is stored as `NULL`. Applications already configured keep their current types. Required |
 | **Vocabulary**, **Values from table**, **FK table** | Source of the values of `select`, `multi_select` and `combo_select` fields, see below |
 | **Read-only** | The field is visible and its value is sent to the server, but users cannot edit it |
 | **Hidden** | The field is not shown to users; its value is still sent to the server and cannot be edited |

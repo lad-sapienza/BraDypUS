@@ -32,9 +32,11 @@
         "values": [
             "TEXT",
             "INTEGER",
+            "REAL",
+            "DATE",
             "TIMESTAMP"
         ],
-        "help": "Database column type. Use TEXT for strings and long texts, INTEGER for numbers and booleans, TIMESTAMP for date/time values (compatible with all engines).",
+        "help": "Database column type. Use TEXT for strings and long texts, INTEGER for whole numbers and booleans, REAL for numbers with decimals, DATE for dates without a time (stored as YYYY-MM-DD; an empty value is stored as NULL), TIMESTAMP for date/time values (compatible with all engines).",
         "required": true,
         "readonly": false
     },

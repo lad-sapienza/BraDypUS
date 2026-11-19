@@ -112,6 +112,20 @@ class Persist
     // ── Public single-section methods ────────────────────────────────────────
 
     /**
+     * Value as it must reach the column: an empty value (`''`, blank text) in a DATE or REAL
+     * column is stored as NULL, because PostgreSQL and MySQL refuse `''` there.
+     * Columns of any other type are left as they are.
+     */
+    private function forColumn(string $tb, string $fld, mixed $val): mixed
+    {
+        if (!is_string($val) || trim($val) !== '') {
+            return $val;
+        }
+        $type = strtoupper((string) $this->cfg->get("tables.{$tb}.fields.{$fld}.db_type"));
+        return in_array($type, ['DATE', 'REAL'], true) ? null : $val;
+    }
+
+    /**
      * Persist the core record (INSERT, UPDATE, or DELETE cascade).
      *
      * @return array  e.g. ['affected'=>1, 'id'=>42] or ['deleted'=>1] or ['affected'=>0]
@@ -134,7 +148,7 @@ class Persist
         $changed = [];
         foreach ($this->model['core'] as $fld => $data) {
             if (array_key_exists('_val', $data)) {
-                $changed[$data['name']] = $data['_val'];
+                $changed[$data['name']] = $this->forColumn($this->tb, $data['name'], $data['_val']);
             }
         }
 
@@ -275,7 +289,7 @@ class Persist
                             ) {
                                 continue;
                             }
-                            $toWrite[$fld] = $data['_val'];
+                            $toWrite[$fld] = $this->forColumn($pluginName, $fld, $data['_val']);
                         }
 
                         if (!empty($toWrite)) {
@@ -294,7 +308,7 @@ class Persist
                     $toWrite = [];
                     foreach ($row as $fld => $data) {
                         if (array_key_exists('_val', $data)) {
-                            $toWrite[$fld] = $data['_val'];
+                            $toWrite[$fld] = $this->forColumn($pluginName, $fld, $data['_val']);
                         }
                     }
 

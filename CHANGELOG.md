@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Vocabularies with a label (#80).** A vocabulary entry can have an optional label next to its value: the value is what is stored (`CER`), the label what people read (`Ceramica`). Forms show the label and store the value; the record view shows the label (`val_label`, one per value for `multi_select`). Entries without a label behave as before, and no stored or exported value changes. The Vocabularies view has a *Label* column (double-click to edit) and an optional label when adding; `POST /api/vocabularies` and `PATCH /api/vocabulary/{id}` accept `label` (blank clears it), `GET /api/vocabularies` returns it, the MCP `vocabulary` tool already returns `{ value, label }`. New migration M057 (`label` column in `bdus_vocabularies`, additive); until it is applied the forms keep working with plain values. Result lists, filters, charts and exports still show the stored value.
 
+### Changed
+
+- **CSV import reads the file one row at a time (#54).** `Import::importData` used to load every row into memory; it now streams a CSV, so the size of the file no longer limits the import. The behaviour is unchanged: one transaction, all-or-nothing, upsert by key (running the same file again updates, never duplicates). A JSON file is still decoded as a whole. The accent-insensitive search half of #54 is #82 (opt-in `BRADYPUS_ACCENT_INSENSITIVE`); resumable, chunked commits were deliberately not done, to keep the all-or-nothing guarantee.
+
 ### Fixed
 
 - **PostgreSQL: free search no longer fails when a column declared `TEXT` is a `date` in the database.** The free-text search compared each textual column with `ILIKE`, which does not exist for `date` (`operator does not exist: date ~~* unknown`). On PostgreSQL the columns are now compared as `CAST(col AS TEXT)`, whatever their real type.

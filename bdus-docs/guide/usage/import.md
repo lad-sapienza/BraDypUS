@@ -43,6 +43,17 @@ error, **all changes are rolled back** and no data is written. Fix the file and
 try again.
 :::
 
+### Large files <Badge type="tip" text="v5.26.0" />
+
+A CSV file is read **one row at a time**, so its size no longer limits the import: memory
+use stays flat whether the file has a hundred rows or a million. (A JSON file still has to be
+decoded as a whole, so very large files are better supplied as CSV.) The import is still a
+single transaction, which means that an interrupted or refused import leaves **nothing**
+behind. Since matching is by the key field, running the same file again is always safe:
+existing records are updated, not duplicated. The time a very large import takes is
+bounded by the server's request time limit (`max_execution_time` and the web server /
+proxy timeouts); split the file if it is hit.
+
 ## Importing GeoJSON
 
 1. Select the target table (must have geodata enabled).

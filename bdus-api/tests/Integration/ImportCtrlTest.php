@@ -93,6 +93,70 @@ class ImportCtrlTest extends BdusTestCase
         $this->assertSame(2, $res['total']);
     }
 
+    /**
+     * The CSV is streamed (#54): walking 200 000 rows (about 16 MB of text, which as an array
+     * would need well over 100 MB) keeps memory flat.
+     */
+    public function testCsvRowsAreStreamedNotLoadedInMemory(): void
+    {
+        $path = sys_get_temp_dir() . '/bdus_import_' . bin2hex(random_bytes(8));
+        $fh = fopen($path, 'w');
+        fwrite($fh, "name,description\n");
+        for ($i = 1; $i <= 200000; $i++) {
+            fwrite($fh, "Bulk Item {$i},Some description that makes the row a bit longer {$i}\n");
+        }
+        fclose($fh);
+
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import');
+        $m = new \ReflectionMethod($ctrl, 'iterateCsvRows');
+
+        gc_collect_cycles();
+        memory_reset_peak_usage();
+        $before = memory_get_usage();
+        $n = 0;
+        foreach ($m->invoke($ctrl, $path) as $row) {
+            $n++;
+        }
+        $growth = memory_get_peak_usage() - $before;
+        @unlink($path);
+
+        $this->assertSame(200000, $n);
+        $this->assertLessThan(2 * 1024 * 1024, $growth, 'rows must be read one at a time');
+    }
+
+    public function testImportDataCsvManyRowsAreAllImported(): void
+    {
+        $rows = 3000;
+        $csv  = "name,description\n";
+        for ($i = 1; $i <= $rows; $i++) {
+            $csv .= "Bulk Item {$i},Desc {$i}\n";
+        }
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
+            'temp_id'   => $this->plantTempFile($csv),
+            'type'      => 'csv',
+            'tb'        => self::TB,
+            'mapping'   => ['name' => 'name', 'description' => 'description'],
+            'key_field' => 'name',
+        ]);
+        $res = $this->callController($ctrl, 'importData');
+        $this->assertSame('success', $res['status'], $res['code'] ?? '');
+        $this->assertSame($rows, $res['inserted']);
+
+        // Importing the same file again updates, it does not duplicate.
+        $ctrl = $this->makeController('Bdus\\Controllers\\Import', [], [
+            'temp_id'   => $this->plantTempFile($csv),
+            'type'      => 'csv',
+            'tb'        => self::TB,
+            'mapping'   => ['name' => 'name', 'description' => 'description'],
+            'key_field' => 'name',
+        ]);
+        $again = $this->callController($ctrl, 'importData');
+        $this->assertSame(0, $again['inserted']);
+        $this->assertSame($rows, $again['updated']);
+
+        static::$db->query("DELETE FROM " . self::TB . " WHERE name LIKE 'Bulk Item %'", [], 'boolean');
+    }
+
     public function testImportDataCsvInsertViaApiKeyStoresNullCreatorNotZero(): void
     {
         // Regression test for issue #56: `creator` is a nullable FK to

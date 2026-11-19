@@ -252,9 +252,16 @@ class Import extends \Bdus\Controller
         }
 
         try {
-            $rows = ($type === 'json')
-                ? $this->readJsonRows($tempPath)
-                : $this->readCsvRows($tempPath);
+            $rows = $this->iterateImportRows($tempPath, $type === 'json' ? 'json' : 'csv');
+            // Peek at the first row now (a generator runs lazily) so an unreadable file is
+            // refused here, before anything is written.
+            $firstRow = null;
+            foreach ($rows as $firstRow) {
+                break;
+            }
+            if ($firstRow === null) {
+                $rows = [];   // no data rows: an exhausted generator cannot be walked again
+            }
         } catch (\Throwable $e) {
             @unlink($tempPath);
             $this->returnJson(['status' => 'error', 'code' => 'import_error_parse', 'detail' => $e->getMessage()]);
@@ -290,8 +297,8 @@ class Import extends \Bdus\Controller
 
         // Validate that at least one mapping KEY exists in the parsed file columns.
         // If none match, every row would be silently skipped — tell the user instead.
-        if (!empty($rows)) {
-            $fileColumns = array_keys($rows[0]);
+        if (is_array($firstRow)) {
+            $fileColumns = array_keys($firstRow);
             $matched = array_intersect(array_keys($mapping), $fileColumns);
             if (empty($matched)) {
                 @unlink($tempPath);
@@ -311,7 +318,8 @@ class Import extends \Bdus\Controller
         try {
             $this->db->beginTransaction();
 
-            foreach ($rows as $rowNum => $row) {
+            // A generator that was peeked at (first row) carries on from that row, no re-read.
+            foreach ($rows as $row) {
                 $keyValue = $row[$keyFileCol] ?? null;
                 if ($keyValue === null || $keyValue === '') continue;
 
@@ -741,23 +749,46 @@ class Import extends \Bdus\Controller
      */
     private function readCsvRows(string $path): array
     {
+        return iterator_to_array($this->iterateCsvRows($path), false);
+    }
+
+    /**
+     * Reads a CSV file one row at a time (a generator): memory stays flat however large the file is.
+     * Rows are associative, keyed by the header line; short rows are padded.
+     *
+     * @return \Generator<int, array<string,string>>
+     */
+    private function iterateCsvRows(string $path): \Generator
+    {
         $delim = $this->detectCsvDelimiter($path);
-        $rows  = [];
         $fh    = fopen($path, 'r');
         if ($fh === false) throw new \RuntimeException('Cannot open file');
 
-        $headers = null;
-        while (($line = fgetcsv($fh, 0, $delim)) !== false) {
-            if ($headers === null) {
-                $headers = array_map('trim', $line);
-                continue;
+        try {
+            $headers = null;
+            while (($line = fgetcsv($fh, 0, $delim)) !== false) {
+                if ($headers === null) {
+                    $headers = array_map('trim', $line);
+                    continue;
+                }
+                // Pad short rows to match header count
+                while (count($line) < count($headers)) $line[] = '';
+                yield array_combine($headers, array_slice($line, 0, count($headers)));
             }
-            // Pad short rows to match header count
-            while (count($line) < count($headers)) $line[] = '';
-            $rows[] = array_combine($headers, array_slice($line, 0, count($headers)));
+        } finally {
+            fclose($fh);
         }
-        fclose($fh);
-        return $rows;
+    }
+
+    /**
+     * The rows of an import file as an iterator: a CSV is streamed; a JSON file has to be
+     * decoded as a whole (its rows are then walked one by one).
+     *
+     * @return iterable<int, array>
+     */
+    private function iterateImportRows(string $path, string $type): iterable
+    {
+        return $type === 'json' ? $this->readJsonRows($path) : $this->iterateCsvRows($path);
     }
 
     /**

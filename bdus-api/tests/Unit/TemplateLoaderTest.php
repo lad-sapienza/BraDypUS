@@ -202,6 +202,26 @@ class TemplateLoaderTest extends TestCase
         $this->assertStringContainsString('invalid_label', $ctrl[0] ?? '');
     }
 
+    public function testVisibleIfIsValidatedOnItemsPanelsAndSections(): void
+    {
+        $ok = "status = 'open' and status not empty";
+        foreach (['core', 'accordion'] as $kind) {
+            $this->assertSame([], Loader::validate($this->tpl(['field' => 'status', 'visible_if' => $ok], $kind), $this->fieldNames, $this->pluginNames), $kind);
+            foreach ([5, '', '   ', ['x'], "a\nb", str_repeat('x', 501)] as $bad) {
+                $errors = Loader::validate($this->tpl(['field' => 'status', 'visible_if' => $bad], $kind), $this->fieldNames, $this->pluginNames);
+                $this->assertStringContainsString('invalid_visible_if', $errors[0] ?? '', $kind);
+            }
+        }
+        $section = ['sections' => [['label' => 'S', 'visible_if' => $ok, 'content' => [['field' => 'status']]]]];
+        $this->assertSame([], Loader::validate($section, $this->fieldNames, $this->pluginNames));
+        $section['sections'][0]['visible_if'] = 7;
+        $this->assertStringContainsString('invalid_visible_if', Loader::validate($section, $this->fieldNames, $this->pluginNames)[0] ?? '');
+        $panel = ['sections' => [['type' => 'accordion', 'label' => 'S', 'content' => [['label' => 'P', 'visible_if' => 7, 'fields' => [['field' => 'status']]]]]]];
+        $this->assertStringContainsString('invalid_visible_if', Loader::validate($panel, $this->fieldNames, $this->pluginNames)[0] ?? '');
+        $inPlugin = Loader::validate($this->tpl(['plugin' => 'tags', 'field' => '*', 'visible_if' => $ok]), $this->fieldNames, $this->pluginNames);
+        $this->assertStringContainsString('option_not_supported_on_plugin_item', $inPlugin[0] ?? '');
+    }
+
     public function testItemOptionsAreRefusedOnPluginItems(): void
     {
         $inCore   = Loader::validate($this->tpl(['plugin' => 'tags', 'field' => '*', 'readonly' => true]), $this->fieldNames, $this->pluginNames);

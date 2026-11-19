@@ -73,6 +73,29 @@ values a group may write use an `enforce` rule; to keep columns out of reach use
 [SQL view](../setup/views).
 :::
 
+### Conditional visibility: `visible_if` <Badge type="tip" text="v5.26.0" />
+
+A field item, a **section** and an **accordion panel** can carry `visible_if`: the element
+(and everything inside it) is shown only while the condition holds.
+
+```json
+{ "field": "decoration", "width": "1/2",
+  "visible_if": "material = 'ceramic' and period regex '^Roman'" }
+```
+
+- Fields are named by their **database name**; values are compared as text.
+- Operators: `=`, `!=`, `regex` (the pattern may match anywhere; use `^` and `$` to anchor),
+  `in ('a', 'b')`, `empty`, `not empty`. Quote values that contain spaces or symbols.
+- `and` / `or` combine conditions (`and` binds tighter); use parentheses to group.
+- Evaluated when the record opens, in read and edit mode, and again whenever a referenced
+  field changes while editing (it follows unsaved changes).
+- A field hidden by its condition **keeps its value and is still saved**; the value is not cleared.
+- An invalid expression or an unknown field name keeps the element **visible** and writes a
+  warning to the browser console. The server refuses a `visible_if` that is not a short
+  single-line text (`invalid_visible_if`); not available on plugin items.
+
+Like `hidden` and `readonly` this is **interface only**, not a permission.
+
 ### Field width
 
 Width is a fraction string. Valid values: `"1/1"`, `"1/2"`, `"1/3"`, `"2/3"`,

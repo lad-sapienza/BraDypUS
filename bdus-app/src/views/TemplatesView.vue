@@ -160,6 +160,10 @@
                     <label>{{ t('section_label') }}</label>
                     <AInput v-model:value="section.label" size="small" style="width:180px" />
                   </div>
+                  <div class="tmpl-field-group">
+                    <label>{{ t('tmpl_visible_if') }}</label>
+                    <AInput v-model:value="section.visible_if" size="small" class="tmpl-item-visibleif" :maxlength="500" :placeholder="t('tmpl_visible_if')" :title="t('tmpl_visible_if_hint')" />
+                  </div>
 
                   <!-- Section type -->
                   <div class="tmpl-field-group">
@@ -230,6 +234,7 @@
                     <AInput v-model:value="item.label" size="small" class="tmpl-item-label" :maxlength="200" :placeholder="t('tmpl_item_label')" :title="t('tmpl_item_label_hint')" />
                     <ACheckbox v-model:checked="item.readonly" class="tmpl-item-flag" :title="t('tmpl_item_readonly_hint')">{{ t('tmpl_item_readonly') }}</ACheckbox>
                     <ACheckbox v-model:checked="item.hidden" class="tmpl-item-flag" :title="t('tmpl_item_hidden_hint')">{{ t('tmpl_item_hidden') }}</ACheckbox>
+                    <AInput v-model:value="item.visible_if" size="small" class="tmpl-item-visibleif" :maxlength="500" :placeholder="t('tmpl_visible_if')" :title="t('tmpl_visible_if_hint')" />
                   </template>
                   <AButton type="text" size="small" :disabled="ii === 0"                          @click="moveField(si, ii, -1)"><template #icon><ArrowUpOutlined /></template></AButton>
                   <AButton type="text" size="small" :disabled="ii === section.content.length - 1" @click="moveField(si, ii,  1)"><template #icon><ArrowDownOutlined /></template></AButton>
@@ -282,6 +287,10 @@
                       <label>{{ t('panel_label') }}</label>
                       <AInput v-model:value="panel.label" size="small" style="width:180px" />
                     </div>
+                    <div class="tmpl-field-group">
+                      <label>{{ t('tmpl_visible_if') }}</label>
+                      <AInput v-model:value="panel.visible_if" size="small" class="tmpl-item-visibleif" :maxlength="500" :placeholder="t('tmpl_visible_if')" :title="t('tmpl_visible_if_hint')" />
+                    </div>
                     <div class="tmpl-field-group tmpl-checkbox-group">
                       <ACheckbox v-model:checked="panel.open" :id="'open-' + si + '-' + pi" />
                       <label :for="'open-' + si + '-' + pi">{{ t('open_by_default') }}</label>
@@ -312,6 +321,7 @@
                         <AInput v-model:value="item.label" size="small" class="tmpl-item-label" :maxlength="200" :placeholder="t('tmpl_item_label')" :title="t('tmpl_item_label_hint')" />
                         <ACheckbox v-model:checked="item.readonly" class="tmpl-item-flag" :title="t('tmpl_item_readonly_hint')">{{ t('tmpl_item_readonly') }}</ACheckbox>
                         <ACheckbox v-model:checked="item.hidden" class="tmpl-item-flag" :title="t('tmpl_item_hidden_hint')">{{ t('tmpl_item_hidden') }}</ACheckbox>
+                    <AInput v-model:value="item.visible_if" size="small" class="tmpl-item-visibleif" :maxlength="500" :placeholder="t('tmpl_visible_if')" :title="t('tmpl_visible_if_hint')" />
                       </template>
                       <AButton type="text" size="small" :disabled="ii === 0"                       @click="movePanelField(si, pi, ii, -1)"><template #icon><ArrowUpOutlined /></template></AButton>
                       <AButton type="text" size="small" :disabled="ii === panel.fields.length - 1" @click="movePanelField(si, pi, ii,  1)"><template #icon><ArrowDownOutlined /></template></AButton>
@@ -551,6 +561,10 @@ function cleanPayload(tpl) {
   for (const s of payload.sections) {
     if (!s.plugin) delete s.plugin
     if (!s.collapsible) delete s.collapsed
+    if (typeof s.visible_if !== 'string' || s.visible_if.trim() === '') delete s.visible_if
+    for (const panel of s.type === 'accordion' ? (s.content ?? []) : []) {
+      if (typeof panel.visible_if !== 'string' || panel.visible_if.trim() === '') delete panel.visible_if
+    }
     if (s.type !== 'accordion') delete s.type
     const items = s.type === 'accordion'
       ? (s.content ?? []).flatMap(panel => panel.fields ?? [])
@@ -559,8 +573,9 @@ function cleanPayload(tpl) {
       // Per-field options: kept only when they say something (interface only).
       if (!it.readonly) delete it.readonly
       if (!it.hidden) delete it.hidden
+      if (typeof it.visible_if !== 'string' || it.visible_if.trim() === '') delete it.visible_if
       if (typeof it.label !== 'string' || it.label.trim() === '') delete it.label
-      if (it.plugin || s.plugin) { delete it.readonly; delete it.hidden; delete it.label }
+      if (it.plugin || s.plugin) { delete it.readonly; delete it.hidden; delete it.label; delete it.visible_if }
     }
   }
   return payload
@@ -1091,6 +1106,7 @@ async function createTemplate() {
   gap: 0.4rem;
 }
 .tmpl-item-label { width: 150px; }
+.tmpl-item-visibleif { width: 220px; }
 .tmpl-item-flag { font-size: 0.8rem; }
 
 .tmpl-add-field-btn {

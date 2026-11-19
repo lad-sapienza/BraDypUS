@@ -1,5 +1,5 @@
 <template>
-  <fieldset class="template-section record-section">
+  <fieldset v-if="sectionVisible" class="template-section record-section">
     <legend
       :class="{ 'legend-collapsible': section.collapsible }"
       @click="toggleCollapse"
@@ -17,6 +17,7 @@
         <div
           v-for="(panel, pi) in section.content"
           :key="pi"
+          v-show="isItemVisible(panel, values, knownFields)"
           class="accordion-panel"
           :class="{ 'accordion-panel--open': openPanels[pi] }"
         >
@@ -30,7 +31,7 @@
           <div v-show="openPanels[pi]" class="accordion-panel-body">
             <div class="template-fields">
               <div
-                v-for="item in (panel.fields ?? []).filter(i => !isItemHidden(i))"
+                v-for="item in (panel.fields ?? []).filter(i => isItemVisible(i, values, knownFields))"
                 :key="item.field"
                 class="template-field-cell"
                 :style="{ gridColumn: 'span ' + widthToSpan(item.width ?? '1/1') }"
@@ -83,7 +84,7 @@
             />
           </div>
           <div
-            v-else-if="!isItemHidden(block.item)"
+            v-else-if="isItemVisible(block.item, values, knownFields)"
             class="template-field-cell"
             :style="{ gridColumn: 'span ' + widthToSpan(block.item.width ?? '1/1') }"
           >
@@ -113,7 +114,7 @@ import { ref, computed } from 'vue'
 import FieldDisplay  from './FieldDisplay.vue'
 import FieldEditor   from './FieldEditor.vue'
 import PluginSection from './PluginSection.vue'
-import { widthToSpan, itemSchema, isItemHidden } from './templateUtils.js'
+import { widthToSpan, itemSchema, isItemVisible } from './templateUtils.js'
 
 const props = defineProps({
   /** One section object from template.sections */
@@ -131,6 +132,14 @@ const props = defineProps({
 })
 
 const isPlugin    = computed(() => !!props.section.plugin)
+
+// visible_if is evaluated on the values being shown: the unsaved form while editing,
+// the saved record otherwise. Reactive, so it follows every change of a referenced field.
+const values = computed(() =>
+  props.mode === 'read' ? (props.record.core ?? {}) : (props.editData.core ?? {})
+)
+const knownFields = computed(() => (props.schema.fields ?? []).map(f => f.name))
+const sectionVisible = computed(() => isItemVisible(props.section, values.value, knownFields.value))
 
 /**
  * Core-section content may mix core fields ({ field, width }) and plugin

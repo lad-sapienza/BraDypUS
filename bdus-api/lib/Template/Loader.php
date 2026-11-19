@@ -254,6 +254,10 @@ class Loader
                 continue;
             }
 
+            if (array_key_exists('visible_if', $section) && !self::validVisibleIf($section['visible_if'])) {
+                $errors[] = "{$sectionLabel}: invalid_visible_if";
+            }
+
             $isPlugin    = array_key_exists('plugin', $section);
             $isAccordion = ($section['type'] ?? '') === 'accordion';
 
@@ -268,6 +272,9 @@ class Loader
             } elseif ($isAccordion) {
                 foreach ($section['content'] as $panelIdx => $panel) {
                     $panelLabel = "{$sectionLabel}.panel[{$panelIdx}]";
+                    if (is_array($panel) && array_key_exists('visible_if', $panel) && !self::validVisibleIf($panel['visible_if'])) {
+                        $errors[] = "{$panelLabel}: invalid_visible_if";
+                    }
                     if (!isset($panel['fields']) || !is_array($panel['fields'])) {
                         $errors[] = "{$panelLabel}: fields_missing_or_invalid";
                         continue;
@@ -329,7 +336,7 @@ class Loader
             return [];
         }
         $errors = [];
-        foreach (['readonly', 'hidden', 'label'] as $opt) {
+        foreach (['readonly', 'hidden', 'label', 'visible_if'] as $opt) {
             if (!array_key_exists($opt, $item)) {
                 continue;
             }
@@ -342,11 +349,31 @@ class Loader
                 if (!is_string($v) || mb_strlen($v) > self::MAX_ITEM_LABEL || preg_match('/[\x00-\x1F\x7F]/', $v)) {
                     $errors[] = "{$where}: invalid_label";
                 }
+            } elseif ($opt === 'visible_if') {
+                if (!self::validVisibleIf($v)) {
+                    $errors[] = "{$where}: invalid_visible_if";
+                }
             } elseif (!is_bool($v)) {
                 $errors[] = "{$where}: invalid_{$opt}";
             }
         }
         return $errors;
+    }
+
+    /** Longest `visible_if` expression. */
+    public const MAX_VISIBLE_IF = 500;
+
+    /**
+     * `visible_if` is a condition on other fields' values (grammar in the template guide).
+     * The server only checks it is a short single-line text; the interface parses it and,
+     * when it cannot, keeps the element visible.
+     */
+    private static function validVisibleIf(mixed $v): bool
+    {
+        return is_string($v)
+            && trim($v) !== ''
+            && mb_strlen($v) <= self::MAX_VISIBLE_IF
+            && !preg_match('/[\x00-\x1F\x7F]/', $v);
     }
 
     // ── Public helpers ────────────────────────────────────────────────────────

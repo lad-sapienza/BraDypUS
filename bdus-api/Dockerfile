@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     libpq-dev \
     libzip-dev \
+    libicu-dev \
     postgresql-client \
     default-mysql-client \
     unzip \
@@ -19,10 +20,11 @@ RUN apt-get update && apt-get install -y \
 # Enable mod_rewrite for .htaccess routing
 RUN a2enmod rewrite
 
-# PHP extensions: PDO + SQLite, mbstring, GD (image thumbnailing/conversion,
+# PHP extensions: PDO + SQLite, mbstring, intl (Unicode normalisation for accent-insensitive
+# search on SQLite, SQL\Fold), GD (image thumbnailing/conversion,
 # --with-webp needed for the optional webp conversion in Image\Resizer)
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install pdo pdo_sqlite pdo_pgsql pdo_mysql mbstring gd zip
+    && docker-php-ext-install pdo pdo_sqlite pdo_pgsql pdo_mysql mbstring gd zip intl
 
 # Allow .htaccess overrides
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' \

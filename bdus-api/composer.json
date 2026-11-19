@@ -26,6 +26,9 @@
         "api",
         "rest"
     ],
+    "suggest": {
+        "ext-intl": "Needed for accent-insensitive search on SQLite (BRADYPUS_ACCENT_INSENSITIVE, SQL\\Fold)"
+    },
     "require": {
         "php": ">=8.4",
         "firebase/php-jwt": "^7.0",

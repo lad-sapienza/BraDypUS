@@ -429,7 +429,8 @@ class QueryFromRequest
       if ($this->db->getEngine() === 'pgsql') {
         $col = "CAST({$col} AS TEXT)";
       }
-      $array_query_core[] = $col . ' ' . $like . ' ?';
+      $engine = $this->db->getEngine();
+      $array_query_core[] = \SQL\Fold::col($engine, $col) . ' ' . $like . ' ' . \SQL\Fold::val($engine);
       $this->values[] = $needle;
     }
     // join partial statements; no textual field at all → match nothing

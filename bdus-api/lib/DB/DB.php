@@ -634,6 +634,7 @@ class DB implements DBInterface
         $this->pdo->query('PRAGMA encoding = "UTF-8"');
         $this->pdo->query('PRAGMA foreign_keys = ON');
       }
+      \SQL\Fold::register($this->pdo, $this->db_engine);
     } catch (\PDOException $e) {
 
       throw new DBException($e);

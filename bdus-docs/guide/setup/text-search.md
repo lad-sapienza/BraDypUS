@@ -6,11 +6,37 @@ title: Accents, case and indexes in text search
 
 Text search (the box in the query bar, the **contains / starts with / ends with**
 operators of **Filters**, the record and file pickers) is a `LIKE '%text%'`
-comparison on the database. What it ignores depends on the engine — BraDypUS adds
-no accent folding of its own — and, on large tables, it scans every row. This page
-says what to expect on each engine and what to do when it is not enough.
+comparison on the database. What it ignores depends on the engine and, on large tables,
+it scans every row. Accent folding is **off by default** and can be switched on for the
+whole installation (below). This page says what to expect on each engine and what to do
+when it is not enough.
 
-## What a search ignores
+## Ignoring accents on every engine <Badge type="tip" text="v5.26.0" />
+
+Set the environment variable `BRADYPUS_ACCENT_INSENSITIVE=1` and the box in the query
+bar and the **contains / starts with / ends with** operators of **Filters** ignore
+accents and case, whatever the script: `Σερηνε` finds `Σερῆνε`, `perche` finds `perché`.
+Equality (`is`) stays exact.
+
+| Engine | How | What it needs |
+|---|---|---|
+| **SQLite** | a function that decomposes the text (Unicode NFD), drops the combining marks and lower-cases it | PHP `intl` (included in the official image) |
+| **PostgreSQL** | the `unaccent` extension | `CREATE EXTENSION unaccent;` once per database (the standard modules ship it) |
+| **MySQL / MariaDB** | nothing changes: it follows the collation of the column | a `…_ci` collation (see below) |
+
+If the switch is on but the engine cannot fold (no `intl`, extension not installed), searches
+silently keep the plain behaviour of the table below.
+
+**Cost.** Comparing through a function means the database cannot use an index for the
+condition, and every row is processed. A `LIKE '%text%'` already scans the table, so the
+difference is a constant factor, but on tables with hundreds of thousands of rows measure it
+before turning it on; this is why it is opt-in. On PostgreSQL, the indexed approach described
+further down is still the way to go for very large tables.
+
+Not covered: the suggestion lists of select fields and the record and file pickers keep the
+plain behaviour of the table below.
+
+## What a search ignores (switch off, or an engine that cannot fold)
 
 | | Upper / lower case | Accents (`citta` finds `Città`) |
 |---|---|---|

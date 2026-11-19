@@ -8,6 +8,7 @@
 namespace SQL\Filter;
 
 use Config\Config;
+use SQL\Fold;
 use SQL\Like;
 
 /**
@@ -512,6 +513,9 @@ class JsonFilter
 
         $like  = Like::operator($this->engine);
         $nlike = Like::operator($this->engine, true);
+        // Accent-insensitive search when enabled (SQL\Fold); otherwise the same text as ever.
+        $fcol  = Fold::col($this->engine, $col);
+        $fval  = Fold::val($this->engine);
 
         return match ($op) {
             '_eq'          => ["{$col} = ?",          [$val]],
@@ -520,13 +524,13 @@ class JsonFilter
             '_lte'         => ["{$col} <= ?",          [$val]],
             '_gt'          => ["{$col} > ?",           [$val]],
             '_gte'         => ["{$col} >= ?",          [$val]],
-            '_contains'    => ["{$col} {$like} ?",     ['%' . $val . '%']],
-            '_icontains'   => ["{$col} {$like} ?",     ['%' . $val . '%']],
-            '_ncontains'   => ["{$col} {$nlike} ?",    ['%' . $val . '%']],
-            '_starts_with'  => ["{$col} {$like} ?",    [$val . '%']],
-            '_ends_with'    => ["{$col} {$like} ?",    ['%' . $val]],
-            '_nstarts_with' => ["{$col} {$nlike} ?",   [$val . '%']],
-            '_nends_with'   => ["{$col} {$nlike} ?",   ['%' . $val]],
+            '_contains'    => ["{$fcol} {$like} {$fval}",     ['%' . $val . '%']],
+            '_icontains'   => ["{$fcol} {$like} {$fval}",     ['%' . $val . '%']],
+            '_ncontains'   => ["{$fcol} {$nlike} {$fval}",    ['%' . $val . '%']],
+            '_starts_with'  => ["{$fcol} {$like} {$fval}",    [$val . '%']],
+            '_ends_with'    => ["{$fcol} {$like} {$fval}",    ['%' . $val]],
+            '_nstarts_with' => ["{$fcol} {$nlike} {$fval}",   [$val . '%']],
+            '_nends_with'   => ["{$fcol} {$nlike} {$fval}",   ['%' . $val]],
             '_in'          => $this->buildIn($col, (array) $val, false),
             '_nin'         => $this->buildIn($col, (array) $val, true),
             '_null'        => $this->isTruthy($val) ? ["{$col} IS NULL",     []] : ["{$col} IS NOT NULL", []],

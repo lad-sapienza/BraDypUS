@@ -278,7 +278,7 @@ onMounted(load)
 .cm-right { margin-left: auto; }
 .cm-text { font-family: monospace; }
 .cm-err {
-  color: var(--ant-color-error, #ff4d4f);
+  color: var(--p-red-500, #ff4d4f);
   font-size: 0.8rem;
 }
 .cfg-loading-center {

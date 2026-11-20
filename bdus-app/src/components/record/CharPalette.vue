@@ -75,14 +75,14 @@ function insert(value) {
   font-size: 0.78rem;
   line-height: 1.7;
   cursor: pointer;
-  color: var(--ant-color-text-secondary, #666);
+  color: var(--p-text-muted-color, #666);
   background: transparent;
-  border: 1px dashed var(--ant-color-border, #d9d9d9);
+  border: 1px dashed var(--p-content-border-color, #d9d9d9);
   border-radius: 4px;
 }
 .char-toggle:hover {
-  color: var(--ant-color-primary, #4f46e5);
-  border-color: var(--ant-color-primary, #4f46e5);
+  color: var(--p-primary-color, #4f46e5);
+  border-color: var(--p-primary-color, #4f46e5);
 }
 .char-toggle-icon { font-weight: 600; }
 .char-toggle-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -110,13 +110,13 @@ function insert(value) {
   line-height: 1.5;
   cursor: pointer;
   color: inherit;
-  background: var(--ant-color-bg-container, #fff);
-  border: 1px solid var(--ant-color-border, #d9d9d9);
+  background: var(--bdus-surface, #fff);
+  border: 1px solid var(--p-content-border-color, #d9d9d9);
   border-radius: 4px;
 }
 .char-btn:hover:not(:disabled) {
-  border-color: var(--ant-color-primary, #4f46e5);
-  color: var(--ant-color-primary, #4f46e5);
+  border-color: var(--p-primary-color, #4f46e5);
+  color: var(--p-primary-color, #4f46e5);
 }
 .char-btn:disabled {
   cursor: default;

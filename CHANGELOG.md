@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.26.1] - 2026-11-20
+
 ### Added
 
 - **`visible_if`: ordering comparisons (`>`, `>=`, `<`, `<=`).** Numbers are compared as numbers (`year > 1200`, `year >= -50 and year <= 100`), anything else as text, which suits ISO dates (`date >= '2020-01-01'`). An empty field never satisfies them. Useful for chronology: show a field only from a given year on.

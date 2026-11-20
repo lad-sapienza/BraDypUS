@@ -5,6 +5,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.26.1] - 2026-11-20
+
+### Added
+
+- **`visible_if`: ordering comparisons (`>`, `>=`, `<`, `<=`).** Numbers are compared as numbers (`year > 1200`, `year >= -50 and year <= 100`), anything else as text, which suits ISO dates (`date >= '2020-01-01'`). An empty field never satisfies them. Useful for chronology: show a field only from a given year on.
+
+### Fixed
+
+- **MCP / transactional writes on PostgreSQL without PostGIS failed with "Database error".** The spatial-extension probe (`SELECT ST_GeomFromText(…)`) fails when PostGIS is absent, and on PostgreSQL a failed statement aborts the open transaction: inside `records_write` (one transaction around the whole save) every following statement, the UPDATE included, was refused. On PostgreSQL the probe now asks `pg_extension` (cannot fail), and the result is cached per connection.
+
+- **PostgreSQL: a boolean set to `false` through the API or MCP was refused ("Database error").** PDO sent PHP `false` as an empty string, which a `boolean` column rejects (`true` worked). Boolean parameters are now bound as booleans on PostgreSQL.
+
 ## [5.26.0] - 2026-11-20
 
 ### Added

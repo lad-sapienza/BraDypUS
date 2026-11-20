@@ -5,6 +5,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.26.0] - 2026-11-20
+
+### Added
+
+- **Conditional visibility in record templates (`visible_if`, #83).** A template field, section or accordion panel can carry `visible_if`, a condition on other fields' database names, e.g. `"material = 'ceramic' and period regex '^Roman'"`. Operators `=`, `!=`, `regex`, `in (…)`, `empty`, `not empty`; `and` / `or` (and binds tighter) and parentheses. It is evaluated when the record opens and again, while editing, whenever a referenced field changes. Interface only: a field hidden by its condition keeps its value and is still saved. An invalid expression or an unknown field keeps the element visible (warning in the console). The server refuses a `visible_if` that is not a short single-line text (`invalid_visible_if`) and on plugin items; the template editor has a *Visible if* box on fields, sections and panels.
+
+- **`DATE` and `REAL` database column types (#84).** The *Database type* of a field can now be `DATE` (dates without a time, ISO `YYYY-MM-DD`) or `REAL` (numbers with decimals), besides `TEXT`, `INTEGER` and `TIMESTAMP`. Activating an existing table and importing DBML now record `date` as `DATE` and `float`, `double`, `decimal`, `numeric`, `real` (and `double precision`) as `REAL`, instead of `TEXT`, so the configuration agrees with the real column on PostgreSQL; the DBML export writes them back as `date` and `float`. An empty value written to a `DATE` or `REAL` column is stored as `NULL` (PostgreSQL and MySQL refuse `''` there), in records and plugin rows. No migration: existing applications keep their `db_type`. Note: `REAL` is single precision on PostgreSQL.
+
+- **Accent-insensitive text search, opt-in (#82, #54).** With `BRADYPUS_ACCENT_INSENSITIVE=1` the free-text box and the *contains / starts with / ends with* filter operators ignore accents and case on every engine, including polytonic Greek (`Σερηνε` finds `Σερῆνε`, `perche` finds `perché`). SQLite uses a `bdus_fold()` function registered on each connection (Unicode decomposition, combining marks dropped, lower case), PostgreSQL uses `unaccent` when the extension is installed, MySQL/MariaDB keeps following the column collation. Off by default, and the SQL is unchanged when off: comparing through a function bypasses indexes. If the engine cannot fold (no `intl`, no extension) the search keeps the plain behaviour. The Docker image now includes PHP `intl`. Not covered: select-field suggestion lists, record and file pickers.
+
+- **Vocabularies with a label (#80).** A vocabulary entry can have an optional label next to its value: the value is what is stored (`CER`), the label what people read (`Ceramica`). Forms show the label and store the value; the record view shows the label (`val_label`, one per value for `multi_select`). Entries without a label behave as before, and no stored or exported value changes. The Vocabularies view has a *Label* column (double-click to edit) and an optional label when adding; `POST /api/vocabularies` and `PATCH /api/vocabulary/{id}` accept `label` (blank clears it), `GET /api/vocabularies` returns it, the MCP `vocabulary` tool already returns `{ value, label }`. New migration M057 (`label` column in `bdus_vocabularies`, additive); until it is applied the forms keep working with plain values. Result lists, filters, charts and exports still show the stored value.
+
+### Changed
+
+- **CSV import reads the file one row at a time (#54).** `Import::importData` used to load every row into memory; it now streams a CSV, so the size of the file no longer limits the import. The behaviour is unchanged: one transaction, all-or-nothing, upsert by key (running the same file again updates, never duplicates). A JSON file is still decoded as a whole. The accent-insensitive search half of #54 is #82 (opt-in `BRADYPUS_ACCENT_INSENSITIVE`); resumable, chunked commits were deliberately not done, to keep the all-or-nothing guarantee.
+
+### Fixed
+
+- **PostgreSQL: free search no longer fails when a column declared `TEXT` is a `date` in the database.** The free-text search compared each textual column with `ILIKE`, which does not exist for `date` (`operator does not exist: date ~~* unknown`). On PostgreSQL the columns are now compared as `CAST(col AS TEXT)`, whatever their real type.
+
 ## [5.25.0] - 2026-11-18
 
 ### Added

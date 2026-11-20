@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.26.0] - 2026-11-20
+
 ### Added
 
 - **Conditional visibility in record templates (`visible_if`, #83).** A template field, section or accordion panel can carry `visible_if`, a condition on other fields' database names, e.g. `"material = 'ceramic' and period regex '^Roman'"`. Operators `=`, `!=`, `regex`, `in (…)`, `empty`, `not empty`; `and` / `or` (and binds tighter) and parentheses. It is evaluated when the record opens and again, while editing, whenever a referenced field changes. Interface only: a field hidden by its condition keeps its value and is still saved. An invalid expression or an unknown field keeps the element visible (warning in the console). The server refuses a `visible_if` that is not a short single-line text (`invalid_visible_if`) and on plugin items; the template editor has a *Visible if* box on fields, sections and panels.

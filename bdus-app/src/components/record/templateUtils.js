@@ -69,12 +69,14 @@ export function isItemHidden(item) {
 // Grammar (no eval):
 //   expr  := and ('or' and)*
 //   and   := term ('and' term)*
-//   term  := '(' expr ')' | field ('=' | '!=' | 'regex') value
+//   term  := '(' expr ')' | field ('=' | '!=' | '>' | '>=' | '<' | '<=' | 'regex') value
 //          | field 'in' '(' value (',' value)* ')' | field 'empty' | field 'not' 'empty'
 //   value := 'quoted' | "quoted" | bare-word
-// Keywords are case-insensitive. Values are compared as text.
+// Keywords are case-insensitive. = != regex in compare as text; > >= < <= compare as numbers when
+// both sides are numbers, otherwise as text (ISO dates sort correctly); an empty field never
+// satisfies them.
 
-const TOKEN_RE = /\s*(?:('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")|(!=|=|\(|\))|(,)|([^\s=!(),'"]+))/y
+const TOKEN_RE = /\s*(?:('(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")|(!=|>=|<=|=|>|<|\(|\))|(,)|([^\s=!<>(),'"]+))/y
 
 function tokenize(src) {
   const tokens = []
@@ -136,7 +138,7 @@ export function parseCondition(src) {
     const field = tk.v
     const o = next()
     if (!o) throw new Error('operator expected')
-    if (o.t === 'op' && (o.v === '=' || o.v === '!=')) return { op: o.v, field, value: value() }
+    if (o.t === 'op' && ['=', '!=', '>', '>=', '<', '<='].includes(o.v)) return { op: o.v, field, value: value() }
     if (o.t === 'word') {
       const w = o.v.toLowerCase()
       if (w === 'regex') {
@@ -174,6 +176,22 @@ function textOf(v) {
   return v === null || v === undefined ? '' : String(v)
 }
 
+/** Ordering comparison: numeric when both sides are numbers, text otherwise; empty is never true. */
+function compare(op, a, b) {
+  if (a.trim() === '') return false
+  const na = Number(a)
+  const nb = Number(b)
+  const numeric = b.trim() !== '' && Number.isFinite(na) && Number.isFinite(nb)
+  const [x, y] = numeric ? [na, nb] : [a, b]
+  switch (op) {
+    case '>':  return x > y
+    case '>=': return x >= y
+    case '<':  return x < y
+    case '<=': return x <= y
+  }
+  return false
+}
+
 /** Collect the field names an AST refers to. */
 export function conditionFields(ast, out = new Set()) {
   if (ast.parts) ast.parts.forEach(p => conditionFields(p, out))
@@ -188,6 +206,7 @@ export function evalCondition(ast, values) {
     case 'or':  return ast.parts.some(p => evalCondition(p, values))
     case '=':   return textOf(values[ast.field]) === ast.value
     case '!=':  return textOf(values[ast.field]) !== ast.value
+    case '>': case '>=': case '<': case '<=': return compare(ast.op, textOf(values[ast.field]), ast.value)
     case 'regex': return new RegExp(ast.value).test(textOf(values[ast.field]))
     case 'in':  return ast.values.includes(textOf(values[ast.field]))
     case 'empty':     return textOf(values[ast.field]).trim() === ''

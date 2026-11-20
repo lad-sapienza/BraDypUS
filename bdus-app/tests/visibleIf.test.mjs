@@ -4,6 +4,20 @@ import { parseCondition, evalVisibleIf, isItemVisible } from '../src/components/
 
 const ev = (e, v, k = null) => evalVisibleIf(e, v, k)
 
+test('> >= < <= compare numbers as numbers, text otherwise, and never match an empty value', () => {
+  assert.equal(ev('year > 1200', { year: '1500' }), true)
+  assert.equal(ev('year > 1200', { year: '900' }), false)     // 900 < 1200 as numbers, not as text
+  assert.equal(ev('year>=1200 and year<=1300', { year: 1250 }), true)
+  assert.equal(ev('year < -50', { year: '-100' }), true)
+  assert.equal(ev('year < 2.5', { year: '2.25' }), true)
+  assert.equal(ev('year > 1200', { year: '' }), false)
+  assert.equal(ev('year < 1200', { year: null }), false)
+  assert.equal(ev('year > 1200', {}), false)
+  assert.equal(ev("d >= '2020-01-01'", { d: '2021-05-02' }), true)   // ISO dates compare as text
+  assert.equal(ev("d < '2020-01-01'", { d: '2021-05-02' }), false)
+  assert.equal(ev('year > 1200 or year < 100', { year: 50 }), true)
+})
+
 test('= and != compare as text, quoted or bare', () => {
   assert.equal(ev("material = 'ceramic'", { material: 'ceramic' }), true)
   assert.equal(ev('material=ceramic', { material: 'bone' }), false)
@@ -40,7 +54,7 @@ test('values with { val } objects are unwrapped', () => {
 test('invalid expressions fail safe (visible) and parse throws', () => {
   const warn = console.warn; console.warn = () => {}
   try {
-    for (const bad of ['a =', 'a ~ b', "a regex '('", '(a = 1', 'a = 1 b', 'a in 1', 'a not x']) {
+    for (const bad of ['a >', 'a > >', 'a <= ', 'a =', 'a ~ b', "a regex '('", '(a = 1', 'a = 1 b', 'a in 1', 'a not x']) {
       assert.throws(() => parseCondition(bad), bad)
       assert.equal(ev(bad, { a: '2' }), true, bad)
     }

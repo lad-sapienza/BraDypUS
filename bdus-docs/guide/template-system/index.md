@@ -84,8 +84,12 @@ A field item, a **section** and an **accordion panel** can carry `visible_if`: t
 ```
 
 - Fields are named by their **database name**; values are compared as text.
-- Operators: `=`, `!=`, `regex` (the pattern may match anywhere; use `^` and `$` to anchor),
-  `in ('a', 'b')`, `empty`, `not empty`. Quote values that contain spaces or symbols.
+- Operators: `=`, `!=`, `>`, `>=`, `<`, `<=` <Badge type="tip" text="v5.27.0" />, `regex` (the pattern may
+  match anywhere; use `^` and `$` to anchor), `in ('a', 'b')`, `empty`, `not empty`. Quote values
+  that contain spaces or symbols.
+- `>`, `>=`, `<`, `<=` compare as **numbers** when both sides are numbers (`year > 1200`,
+  `year >= -50 and year <= 100`), otherwise as text, which is right for ISO dates
+  (`date >= '2020-01-01'`). An empty field never satisfies them.
 - `and` / `or` combine conditions (`and` binds tighter); use parentheses to group.
 - Evaluated when the record opens, in read and edit mode, and again whenever a referenced
   field changes while editing (it follows unsaved changes).

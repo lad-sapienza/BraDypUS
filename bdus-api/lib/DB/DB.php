@@ -277,7 +277,18 @@ class DB implements DBInterface
 
       if (!$values) $values = [];
 
-      $flag = $sql->execute($values);
+      if ($this->db_engine === 'pgsql' && in_array(true, array_map('is_bool', $values), true)) {
+        // execute($values) sends PHP false as '' (and true as '1'), which a
+        // PostgreSQL boolean column refuses: bind booleans as booleans.
+        $i = 0;
+        foreach ($values as $k => $v) {
+          $sql->bindValue(is_int($k) ? $i + 1 : $k, $v, is_bool($v) ? \PDO::PARAM_BOOL : \PDO::PARAM_STR);
+          $i++;
+        }
+        $flag = $sql->execute();
+      } else {
+        $flag = $sql->execute($values);
+      }
 
       if (is_int($type)) {
         return $sql->fetchColumn($type);
@@ -648,11 +659,31 @@ class DB implements DBInterface
    */
   public function hasSpatialExtension(): bool
   {
+    if ($this->spatialExtension !== null) {
+      return $this->spatialExtension;
+    }
+    // PostgreSQL: a failed statement aborts the open transaction, and this probe
+    // can run inside one (a write wrapped by records_write). Ask the catalogue
+    // instead of calling a function that may not exist.
+    if ($this->db_engine === 'pgsql') {
+      try {
+        $this->spatialExtension = !empty($this->pdo->query(
+          "SELECT 1 FROM pg_extension WHERE extname = 'postgis'"
+        )->fetchAll());
+      } catch (\PDOException $e) {
+        $this->spatialExtension = false;
+      }
+      return $this->spatialExtension;
+    }
     try {
       $this->pdo->query("SELECT ST_GeomFromText('POINT(0 0)')");
-      return true;
+      $this->spatialExtension = true;
     } catch (\PDOException $e) {
-      return false;
+      $this->spatialExtension = false;
     }
+    return $this->spatialExtension;
   }
+
+  /** Result of hasSpatialExtension(), looked up once per connection. */
+  private ?bool $spatialExtension = null;
 }

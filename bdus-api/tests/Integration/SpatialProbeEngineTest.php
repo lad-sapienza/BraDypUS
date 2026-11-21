@@ -62,7 +62,9 @@ class SpatialProbeEngineTest extends TestCase
         try {
             $db->query('INSERT INTO sp_bool_t (id, flag) VALUES (?, ?)', [1, true], 'boolean');
             $db->query('UPDATE sp_bool_t SET flag = ? WHERE id = ?', [false, 1], 'boolean');
-            $this->assertFalse((bool) $db->query('SELECT flag FROM sp_bool_t WHERE id = 1', [], 0));
+            $rows = $db->query('SELECT flag FROM sp_bool_t WHERE id = 1', [], 'read');
+            // PDO hands a boolean back as false or as 'f' depending on the driver version
+            $this->assertContains($rows[0]['flag'], [false, 'f', 0, '0'], 'false must be stored, not left at true');
         } finally {
             $db->exec('DROP TABLE IF EXISTS sp_bool_t');
         }

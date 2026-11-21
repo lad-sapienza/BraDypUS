@@ -30,7 +30,7 @@ class Record extends \Bdus\Controller
    * Used by the Vue data module.
    *
    * GET ?obj=record_ctrl&method=getRecords&tb=TABLE&page=1&per_page=30
-   *     &sort_field=FIELD&sort_dir=asc|desc&search=STRING
+   *     &sort_field=FIELD&sort_dir=asc|desc&sort_nulls=first|last&search=STRING
    *
    * Response:
    * {
@@ -233,6 +233,8 @@ class Record extends \Bdus\Controller
           $this->log->debug("getRecords: ignoring unknown sort field '{$f}' for table '{$tb}'");
         }
       }
+      // `sort_nulls=last|first`: where empty (NULL) values go in a requested sort.
+      $qObj->setNulls($this->get['sort_nulls'] ?? $this->post['sort_nulls'] ?? null);
       if (count($sortPairs) === 1) {
         $qObj->setOrder($sortPairs[0][0], $sortPairs[0][1]);
       } elseif ($sortPairs) {

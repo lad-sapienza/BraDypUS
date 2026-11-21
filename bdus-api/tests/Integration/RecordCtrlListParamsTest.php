@@ -135,6 +135,28 @@ class RecordCtrlListParamsTest extends BdusTestCase
         $this->assertSame([1, 2, 4, 5, 3], $this->ids($res));   // Alpha Beta Delta Epsilon Gamma
     }
 
+    public function testSortNullsPutsEmptyValuesWhereAsked(): void
+    {
+        // cat_ref is a lookup: items 1 (Ceramics) and 2 (Metal) have one, 3-5 do not
+        $this->assertSame([1, 2, 3, 4, 5], $this->ids($this->list(['sort_field' => 'cat_ref', 'sort_nulls' => 'last'])));
+        $this->assertSame([3, 4, 5, 1, 2], $this->ids($this->list(['sort_field' => 'cat_ref', 'sort_nulls' => 'first'])));
+        $this->assertSame([2, 1, 5, 4, 3], $this->ids($this->list(['sort_field' => 'cat_ref', 'sort_dir' => 'desc', 'sort_nulls' => 'last'])));
+        $this->assertSame([5, 4, 3, 2, 1], $this->ids($this->list(['sort_field' => 'cat_ref', 'sort_dir' => 'desc', 'sort_nulls' => 'first'])));
+    }
+
+    public function testSortNullsAppliesToEveryKeyOfAMultiSort(): void
+    {
+        $this->assertSame([2, 1, 3, 5, 4], $this->ids($this->list(['sort' => '-cat_ref,-name', 'sort_nulls' => 'last'])));
+    }
+
+    public function testUnknownSortNullsValueChangesNothing(): void
+    {
+        $this->assertSame(
+            $this->ids($this->list(['sort_field' => 'cat_ref'])),
+            $this->ids($this->list(['sort_field' => 'cat_ref', 'sort_nulls' => 'sideways']))
+        );
+    }
+
     public function testUnknownSortFieldsAreIgnored(): void
     {
         $this->assertSame([1, 2, 3, 4, 5], $this->ids($this->list(['sort' => 'nope,-drop;table'])));

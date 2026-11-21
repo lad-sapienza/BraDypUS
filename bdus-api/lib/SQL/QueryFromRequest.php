@@ -113,6 +113,29 @@ class QueryFromRequest
     }
   }
 
+  /** Where NULLs go in a requested sort: 'first', 'last', or null for the engine's own habit. */
+  private ?string $nulls = null;
+
+  public function setNulls(?string $where): QueryFromRequest
+  {
+    $where       = is_string($where) ? strtolower(trim($where)) : null;
+    $this->nulls = in_array($where, ['first', 'last'], true) ? $where : null;
+    return $this;
+  }
+
+  /**
+   * "(col IS NULL) dir, " put before a sort key: portable on every engine (the
+   * NULLS FIRST/LAST syntax does not exist in MySQL). Empty when not asked for.
+   */
+  private function nullsKey(string $col): string
+  {
+    return match ($this->nulls) {
+      'last'  => "({$col} IS NULL) asc, ",
+      'first' => "({$col} IS NULL) desc, ",
+      default => '',
+    };
+  }
+
   public function setOrder($fld = false, $type = false): ?QueryFromRequest
   {
     if (!preg_match('/(LIMIT)/', $this->where)) {
@@ -152,7 +175,7 @@ class QueryFromRequest
       // with the visible page.
       $tieBreak = ($fld && $fld !== $this->tb . '.id') ? ", {$this->tb}.id $type" : '';
 
-      $this->order = $fld ? " ORDER BY $fld $type{$tieBreak} " : '';
+      $this->order = $fld ? ' ORDER BY ' . $this->nullsKey($fld) . "$fld $type{$tieBreak} " : '';
 
       if (preg_match('/ORDER/', $this->where)) {
         $this->where = preg_replace('/order\sby\s([a-z_\.]+)\s?(?:asc|desc)?/i', '', $this->where);
@@ -185,7 +208,8 @@ class QueryFromRequest
       $seen[$fld] = true;
       $dir        = (is_string($dir) && strtolower($dir) === 'desc') ? 'desc' : 'asc';
       $first    ??= $dir;
-      $parts[]    = ($this->fkOrderBy[$fld] ?? ($this->tb . '.' . $fld)) . ' ' . $dir;
+      $col        = $this->fkOrderBy[$fld] ?? ($this->tb . '.' . $fld);
+      $parts[]    = $this->nullsKey($col) . $col . ' ' . $dir;
     }
 
     if (!$parts) {

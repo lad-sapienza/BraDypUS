@@ -27,6 +27,8 @@ class RecordCtrlFieldsExpandTest extends BdusTestCase
         }
         static::$db->exec("DELETE FROM tags WHERE id > 2");
         static::$db->exec("DELETE FROM bdus_geodata WHERE id >= 950");
+        static::$db->exec("DELETE FROM bdus_file_links WHERE file_id >= 960");
+        static::$db->exec("DELETE FROM bdus_files WHERE id >= 960");
         $this->setPrivilege(1);
     }
 
@@ -298,6 +300,65 @@ class RecordCtrlFieldsExpandTest extends BdusTestCase
 
         $this->assertSame([1, 3, 5], array_keys($rows));
         $this->assertCount(2, $rows[1]['geodata']);
+    }
+
+    // ── files linked to the record ────────────────────────────────────────────
+
+    private function seedFiles(): void
+    {
+        static::$db->exec("INSERT INTO bdus_files (id, creator, ext, filename, attribution) VALUES
+            (960, 1, 'jpg', 'front', 'Photo A'), (961, 1, 'png', 'back', NULL), (962, 1, 'jpg', 'other', NULL)");
+        // 961 comes first on item 1 (sort 1); 962 is linked to a *category* #1, not to item 1
+        static::$db->exec("INSERT INTO bdus_file_links (file_id, table_name, record_id, sort) VALUES
+            (960, 'items', 1, 2), (961, 'items', 1, 1), (960, 'items', 2, 1), (962, 'categories', 1, 1)");
+    }
+
+    /** ids of the files seeded here (the fixture links a few of its own) */
+    private function mine(array $files): array
+    {
+        return array_values(array_filter(array_column($files, 'id'), fn($i) => $i >= 960));
+    }
+
+    public function testFilesListsTheLinkedFilesInRecordOrder(): void
+    {
+        $this->seedFiles();
+
+        $rows = $this->byId($this->list(['fields' => 'id,files']));
+
+        $this->assertSame([961, 960], $this->mine($rows[1]['files']));
+        $byId = array_column($rows[1]['files'], null, 'id');
+        $this->assertSame('png', $byId[961]['ext']);
+        $this->assertSame('front', $byId[960]['filename']);
+        $this->assertSame('Photo A', $byId[960]['attribution']);
+        $this->assertSame([960], $this->mine($rows[2]['files']));
+        $this->assertSame([], $this->mine($rows[3]['files']), 'no file of ours: nothing');
+    }
+
+    public function testFilesPartsAndAlias(): void
+    {
+        $this->seedFiles();
+
+        $rows = $this->byId($this->list(['fields' => 'pics:files.ext,files.filename']));
+
+        $this->assertEqualsCanonicalizing(['id', 'ext'], array_keys($rows[1]['pics'][0]));
+        $this->assertEqualsCanonicalizing(['id', 'filename'], array_keys($rows[1]['files'][0]));
+        $this->assertContains('jpg', array_column($rows[2]['pics'], 'ext'));
+    }
+
+    public function testFilesRefusesAnUnknownPart(): void
+    {
+        $this->assertSame('invalid_parameters', $this->list(['fields' => 'files.nope'])['code']);
+    }
+
+    public function testFilesFollowTheRecordsTheGroupMayRead(): void
+    {
+        $this->seedFiles();
+        $this->reviewer(['status' => ['_eq' => 'active']]);   // items 1, 3, 5
+
+        $rows = $this->byId($this->list(['fields' => 'files']));
+
+        $this->assertSame([1, 3, 5], array_keys($rows));
+        $this->assertSame([961, 960], $this->mine($rows[1]['files']));
     }
 
     // ── bad requests ──────────────────────────────────────────────────────────

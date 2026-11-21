@@ -34,6 +34,11 @@ use DB\DBInterface;
  * record's geometries from bdus_geodata: a list of {id, geometry (WKT), geojson}. It follows the
  * record, like a plugin, and exists only for tables with geodata enabled.
  *
+ * The pseudo-field `files` (or `files.ext`, `files.filename`, …, `alias:files`) adds the files
+ * linked to the record: a list ordered as in the record view, each `{id, ext, filename,
+ * description, keywords, attribution, printable}` (all of them with `files` / `files.*`, only the
+ * named ones with `files.col`; `id` is always there). It follows the record, like a plugin.
+ *
  * Only one level of nesting is supported (`rel.sub.col` is refused).
  *
  * Permissions (never wider than the direct request to the related table):
@@ -102,6 +107,10 @@ final class Expand
                 $self->addGeodata($path[1] ?? '*', $alias ?? 'geodata', $own);
                 continue;
             }
+            if ($path[0] === 'files' && !in_array('files', $own, true) && count($path) <= 2) {
+                $self->addFiles($path[1] ?? '*', $alias ?? 'files', $own);
+                continue;
+            }
             if (count($path) > 2) {
                 throw new \InvalidArgumentException("Nesting deeper than one level is not supported: '{$token}'");
             }
@@ -161,6 +170,7 @@ final class Expand
                 'fk'      => $this->applyLookup($rows, $key, $node, $access),
                 'inverse' => $this->applyInverse($rows, $key, $node, $access),
                 'geodata' => $this->applyGeodata($rows, $key, $node),
+                'files'   => $this->applyFiles($rows, $key, $node),
             };
         }
         return $rows;
@@ -241,6 +251,32 @@ final class Expand
         }
 
         $node = $this->nodes[$key] ?? ['kind' => 'geodata', 'rel' => 'bdus_geodata', 'via' => 'id_link', 'cols' => [], 'all' => false];
+        if ($sel === '*') {
+            $node['all'] = true;
+        } elseif (!in_array($sel, $node['cols'], true)) {
+            $node['cols'][] = $sel;
+        }
+        $this->nodes[$key] = $node;
+    }
+
+    /** Columns of bdus_files a client may ask for through `files.col`. */
+    private const FILE_PARTS = ['ext', 'filename', 'description', 'keywords', 'attribution', 'printable'];
+
+    private function addFiles(string $sel, string $key, array $own): void
+    {
+        if (in_array($key, $own, true)) {
+            throw new \InvalidArgumentException("Alias '{$key}' clashes with a column of '{$this->tb}'");
+        }
+        if (isset($this->nodes[$key]) && $this->nodes[$key]['kind'] !== 'files') {
+            throw new \InvalidArgumentException("Key '{$key}' is used for two different relations");
+        }
+        if ($sel !== '*' && !in_array($sel, self::FILE_PARTS, true)) {
+            throw new \InvalidArgumentException(
+                "Unknown file part '{$sel}' (expected " . implode(', ', self::FILE_PARTS) . ' or *)'
+            );
+        }
+
+        $node = $this->nodes[$key] ?? ['kind' => 'files', 'rel' => 'bdus_files', 'via' => 'record_id', 'cols' => [], 'all' => false];
         if ($sel === '*') {
             $node['all'] = true;
         } elseif (!in_array($sel, $node['cols'], true)) {
@@ -370,6 +406,43 @@ final class Expand
                     }
                 }
                 $grouped[(int) $f['id_link']][] = $entry;
+            }
+        }
+
+        foreach ($rows as &$row) {
+            $row[$key] = $grouped[$this->idOf($row)] ?? [];
+        }
+        unset($row);
+        return $rows;
+    }
+
+    // ── Files linked to the record (bdus_file_links → bdus_files) ────────────
+
+    private function applyFiles(array $rows, string $key, array $node): array
+    {
+        $parts = $node['all'] ? self::FILE_PARTS : $node['cols'];
+        $ids   = array_values(array_unique(array_filter(array_map(fn($r) => $this->idOf($r), $rows))));
+
+        $select = 'f.id' . implode('', array_map(fn($c) => ", f.{$c}", $parts));
+
+        $grouped = [];
+        foreach (array_chunk($ids, self::CHUNK) as $chunk) {
+            $marks = implode(',', array_fill(0, count($chunk), '?'));
+            $found = $this->db->query(
+                "SELECT {$select}, fl.record_id AS bdus_rec
+                 FROM bdus_files AS f
+                 INNER JOIN bdus_file_links AS fl ON fl.file_id = f.id
+                 WHERE fl.table_name = ? AND fl.record_id IN ({$marks})
+                 ORDER BY fl.record_id, fl.sort, fl.id",
+                array_merge([$this->tb], $chunk),
+                'read'
+            ) ?: [];
+            $this->count(count($found));
+            foreach ($found as $f) {
+                $rec = (int) $f['bdus_rec'];
+                unset($f['bdus_rec']);
+                $f['id'] = (int) $f['id'];
+                $grouped[$rec][] = $f;
             }
         }
 

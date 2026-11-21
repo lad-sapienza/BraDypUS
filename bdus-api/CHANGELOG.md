@@ -5,6 +5,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`fields=files` on the record list.** Each row can carry the files linked to it (`fields=id,title,files`, or `files.ext,files.filename`, with an alias if you like): `{id, ext, filename, description, keywords, attribution, printable}` in the order of the record view. With `id` and `ext` a public site builds the image address (`/{app}/api/file/{preset}/{id}.webp`) without a second request per record. The files follow the record: a record the user or key cannot read brings none.
+
+- **`sort_nulls=last|first` on the record list.** Where empty values go in the requested sort (PostgreSQL puts them first in a descending sort). Portable on every engine; without the parameter nothing changes.
+
+### Changed
+
+- **An unknown API route answers HTTP 404** (`{"status":"error","code":"route_not_found"}`) instead of 200 `dispatch_error`, for a client that only looks at the status. An anonymous request still gets 401 first.
+
+### Documentation
+
+- REST API guide: a level-30 key reads every table (limiting needs level 39 + a group), the routes to edit, disable, revoke and delete a key (singular `api-key`), the full filter-operator table with the case/accent rules, counts per value (`/api/chart/data`), `fields=files`, `sort_nulls`, vocabularies and file search, the error convention, and where the OpenAPI file is.
+
 ## [5.26.1] - 2026-11-20
 
 ### Added

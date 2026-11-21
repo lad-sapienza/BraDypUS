@@ -42,6 +42,15 @@ Each key has a privilege level: 30 (reader) keys can only read data, 25 keys can
 also create and write, 10 keys are admin keys. A key can also belong to a
 [group](../setup/groups) — see below.
 
+::: warning A level 30 key reads everything
+A reader key (30) reads **every row of every table** of the application, drafts and
+unpublished records included. To give a website or a script access to only some tables
+or rows, do not use level 30: create a key at level **Enter (39)** tied to a
+[group](../setup/groups) whose rules grant `read` on those tables, with a row filter if needed.
+See [API keys with a group](#api-keys-with-a-group) below and the recipe in
+[Views and public data](../setup/views).
+:::
+
 #### Changing, disabling and revoking a key <Badge type="tip" text="next release" />
 
 In **Config → API Keys** a key is not fixed once created:
@@ -55,8 +64,16 @@ In **Config → API Keys** a key is not fixed once created:
 - **Revoke** is final: the key can no longer be enabled or edited (it can only be deleted). Use it
   when a key may have leaked, and make a new one.
 
-Through the API: `PUT /api/api-key/{id}`, `POST /api/api-key/{id}/disable` and `/enable`
-(administrators only; see the [API reference](/api-reference/)). Apps that were created before
+Through the API (administrators only; see the [API reference](/api-reference/)). Mind the
+**singular** `api-key` in the routes that act on one key; only the list and the creation use `api-keys`:
+
+| Action | Request |
+|---|---|
+| List / create | `GET` / `POST /{app}/api/api-keys` |
+| Edit | `PUT /{app}/api/api-key/{id}` |
+| Disable / enable | `POST /{app}/api/api-key/{id}/disable` · `…/enable` |
+| Revoke (final) | `POST /{app}/api/api-key/{id}/revoke` |
+| Delete | `DELETE /{app}/api/api-key/{id}` | Apps that were created before
 this release need the minor update that adds the `disabled_at` column
 ([Updating](../install/update)) before keys can be disabled.
 
@@ -139,6 +156,7 @@ Returns a paginated JSON response:
 | `per_page` | 30 | Records per page (max 200) |
 | `sort_field` | — | Column to sort by |
 | `sort_dir` | `asc` | `asc` or `desc` |
+| `sort_nulls` | — | `last` or `first`: where empty (`NULL`) values go in the sort. Without it the database decides (PostgreSQL puts them **first** in a descending sort); `last` keeps records without a value at the end, whatever the direction. Applies to every key of a `sort=a,-b` |
 
 ### Directus-style parameters <Badge type="tip" text="v5.23.0" />
 
@@ -206,6 +224,12 @@ The pseudo-field **`geodata`** adds the record's geometries (they live in a syst
 as GeoJSON, `[]` when it has none. `geodata.geojson` or `geodata.geometry` return only that part; an alias works
 (`geo:geodata.geojson`). Only for tables with geodata enabled, otherwise `invalid_parameters`; the geometries
 follow the record, so a row you cannot read brings none.
+
+The pseudo-field **`files`** adds the files linked to the record, in the order of the record view:
+`fields=id,title,files` gives each record a list of `{id, ext, filename, description, keywords, attribution, printable}`;
+`files.ext` (repeatable: `files.ext,files.filename`) returns only those parts, always with `id`; an alias works
+(`pics:files.ext`). `[]` when the record has none. With the `id` and `ext` of a file you build the image address
+([Images in several sizes](#images-in-several-sizes)). The files follow the record: a row you cannot read brings none.
 
 Rules:
 
@@ -288,20 +312,51 @@ Multiple conditions are joined with `AND` by default. For `OR`:
 
 | Operator | Meaning |
 |---|---|
-| `_eq` | Equal |
-| `_neq` | Not equal |
-| `_icontains` | Case-insensitive contains |
+| `_eq` · `_neq` | Equal · not equal (exact) |
+| `_contains` · `_icontains` | Contains (the two are identical, see below) |
 | `_ncontains` | Does not contain |
-| `_starts_with` | Starts with |
-| `_ends_with` | Ends with |
-| `_gt` | Greater than |
-| `_lt` | Less than |
-| `_gte` | Greater than or equal |
-| `_lte` | Less than or equal |
-| `_empty` | Is NULL or empty string |
-| `_nempty` | Is not NULL and not empty |
-| `_in` | Value is in the list |
-| `_nin` | Value is not in the list |
+| `_starts_with` · `_nstarts_with` | Starts with · does not start with |
+| `_ends_with` · `_nends_with` | Ends with · does not end with |
+| `_gt` · `_gte` · `_lt` · `_lte` | Greater / less than (or equal) |
+| `_between` | Between two values: `[low, high]` |
+| `_in` · `_nin` | Value is / is not in the list (an array) |
+| `_null` · `_nnull` | Is NULL / is not NULL (`true` or `false`) |
+| `_empty` · `_nempty` | Is NULL or empty string / is neither |
+| `_chrono_overlap` | Fuzzy-date range overlap: `[low, high]` years (needs the fuzzy-date plugin) |
+
+An unknown operator answers `invalid_parameters` / `Unknown filter operator`. Conditions on the
+same level are joined with `AND`; use `_and` / `_or` (arrays of conditions) to nest.
+
+**Case and accents.** Every text operator in the table (`_contains`, `_icontains`, `_starts_with`,
+`_ends_with` and their negations) ignores case on every engine (PostgreSQL uses `ILIKE`), so there is no
+separate case-insensitive variant: `_starts_with` already is one. Accents are ignored only when the
+administrator switches on `BRADYPUS_ACCENT_INSENSITIVE` (and, on PostgreSQL, installs the `unaccent`
+extension): then the same operators and the search box find `perche` for `perché`. See
+[Accents, case and indexes in text search](../setup/text-search). `_eq`, `_in` and the comparison
+operators are always exact.
+
+## Counting by value
+
+To get "how many records for each value of a field" (a status page, a menu with counts) do not make one
+request per value. Ask the chart endpoint for a grouped count, which a key with a group can call on the
+tables it may read:
+
+```http
+POST /{app}/api/chart/data
+Content-Type: application/json
+
+{ "definition": { "tb": "works", "type": "bar", "x_field": "status",
+                  "y_field": "id", "y_function": "COUNT",
+                  "filter": { "filter": { "published": { "_eq": "yes" } } } } }
+```
+
+```json
+{ "status": "success", "type": "bar", "labels": ["open", "closed"], "data": [12, 30] }
+```
+
+`x_field` is the field to group by; `y_function` is `COUNT`, `COUNT_DISTINCT`, `SUM`, `AVG`, `MIN` or `MAX`
+(on `y_field`). The optional `filter` restricts the rows, with the same JSON filter as above. For a single number
+(a total) use `"type": "metric"` with `field` and `function`. The MCP tool `aggregate` does the same for assistants.
 
 ## Reading a single record
 
@@ -334,7 +389,28 @@ placeholder `{{attribution}}`): it is drawn on derived versions only, and the or
 Originals and derived versions are served without authentication and ids are sequential.
 :::
 
+## Other useful endpoints
+
+| Request | Returns |
+|---|---|
+| `GET /{app}/api/vocabularies` | All the vocabularies, grouped by name: `{id, def, label, sort}` for each value |
+| `GET /{app}/api/files?search=TEXT` | Library files whose name contains the text, with `id` and `ext`; `page`, `per_page` (5–100, default 25) |
+| `GET /{app}/api/record/{table}/{id}` | One record in full, with its files |
+
+## Errors
+
+Errors carry a JSON body `{"status": "error", "code": "…"}` and, by convention, **HTTP 200** when the request
+reached its endpoint and was refused for a reason of the data (`invalid_parameters`, `parameter_missing`…).
+The HTTP status is used for what happens before: `401` `unauthenticated` (no or bad key), `403`
+`not_enough_privilege`, `404` `route_not_found` (no such endpoint) or `app_prefix_required`, `405`
+`method_not_allowed` (with the allowed methods), `409` major upgrade pending, `429` `too_many_requests`.
+A request that fails inside the server answers `dispatch_error`. A client should therefore read the
+`status` field of the body, not only the HTTP code.
+
 ## Interactive API reference
 
 See the [API Reference](/api-reference/) section for an interactive OpenAPI
-explorer with all available endpoints.
+explorer with all available endpoints. The same description is the file
+[`bdus-api/openapi.yaml`](https://github.com/lad-sapienza/BraDypUS/blob/v5/bdus-api/openapi.yaml) in the
+repository (OpenAPI 3): download it to generate a client. There is no `/api/openapi.json` or `/api/docs` endpoint
+on the server.

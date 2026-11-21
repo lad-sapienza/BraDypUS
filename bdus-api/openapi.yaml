@@ -1339,6 +1339,15 @@ paths:
             type: string
             enum: [asc, desc]
             default: asc
+        - name: sort_nulls
+          in: query
+          schema:
+            type: string
+            enum: [first, last]
+          description: |
+            Where empty (`NULL`) values go in the requested sort. Without it the database
+            decides (on PostgreSQL they come first in a descending sort). `last` keeps them
+            at the end whatever the direction.
         - name: search_type
           in: query
           schema:
@@ -1434,6 +1443,12 @@ paths:
             alias) adds the record's geometries from `bdus_geodata`: a list of
             `{id, geometry (WKT), geojson}`, `[]` when there are none. A table without geodata
             answers `invalid_parameters`.
+
+            The pseudo-field `files` (also `files.ext`, `files.filename`, `files.description`,
+            `files.keywords`, `files.attribution`, `files.printable`, or with an alias) adds the
+            files linked to the record, in the order of the record view: a list of
+            `{id, ext, …}` (`id` always; every part with `files` or `files.*`), `[]` when there
+            are none. An unknown part answers `invalid_parameters`. The files follow the record.
 
             Permissions never widen: plugin rows follow the readable records; a lookup is
             expanded only when the key/user may read the referenced table and that row,

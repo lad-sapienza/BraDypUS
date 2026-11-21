@@ -141,6 +141,20 @@ class Dispatcher
             }
 
             // ── Controller validation ─────────────────────────────────────────
+            // No route matched (Router left obj/method unset): a plain 404, for a
+            // client that looks only at the HTTP status. Reached after the auth
+            // gate, so an anonymous caller still gets 401 and learns nothing.
+            if (!isset($get['obj']) && !isset($get['method'])
+                && str_contains((string) ($_SERVER['REQUEST_URI'] ?? ''), '/api')) {
+                http_response_code(404);
+                header('Content-Type: application/json');
+                echo json_encode(
+                    ['status' => 'error', 'code' => 'route_not_found', 'message' => 'No such endpoint.'],
+                    JSON_UNESCAPED_UNICODE
+                );
+                return;
+            }
+
             if (!method_exists($obj, $method)) {
                 throw new \Exception("Object {$obj} does not have method {$method}");
             }

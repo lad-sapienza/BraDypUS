@@ -21,14 +21,14 @@ jsonpath "$.status"  == "error"
 jsonpath "$.code"    == "unauthenticated"
 
 
-# ── 41b. Unknown route, valid JWT → JSON 'dispatch_error' + message ────
+# ── 41b. Unknown route, valid JWT → JSON 404 'route_not_found' + message ────
 GET {{base_url}}/{{app_name}}/api/this-route-does-not-exist
 Authorization: Bearer {{jwt}}
-HTTP 200
+HTTP 404
 [Asserts]
 header "Content-Type" contains "json"
 jsonpath "$.status"  == "error"
-jsonpath "$.code"    == "dispatch_error"
+jsonpath "$.code"    == "route_not_found"
 jsonpath "$.message" isString
 jsonpath "$.message" != ""
 

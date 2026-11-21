@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.26.2] - 2026-11-21
+
 ### Added
 
 - **`fields=files` on the record list.** Each row can carry the files linked to it (`fields=id,title,files`, or `files.ext,files.filename`, with an alias if you like): `{id, ext, filename, description, keywords, attribution, printable}` in the order of the record view. With `id` and `ext` a public site builds the image address (`/{app}/api/file/{preset}/{id}.webp`) without a second request per record. The files follow the record: a record the user or key cannot read brings none.

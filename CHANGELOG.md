@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Documentation toolchain: `vite` forced to 6.4.6 (`overrides` in `bdus-docs`), which also brings `esbuild` 0.25.12.** Closes the nine open Dependabot alerts (`vite`, `esbuild`, `launch-editor`), all in development dependencies of VitePress that only matter for `vitepress dev`; the published site is static HTML and the application images are not affected. VitePress 1.6.4 asks for Vite 5, which has no fix; the build, the dev server and the API reference page were checked with Vite 6.
+
 ## [5.26.2] - 2026-11-21
 
 ### Added

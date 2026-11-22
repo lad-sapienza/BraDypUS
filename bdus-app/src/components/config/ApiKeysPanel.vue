@@ -31,6 +31,8 @@
             v-if="newPrivilege !== PRIV_ADMIN"
             v-model:value="newGroup"
             :options="groupOptions"
+            show-search
+            option-filter-prop="label"
             :placeholder="newPrivilege === PRIV_ENTER ? t('grp_key_group_required') : t('grp_key_group_optional')"
             :allow-clear="newPrivilege !== PRIV_ENTER"
             style="min-width: 14rem"
@@ -160,6 +162,8 @@
           <ASelect
             v-model:value="edit.group"
             :options="groupOptions"
+            show-search
+            option-filter-prop="label"
             :placeholder="edit.privilege === PRIV_ENTER ? t('grp_key_group_required') : t('grp_key_group_optional')"
             :allow-clear="edit.privilege !== PRIV_ENTER"
           />

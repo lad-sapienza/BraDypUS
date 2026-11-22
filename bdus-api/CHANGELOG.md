@@ -5,6 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.26.4] - 2026-11-22
+
+### Fixed
+
+- **Watermark: the text is vertically centred in its box.** The box was measured at the raw font size while the text is drawn smaller, and the text top was offset twice: the box came out too big and the text sat at its bottom edge. Versions already in the cache keep the old look until the preset's cache is cleared.
+- **Groups list: filter box.** As in the users list, a filter appears above the list when there are more than 7 groups.
+- **API keys: the group select is searchable** (create and edit), so a long list of groups can be filtered by typing.
+- **App settings, derived images:** a **Clear cache** button per saved preset (`POST /api/config/image-presets/{name}/purge`, super admin), a confirmation before **Delete** of a preset, a **Cancel** button, and a warning when leaving the page (another section, reload, closing the tab) with unsaved changes.
+
 ## [5.26.3] - 2026-11-21
 
 ### Security

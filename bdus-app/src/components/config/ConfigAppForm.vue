@@ -120,7 +120,15 @@
             >
               <AButton size="small" :loading="clearing === p.name">{{ t('preset_clear_cache') }}</AButton>
             </APopconfirm>
-            <AButton size="small" danger @click="form.imagePresets.splice(i, 1)">{{ t('delete') }}</AButton>
+            <APopconfirm
+              :title="p.name ? t('preset_delete_confirm', p.name) : t('preset_delete_confirm_unnamed')"
+              :ok-text="t('delete')"
+              :cancel-text="t('cancel')"
+              ok-type="danger"
+              @confirm="form.imagePresets.splice(i, 1)"
+            >
+              <AButton size="small" danger>{{ t('delete') }}</AButton>
+            </APopconfirm>
           </div>
           <div v-if="p.watermark" class="cfg-form-row" style="align-items:flex-end; margin-left:1rem">
             <div class="cfg-form-field" style="flex:2; min-width:14rem">

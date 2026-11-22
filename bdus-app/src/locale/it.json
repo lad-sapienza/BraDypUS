@@ -1704,6 +1704,8 @@
   "preset_url_hint": "URL pubblico: /{app}/api/file/{nome}/{id file}.{webp|jpg}",
   "preset_clear_cache": "Svuota cache",
   "preset_clear_cache_confirm": "Eliminare le versioni in cache del preset \"%s\"? Vengono rigenerate alla prossima richiesta.",
+  "preset_delete_confirm": "Eliminare il preset \"%s\"? Viene rimosso quando salvi, insieme alle sue versioni in cache.",
+  "preset_delete_confirm_unnamed": "Eliminare questo preset?",
   "ok_preset_cache_purged": "Cache svuotata",
   "preset_cache_removed": "%s file rimossi",
   "preset_watermark": "Filigrana",

@@ -1704,6 +1704,8 @@
   "preset_url_hint": "Public URL: /{app}/api/file/{name}/{file id}.{webp|jpg}",
   "preset_clear_cache": "Clear cache",
   "preset_clear_cache_confirm": "Delete the cached versions of preset \"%s\"? They are rebuilt when requested again.",
+  "preset_delete_confirm": "Delete the preset \"%s\"? It is removed when you save, together with its cached versions.",
+  "preset_delete_confirm_unnamed": "Delete this preset?",
   "ok_preset_cache_purged": "Cache emptied",
   "preset_cache_removed": "%s files removed",
   "preset_watermark": "Watermark",

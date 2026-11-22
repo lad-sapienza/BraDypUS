@@ -77,6 +77,11 @@ file gallery and the file manager use it for their thumbnails. Define a preset n
 `thumb` to change its size or fit. Saving a changed or removed preset deletes the cached versions
 generated from it; they are rebuilt on the next request.
 
+Each saved preset has a **Clear cache** button: it deletes all the cached versions of that
+preset at once (after a confirmation) without changing anything else, and they are rebuilt on
+demand. Use it when something outside the preset's own settings changed what the versions should
+look like. **Delete** asks for a confirmation too, and takes effect only when you click **Save**.
+
 #### Watermark <Badge type="tip" text="v5.19.0" />
 
 Each preset can carry a **text watermark**, drawn on the derived versions only (the original file is
@@ -163,3 +168,8 @@ login time from `GET /api/info/app`.
 
 Click **Save** to apply changes. A toast notification confirms success or shows
 the error detail if validation fails.
+
+While you have unsaved changes, **Unsaved changes** appears next to the buttons.
+**Cancel** discards them (after a confirmation) and goes back to the saved settings. Leaving the
+page, switching to another settings section, reloading or closing the tab with unsaved changes
+asks for confirmation first.

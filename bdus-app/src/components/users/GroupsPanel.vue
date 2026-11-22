@@ -7,11 +7,19 @@
         {{ t('grp_new_group') }}
       </AButton>
 
+      <AInput
+        v-if="groups.length > 7"
+        v-model:value="filterText"
+        :placeholder="t('groups_filter_placeholder')"
+        size="small"
+        allow-clear
+      />
+
       <ul class="gp-items">
         <li :class="{ active: selected === 'builtin' }" @click="select('builtin')">
           <LockOutlined /> <span>{{ t('grp_builtin_levels') }}</span>
         </li>
-        <li v-for="g in groups" :key="g.id" :class="{ active: selected === g.id }" @click="select(g.id)">
+        <li v-for="g in filteredGroups" :key="g.id" :class="{ active: selected === g.id }" @click="select(g.id)">
           <LockOutlined v-if="g.system" :title="t('grp_system')" />
           <TeamOutlined v-else />
           <span class="gp-name">{{ g.name }}</span>
@@ -139,6 +147,11 @@ const api       = useGroups()
 const { tables, loadTables } = useTables()
 
 const groups   = ref([])
+const filterText = ref('')
+const filteredGroups = computed(() => {
+  const q = filterText.value.trim().toLowerCase()
+  return q ? groups.value.filter(g => (g.name ?? '').toLowerCase().includes(q)) : groups.value
+})
 const loading  = ref(false)
 const selected = ref('builtin')     // 'builtin' | group id | 'new'
 const group    = ref(null)          // the selected group, with members and rules

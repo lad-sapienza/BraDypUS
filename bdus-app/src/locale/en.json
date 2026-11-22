@@ -1049,6 +1049,7 @@
   "users": "Users",
   "new_user": "New user",
   "users_filter_placeholder": "Filter users…",
+  "groups_filter_placeholder": "Filter groups…",
   "edit_user": "Edit user",
   "table": "Table",
   "charts": "Charts",

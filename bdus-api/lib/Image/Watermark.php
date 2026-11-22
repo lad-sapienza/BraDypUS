@@ -41,6 +41,8 @@ final class Watermark
     public const MAX_SIZE    = 20;
     public const MAX_MARGIN  = 25;
     public const MIN_FONT_PX = 6;
+    /** Ratio between the requested size and the GD point size Intervention uses. */
+    public const FONT_SCALE  = 0.76;
 
     public static function fontPath(): string
     {
@@ -168,17 +170,23 @@ final class Watermark
         $margin  = (int) round($short * $w['margin'] / 100);
         $size    = max((float) self::MIN_FONT_PX, $short * $w['size'] / 100);
 
+        // Intervention renders a font of $size at $size * FONT_SCALE (GD points): measure the
+        // same way, or the box comes out wider and taller than the text drawn in it.
         // Shrink until the box fits the image width (long credits on small thumbnails).
         do {
-            $bbox = imagettfbbox($size, 0, $font, $text);
-            if ($bbox === false) {
+            $native = $size * self::FONT_SCALE;
+            $bbox   = imagettfbbox($native, 0, $font, $text);
+            $capBox = imagettfbbox($native, 0, $font, 'T');
+            if ($bbox === false || $capBox === false) {
                 throw new \RuntimeException('cannot measure watermark text');
             }
-            $tw  = $bbox[2] - $bbox[0];
-            $th  = $bbox[1] - $bbox[7];
-            $pad = (int) round($size * 0.4);
-            $bw  = $tw + 2 * $pad;
-            $bh  = $th + 2 * $pad;
+            $tw   = $bbox[2] - $bbox[0];
+            $capH = $capBox[1] - $capBox[7];
+            $pad  = (int) round($size * 0.4);
+            $bw   = $tw + 2 * $pad;
+            // Intervention's 'top' alignment puts the top of the capitals at the given y:
+            // a box of cap height + equal padding keeps the text vertically centred.
+            $bh   = $capH + 2 * $pad;
             if ($bw <= $iw - 2 * $margin || $size <= self::MIN_FONT_PX) {
                 break;
             }
@@ -201,7 +209,7 @@ final class Watermark
         }
 
         $fg = self::rgba($w['color'], $alpha);
-        $img->text($text, $x + $pad - (int) $bbox[0], $y + $pad - (int) $bbox[7], static function ($f) use ($font, $size, $fg) {
+        $img->text($text, $x + $pad - (int) $bbox[0], $y + $pad, static function ($f) use ($font, $size, $fg) {
             $f->filepath($font)->size($size)->color($fg)->align('left', 'top');
         });
     }

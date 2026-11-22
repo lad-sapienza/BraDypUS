@@ -1510,6 +1510,23 @@ class Config extends \Bdus\Controller
   }
 
   /**
+   * Empties the cache of one derived-image preset (the versions are rebuilt when
+   * requested again). Independent of the saved configuration: an old or removed
+   * preset can have leftovers too.
+   */
+  public function purgeImagePreset(): void
+  {
+    if (!$this->requireSuperAdmin()) return;
+    $name = (string) ($this->get['name'] ?? '');
+    if (!\Image\Presets::isValidName($name)) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_invalid']);
+      return;
+    }
+    $removed = \Image\Derivative::purgePreset(PROJ_DIR, $name);
+    $this->returnJson(['status' => 'success', 'code' => 'ok_preset_cache_purged', 'removed' => $removed]);
+  }
+
+  /**
    * Replaces the application's own char map presets.
    *
    * PUT /api/config/char-maps   { custom: { name: list | map | string } }

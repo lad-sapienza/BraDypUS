@@ -205,6 +205,7 @@ class Router
         // ── Super-admin (privilege = 1) — schema config and raw SQL ──────────
         'Bdus\\Controllers\\Config::getAppProperties'              => 'super_admin',
         'Bdus\\Controllers\\Config::save_app_properties'           => 'super_admin',
+        'Bdus\\Controllers\\Config::purgeImagePreset'              => 'super_admin',
         'Bdus\\Controllers\\Config::getCharMaps'                   => 'super_admin',
         'Bdus\\Controllers\\Config::saveCharMaps'                  => 'super_admin',
         'Bdus\\Controllers\\Config::getTableList'                  => 'super_admin',
@@ -539,6 +540,7 @@ class Router
             // ── Configuration ─────────────────────────────────────────────────
             $r->addRoute('GET', '/api/config/app',            ['Bdus\\Controllers\\Config', 'getAppProperties']);
             $r->addRoute('PUT', '/api/config/app',            ['Bdus\\Controllers\\Config', 'save_app_properties']);
+            $r->addRoute('POST', '/api/config/image-presets/{name}/purge', ['Bdus\\Controllers\\Config', 'purgeImagePreset']);
             $r->addRoute('GET', '/api/config/char-maps',      ['Bdus\\Controllers\\Config', 'getCharMaps']);
             $r->addRoute('PUT', '/api/config/char-maps',      ['Bdus\\Controllers\\Config', 'saveCharMaps']);
             $r->addRoute('GET', '/api/config/tables',         ['Bdus\\Controllers\\Config', 'getTableList']);

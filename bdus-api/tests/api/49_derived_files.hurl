@@ -138,6 +138,39 @@ Authorization: Bearer {{jwt}}
 HTTP 200
 
 
+# ── 49f7. Clear the cache of one preset (super admin) ────────────────
+POST {{base_url}}/{{app_name}}/api/config/image-presets/thumb/purge
+HTTP 401
+
+POST {{base_url}}/{{app_name}}/api/config/image-presets/thumb/purge
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status"  == "success"
+jsonpath "$.removed" >= 1
+
+# a second call finds nothing left
+POST {{base_url}}/{{app_name}}/api/config/image-presets/thumb/purge
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status"  == "success"
+jsonpath "$.removed" == 0
+
+# the version is rebuilt on the next request
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49}}.webp
+HTTP 200
+Content-Type: image/webp
+
+# not a valid preset name: nothing is touched
+POST {{base_url}}/{{app_name}}/api/config/image-presets/BAD_Name/purge
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code"   == "parameter_invalid"
+
+
 # ── 49g. Cleanup ─────────────────────────────────────────────────────
 DELETE {{base_url}}/{{app_name}}/api/file/{{file_49}}
 Authorization: Bearer {{jwt}}

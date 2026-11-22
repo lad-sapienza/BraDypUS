@@ -2838,6 +2838,35 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/config/image-presets/{name}/purge:
+    post:
+      operationId: postConfigImagePresetPurge
+      tags: [config]
+      summary: Empty the cache of one derived-image preset
+      description: |
+        Removes every cached version of the preset (they are rebuilt when requested again).
+        Works on the cache folder by name, whether or not the preset is defined: leftovers of
+        an old preset can be cleared too. Super admin. An invalid name answers
+        `parameter_invalid` and removes nothing.
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Cache emptied (`removed` = number of files deleted)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      removed: { type: integer }
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /api/config/app:
     get:
       operationId: getConfigApp

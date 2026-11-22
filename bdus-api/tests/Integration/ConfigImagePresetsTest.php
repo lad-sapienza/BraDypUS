@@ -71,6 +71,31 @@ class ConfigImagePresetsTest extends BdusTestCase
         $this->assertSame('success', $save([])['status']);
     }
 
+    public function testPurgeImagePresetEmptiesOnePresetOnly(): void
+    {
+        $mk = function (string $name): string {
+            $d = \Image\Derivative::cacheDir(PROJ_DIR, $name);
+            @mkdir($d, 0775, true);
+            file_put_contents($d . '/1.webp', 'x');
+            return $d . '/1.webp';
+        };
+        $fa = $mk('pa');
+        $fb = $mk('pb');
+
+        $res = $this->callController($this->makeController('Bdus\\Controllers\\Config', ['name' => 'pa'], []), 'purgeImagePreset');
+        $this->assertSame('success', $res['status']);
+        $this->assertSame(1, $res['removed']);
+        $this->assertFileDoesNotExist($fa);
+        $this->assertFileExists($fb, 'other presets are left alone');
+
+        // A name that is not a valid preset name is refused, nothing is removed
+        $bad = $this->callController($this->makeController('Bdus\\Controllers\\Config', ['name' => '../files'], []), 'purgeImagePreset');
+        $this->assertSame('error', $bad['status']);
+        $this->assertSame('parameter_invalid', $bad['code']);
+
+        \Image\Derivative::purgePreset(PROJ_DIR, 'pb');
+    }
+
     public function testInvalidWatermarkIsRejectedWithACode(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], [

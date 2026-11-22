@@ -2,10 +2,22 @@
   <div class="cfg-panel">
     <div class="cfg-panel-header">
       <h2><SettingOutlined /> {{ t('app_settings') }}</h2>
-      <AButton type="primary" size="small" :loading="saving" @click="save">
-        <template #icon><SaveOutlined /></template>
-        {{ t('save') }}
-      </AButton>
+      <div class="cfg-header-actions">
+        <span v-if="dirty" class="cfg-dirty">{{ t('unsaved_changes') }}</span>
+        <APopconfirm
+          :title="t('cfg_discard_confirm')"
+          :ok-text="t('yes')"
+          :cancel-text="t('no')"
+          :disabled="!dirty"
+          @confirm="cancelChanges"
+        >
+          <AButton size="small" :disabled="!dirty || saving || loading">{{ t('cancel') }}</AButton>
+        </APopconfirm>
+        <AButton type="primary" size="small" :loading="saving" :disabled="!dirty || loading" @click="save">
+          <template #icon><SaveOutlined /></template>
+          {{ t('save') }}
+        </AButton>
+      </div>
     </div>
 
     <div v-if="loading" class="cfg-loading-center">
@@ -291,9 +303,10 @@
 
 <script setup>
 import { LoadingOutlined, SaveOutlined, SettingOutlined } from '@ant-design/icons-vue'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Button as AButton, Input, Select as ASelect, Alert as AAlert, Popconfirm as APopconfirm, Switch as ASwitch, InputNumber as AInputNumber } from 'ant-design-vue'
-import { useToast } from '@/composables/useNotify'
+import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n, availableLocales } from '@/i18n'
 import { api, assetUrl } from '@/api'
 import { COLOR_PALETTE, ANTD_HEX, applyColor } from '@/composables/useAppColor'
@@ -304,6 +317,8 @@ const AInputPassword = Input.Password
 
 const { t }  = useI18n()
 const toast  = useToast()
+const confirm = useConfirm()
+const router = useRouter()
 
 const loading       = ref(false)
 const saving        = ref(false)
@@ -382,8 +397,15 @@ function onHexTyped(value) {
   }
 }
 
+const dirty = computed(() => !!form.value && !loading.value && JSON.stringify(form.value) !== saved.value)
+
 function snapshot() {
   saved.value = JSON.stringify(form.value)
+}
+
+// Discard the edits: back to what was loaded or last saved.
+function cancelChanges() {
+  if (saved.value) form.value = JSON.parse(saved.value)
 }
 
 // Only presets already saved have a cache; a new or renamed one has nothing yet.
@@ -463,6 +485,37 @@ async function save() {
   }
 }
 
+// ── Unsaved changes guard ─────────────────────────────────────────
+// The sections of this page are all the same route (only its params change), so the
+// guard is a global one, registered while the panel is open: it catches a click on
+// another section, on the menu, the browser's back button and a logout alike.
+const removeGuard = router.beforeEach((to, from) => {
+  if (!dirty.value || to.path === from.path) return true
+  return new Promise(resolve => {
+    confirm.require({
+      message:  t('unsaved_changes_warning'),
+      header:   t('unsaved_changes'),
+      icon:     'pi pi-exclamation-triangle',
+      severity: 'warn',
+      accept:   () => resolve(true),
+      reject:   () => resolve(false),
+    })
+  })
+})
+
+// Reload or closing the tab
+function warnBeforeUnload(e) {
+  if (!dirty.value) return
+  e.preventDefault()
+  e.returnValue = ''
+}
+window.addEventListener('beforeunload', warnBeforeUnload)
+
+onUnmounted(() => {
+  removeGuard()
+  window.removeEventListener('beforeunload', warnBeforeUnload)
+})
+
 onMounted(load)
 </script>
 
@@ -488,6 +541,15 @@ onMounted(load)
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+.cfg-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.cfg-dirty {
+  font-size: 0.78rem;
+  color: var(--p-text-muted-color);
 }
 .cfg-loading-center {
   flex: 1;

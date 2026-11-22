@@ -111,6 +111,15 @@
               <label>{{ t('preset_watermark') }}</label>
               <ASwitch class="cfg-switch" :checked="!!p.watermark" @change="on => toggleWatermark(p, on)" />
             </div>
+            <APopconfirm
+              v-if="isSavedPreset(p)"
+              :title="t('preset_clear_cache_confirm', p.name)"
+              :ok-text="t('yes')"
+              :cancel-text="t('no')"
+              @confirm="clearCache(p.name)"
+            >
+              <AButton size="small" :loading="clearing === p.name">{{ t('preset_clear_cache') }}</AButton>
+            </APopconfirm>
             <AButton size="small" danger @click="form.imagePresets.splice(i, 1)">{{ t('delete') }}</AButton>
           </div>
           <div v-if="p.watermark" class="cfg-form-row" style="align-items:flex-end; margin-left:1rem">
@@ -275,7 +284,7 @@
 <script setup>
 import { LoadingOutlined, SaveOutlined, SettingOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
-import { Button as AButton, Input, Select as ASelect, Alert as AAlert, Switch as ASwitch, InputNumber as AInputNumber } from 'ant-design-vue'
+import { Button as AButton, Input, Select as ASelect, Alert as AAlert, Popconfirm as APopconfirm, Switch as ASwitch, InputNumber as AInputNumber } from 'ant-design-vue'
 import { useToast } from '@/composables/useNotify'
 import { useI18n, availableLocales } from '@/i18n'
 import { api, assetUrl } from '@/api'
@@ -292,6 +301,9 @@ const loading       = ref(false)
 const saving        = ref(false)
 const error         = ref(null)
 const form          = ref(null)
+// JSON of the form as last loaded or saved: what "unsaved changes" is measured against.
+const saved         = ref('')
+const clearing      = ref(null)   // name of the preset whose cache is being emptied
 // Available UI languages — owned by the frontend, not fetched from the backend.
 // To add a new locale: add the JSON file to src/locale/ and add an entry here.
 const langs         = availableLocales.map(l => l.code)
@@ -362,6 +374,34 @@ function onHexTyped(value) {
   }
 }
 
+function snapshot() {
+  saved.value = JSON.stringify(form.value)
+}
+
+// Only presets already saved have a cache; a new or renamed one has nothing yet.
+function isSavedPreset(p) {
+  if (!p.name || !saved.value) return false
+  return (JSON.parse(saved.value).imagePresets ?? []).some(sp => sp.name === p.name)
+}
+
+async function clearCache(name) {
+  clearing.value = name
+  try {
+    const res = await api.post(`/api/config/image-presets/${encodeURIComponent(name)}/purge`, {})
+    const ok  = res.status === 'success'
+    toast.add({
+      severity: ok ? 'success' : 'error',
+      summary:  ok ? t('ok_preset_cache_purged') : t(res.code),
+      detail:   ok ? t('preset_cache_removed', res.removed ?? 0) : undefined,
+      life: 4000
+    })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: e.message, life: 4000 })
+  } finally {
+    clearing.value = null
+  }
+}
+
 function addPreset() {
   form.value.imagePresets.push({ name: '', width: 800, height: 600, fit: 'cover', format: 'webp', quality: 80 })
 }
@@ -386,6 +426,7 @@ async function load() {
     // PHP may return these as objects ({key:val}) if keys are non-sequential — normalise to arrays
     statusOptions.value = Array.isArray(res.status_options) ? res.status_options : Object.values(res.status_options ?? {})
     dbEngines.value     = Array.isArray(res.db_engines)    ? res.db_engines    : Object.values(res.db_engines    ?? {})
+    snapshot()
   } catch (e) {
     error.value = e.message
   } finally {
@@ -400,6 +441,7 @@ async function save() {
     // own panel: posting the copy loaded here could overwrite what was saved there.
     const { mail_configured, mcp, ...payload } = form.value
     const res = await api.put('/api/config/app', payload)
+    if (res.status === 'success') snapshot()
     toast.add({
       severity: res.status === 'success' ? 'success' : 'error',
       summary:  t('saved'),

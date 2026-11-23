@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.27.0] - 2026-11-23
+
+### Changed
+
+- **Table and field names: up to 63 characters, digits allowed.** The rule for new and renamed names was `^[a-z_]{2,15}$` for fields (client side only) and unchecked for tables. Both are now `^[a-z][a-z0-9_]{1,62}$` (lowercase letters, digits, underscore, starting with a letter; 63 is the PostgreSQL identifier limit) and are also enforced by the API (`add_new_tb`, `add_new_fld`, `rename_tb`, `rename_column` answer `invalid_db_name`). Names already in a configuration are not re-checked.
+
 ## [5.26.4] - 2026-11-22
 
 ### Fixed

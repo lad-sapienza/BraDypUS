@@ -2944,7 +2944,8 @@ paths:
               properties:
                 name:
                   type: string
-                  pattern: '^[a-z][a-z0-9_]*$'
+                  pattern: '^[a-z][a-z0-9_]{1,62}$'
+                  description: Database name of the table; an invalid name answers `invalid_db_name`.
                 label:
                   type: string
                 is_plugin:
@@ -3168,6 +3169,7 @@ paths:
       operationId: patchConfigTableByTb
       tags: [config]
       summary: Rename a table
+      description: The new name must match `^[a-z][a-z0-9_]{1,62}$` (2–63 characters); otherwise the answer is `invalid_db_name`.
       parameters:
         - $ref: '#/components/parameters/tb'
       requestBody:
@@ -3176,16 +3178,16 @@ paths:
           application/json:
             schema:
               type: object
-              required: [new]
+              required: [new_name]
               properties:
-                new:
+                new_name:
                   type: string
-                  description: New name (letters, digits, `-` and `_`)
+                  pattern: '^[a-z][a-z0-9_]{1,62}$'
       responses:
         '200':
           description: >
-            Rename result (`template_renamed`). The groups that use the template follow the
-            new name.
+            Rename result (`ok_renaming_table`, `error_renaming_table`, or `invalid_db_name`
+            when the new name is not valid).
           content:
             application/json:
               schema:
@@ -3347,6 +3349,7 @@ paths:
       operationId: postConfigTableFieldByTb
       tags: [config]
       summary: Add a new field to a table
+      description: "The field `name` must match `^[a-z][a-z0-9_]{1,62}$` (2–63 characters); otherwise `invalid_db_name`."
       parameters:
         - $ref: '#/components/parameters/tb'
       requestBody:
@@ -3392,6 +3395,7 @@ paths:
       operationId: patchConfigTableFieldByTbAndFld
       tags: [config]
       summary: Rename a field
+      description: "`new_name` must match `^[a-z][a-z0-9_]{1,62}$` (2–63 characters); otherwise `invalid_db_name`."
       parameters:
         - $ref: '#/components/parameters/tb'
         - $ref: '#/components/parameters/fld'
@@ -3405,6 +3409,7 @@ paths:
               properties:
                 new_name:
                   type: string
+                  pattern: '^[a-z][a-z0-9_]{1,62}$'
       responses:
         '200':
           description: Rename result

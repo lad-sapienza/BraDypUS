@@ -480,7 +480,14 @@ async function load() {
 watch(() => props.tb, () => load())
 
 // ── Save ───────────────────────────────────────────────────────────────────
+// Same rule as the API (Config\Identifier): lowercase, digits, underscore, 2-63 chars.
+const DB_NAME_RE = /^[a-z][a-z0-9_]{1,62}$/
+
 async function save() {
+  if (!props.tb && !DB_NAME_RE.test(form.value.name ?? '')) {
+    toast.add({ severity: 'error', summary: t('invalid_db_name'), life: 5000 })
+    return
+  }
   saving.value = true
   try {
     const payload = buildPayload()
@@ -685,6 +692,10 @@ async function doDelete() {
 async function confirmRename() {
   if (!newName.value || newName.value === props.tb) {
     renameVisible.value = false
+    return
+  }
+  if (!DB_NAME_RE.test(newName.value)) {
+    toast.add({ severity: 'error', summary: t('invalid_db_name'), life: 5000 })
     return
   }
   renaming.value = true

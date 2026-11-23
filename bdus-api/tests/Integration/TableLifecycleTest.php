@@ -203,6 +203,25 @@ class TableLifecycleTest extends BdusTestCase
         $this->call('activateDbObject', ['name' => 'lc_solo']);
     }
 
+    public function testNewAndRenamedNamesMustBeValidIdentifiers(): void
+    {
+        foreach (['Bad Name', 'x', '1abc', str_repeat('a', 64)] as $bad) {
+            $res = $this->call('add_new_tb', [], ['name' => $bad, 'label' => 'x', 'is_plugin' => '0']);
+            $this->assertSame('invalid_db_name', $res['code'], "add_new_tb accepted '$bad'");
+        }
+
+        // A table with a name longer than the old 15 characters, with digits
+        $long = 'a_table_name_longer_than_fifteen_chars_2';
+        $this->assertSame('ok_cfg_data_updated', $this->call('add_new_tb', [], ['name' => $long, 'label' => 'L', 'is_plugin' => '0'])['code']);
+
+        $this->assertSame('invalid_db_name', $this->call('rename_tb', ['tb' => $long], ['new_name' => 'Bad'])['code']);
+        $this->assertSame('invalid_db_name', $this->call('add_new_fld', ['tb' => $long], ['name' => 'Bad', 'type' => 'text', 'db_type' => 'TEXT'])['code']);
+
+        $fld = 'a_field_name_longer_than_15_c14';
+        $this->assertSame('ok_cfg_data_updated', $this->call('add_new_fld', ['tb' => $long], ['name' => $fld, 'type' => 'text', 'db_type' => 'TEXT'])['code']);
+        $this->assertSame('invalid_db_name', $this->call('rename_column', ['tb' => $long, 'fld' => $fld], ['new_name' => '1x'])['code']);
+    }
+
     public function testHardRemoveKeepsTableDataAndForeignKeys(): void
     {
         static::$cfg = $this->reload();

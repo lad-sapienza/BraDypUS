@@ -499,6 +499,11 @@ class Config extends \Bdus\Controller
 
       $new_tb_name = $post['name'];
 
+      if (!\Config\Identifier::isValid($new_tb_name)) {
+        $this->returnJson(['status' => 'error', 'code' => 'invalid_db_name']);
+        return;
+      }
+
       // Reject duplicate table names before touching the config or the DB.
       $existing = array_column($this->cfg->get('tables') ?? [], 'name');
       if (in_array($new_tb_name, $existing, true)
@@ -597,6 +602,10 @@ class Config extends \Bdus\Controller
 
       if (!$post['name'] || !$post['type']) {
         throw new \Exception('Both field name and field type are required');
+      }
+      if (!\Config\Identifier::isValid($fld)) {
+        $this->returnJson(['status' => 'error', 'code' => 'invalid_db_name']);
+        return;
       }
       $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));
       if (in_array($fld, $available_flds)) {
@@ -770,6 +779,10 @@ class Config extends \Bdus\Controller
     $old_name = $this->get['tb'];
     $new_name = $this->post['new_name'] ?? null;
     if ($this->rejectIfView($old_name)) return;
+    if (!\Config\Identifier::isValid($new_name)) {
+      $this->returnJson(['status' => 'error', 'code' => 'invalid_db_name']);
+      return;
+    }
     try {
       $available_tbs = array_values($this->cfg->get('tables.*.name'));
       if (in_array($new_name, $available_tbs)) {
@@ -796,6 +809,11 @@ class Config extends \Bdus\Controller
     $new_name = $this->post['new_name'] ?? null;
 
     if ($this->rejectIfView($tb)) return;
+
+    if (!\Config\Identifier::isValid($new_name)) {
+      $this->returnJson(['status' => 'error', 'code' => 'invalid_db_name']);
+      return;
+    }
 
     try {
       $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));

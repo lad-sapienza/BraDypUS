@@ -16,7 +16,7 @@ shown in the form:
 
 | Property | Description |
 |---|---|
-| **Field name** | Database name of the column: 2 to 15 lowercase letters and underscores (`^[a-z_]{2,15}$`, e.g. `site_name`). Required; cannot be changed afterwards except with **Rename** |
+| **Field name** | Database name of the column: 2 to 63 characters: lowercase letters, digits and underscores, starting with a letter (`^[a-z][a-z0-9_]{1,62}$`, e.g. `site_name`). Required; cannot be changed afterwards except with **Rename** |
 | **Label** | Display label shown to users (spaces, uppercase and special characters allowed) |
 | **Type** | See field types below. Required |
 | **Database type** | Column type: `TEXT` (strings, long texts), `INTEGER` (whole numbers, booleans), `REAL` (numbers with decimals) <Badge type="tip" text="v5.26.0" />, `DATE` (a date without a time, stored as `YYYY-MM-DD`) <Badge type="tip" text="v5.26.0" /> or `TIMESTAMP` (dates and times). An empty value in a `DATE` or `REAL` column is stored as `NULL`. Applications already configured keep their current types. Required |

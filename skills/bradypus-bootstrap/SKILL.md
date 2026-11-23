@@ -41,7 +41,7 @@ Do not import dirty keys and hope: fix or flag them now.
 Tables and vocabularies are created from one DBML text
 (guide: `bdus-docs/guide/setup/dbml.md`). Rules the importer enforces or relies on:
 
-- Table and column names: lowercase ASCII, digits, underscore. Application name
+- Table and column names: `^[a-z][a-z0-9_]{1,62}$` (lowercase ASCII, digits, underscore, start with a letter, 2–63 characters). Application name
   (step 3): `^[a-z][a-z0-9_-]{2,19}$`.
 - **The primary key must be named `id`**: `id integer [pk, increment]`. Without it an
   `id` is added; with a different pk name the table is rejected (`pk_must_be_id`).

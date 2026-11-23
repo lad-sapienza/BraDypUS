@@ -15,7 +15,7 @@ Click **Add table** at the bottom of the table list. Fill in:
 
 | Field | Description |
 |---|---|
-| **Name** | Internal slug (lowercase letters, digits and underscores; e.g. `sites`) |
+| **Name** | Internal slug (2 to 63 characters: lowercase letters, digits and underscores, starting with a letter; e.g. `sites`) |
 | **Label** | Display name shown in the UI (e.g. `Sites`) |
 | **Is plugin** | Enable if this table is a sub-table attached to a parent (e.g. `finds` attached to `contexts`) |
 

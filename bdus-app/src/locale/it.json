@@ -1270,7 +1270,7 @@
   "remove_field": "Rimuovi",
   "loading": "Caricamento…",
 
-  "help_table_name": "Nome interno nel database. Solo lettere minuscole e underscore.",
+  "help_table_name": "Nome interno nel database. Lettere minuscole, cifre e underscore, iniziando con una lettera (da 2 a 63 caratteri).",
   "help_table_label": "Etichetta mostrata all'utente nell'interfaccia.",
   "help_table_is_plugin": "Una tabella plugin dipende da una tabella principale tramite il campo id_link.",
   "help_table_plugin_of": "La tabella principale a cui questa tabella plugin sarà agganciata. Non modificabile dopo la creazione.",
@@ -1373,6 +1373,7 @@
   "not_found": "Non trovato",
   "missing_id_column": "Non ha la colonna 'id', che BraDypUS richiede per identificare i record.",
   "missing_creator_column": "È scrivibile ma non ha la colonna 'creator', che BraDypUS richiede per registrare chi ha creato un record.",
+  "invalid_db_name": "Il nome non è valido: usa lettere minuscole, cifre e underscore, inizia con una lettera, da 2 a 63 caratteri.",
   "invalid_name": "Il nome non è valido per una tabella BraDypUS (lettere, cifre e trattino basso, iniziando con una lettera).",
   "already_configured": "È già in configurazione.",
   "view_not_found": "La vista non esiste nel database.",

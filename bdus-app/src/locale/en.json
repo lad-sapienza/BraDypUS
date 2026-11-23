@@ -1270,7 +1270,7 @@
   "remove_field": "Remove",
   "loading": "Loading…",
 
-  "help_table_name": "Internal database name. Only lowercase letters and underscores.",
+  "help_table_name": "Internal database name. Lowercase letters, digits and underscore, starting with a letter (2 to 63 characters).",
   "help_table_label": "Label shown to users in the interface.",
   "help_table_is_plugin": "A plugin table depends on a main table via the id_link field.",
   "help_table_plugin_of": "The parent table this plugin table will be attached to. Cannot be changed after creation.",
@@ -1373,6 +1373,7 @@
   "not_found": "Not found",
   "missing_id_column": "It has no 'id' column, which BraDypUS needs to identify records.",
   "missing_creator_column": "It can be written but has no 'creator' column, which BraDypUS needs to record who created a record.",
+  "invalid_db_name": "The name is not valid: use lowercase letters, digits and underscore, start with a letter, 2 to 63 characters.",
   "invalid_name": "The name is not valid for a BraDypUS table (letters, digits and underscore, starting with a letter).",
   "already_configured": "Already in the configuration.",
   "view_not_found": "The view does not exist in the database.",

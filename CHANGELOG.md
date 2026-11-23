@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The `id` field can be shown in the record list.** It was dropped from the list even when listed in a table's preview fields, and was missing from the *Visible columns* menu. It now behaves like any other field: shown when it is in the preview (Config → table) or ticked in the menu. `GET /api/records/{tb}` answers a new `show_id` flag (`fields` still always lists `id`).
+
 ## [5.27.0] - 2026-11-23
 
 ### Changed

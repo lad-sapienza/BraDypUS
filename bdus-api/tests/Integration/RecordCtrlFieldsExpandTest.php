@@ -58,7 +58,17 @@ class RecordCtrlFieldsExpandTest extends BdusTestCase
 
         $this->assertArrayNotHasKey('tags', $rows[1]);
         $this->assertCount(5, $rows);
-        $this->assertSame(['status', 'total', 'fields', 'data', 'can_add', 'can'], array_keys($plain));
+        $this->assertSame(['status', 'total', 'fields', 'show_id', 'data', 'can_add', 'can'], array_keys($plain));
+    }
+
+    public function testShowIdFollowsTheColumnsAskedFor(): void
+    {
+        $this->assertFalse($this->list(['columns' => 'name'])['show_id']);
+        $this->assertTrue($this->list(['columns' => 'id,name'])['show_id']);
+
+        $onlyId = $this->list(['columns' => 'id']);
+        $this->assertTrue($onlyId['show_id']);
+        $this->assertSame(['id'], array_column($onlyId['fields'], 'name'));
     }
 
     // ── plugin rows ───────────────────────────────────────────────────────────

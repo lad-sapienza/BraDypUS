@@ -30,7 +30,7 @@ export function useColumnPrefs({ table, fields, onChange }) {
     return fields.value
       .filter(f => f.value.startsWith(tb + ':'))
       .map(f => ({ name: f.value.split(':')[1], label: f.label }))
-      .filter(f => f.name && f.name !== 'id')
+      .filter(f => f.name)
   })
 
   /**

@@ -7926,9 +7926,15 @@ components:
                 additionalProperties: true
             fields:
               type: array
-              description: The columns of `data` (name and label)
+              description: The columns of `data` (name and label). `id` is always listed (and always in `data`).
               items:
                 type: object
+            show_id:
+              type: boolean
+              description: >
+                Whether `id` is a displayed column: true when the table's `preview` lists it
+                (default columns) or when `columns` asked for it. Clients that render `fields`
+                as a table hide `id` when false.
             truncated:
               type: boolean
               description: Only with `limit=-1` or a `limit` above the cap — true when more rows match than were returned

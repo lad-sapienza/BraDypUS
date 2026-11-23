@@ -18,7 +18,7 @@ export function useRecordList({ table, prefs, getSearch }) {
   const toast = useToast()
 
   const records   = ref([])
-  const columns   = ref([])     // the columns the backend returned (without id)
+  const columns   = ref([])     // the columns the backend returned (id only when displayed)
   const total     = ref(0)
   const loading   = ref(false)
   const canAdd    = ref(false)  // backend-controlled: can the user add a record
@@ -75,7 +75,8 @@ export function useRecordList({ table, prefs, getSearch }) {
       total.value   = res.total ?? 0
       canAdd.value  = res.can_add ?? false
       if (res.fields?.length) {
-        columns.value = res.fields.filter(f => f.name !== 'id')
+        // `id` is always returned (rows need it); it is a column only when asked for.
+        columns.value = res.fields.filter(f => f.name !== 'id' || res.show_id)
         // No saved choice yet: start from the preview columns the backend returned.
         if (prefs.visible.value.length === 0) prefs.initFrom(columns.value, tb)
       }

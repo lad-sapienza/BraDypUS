@@ -175,6 +175,7 @@ class Record extends \Bdus\Controller
       }
     }
     $customColumns = null;
+    $showId = false;   // is the id column itself part of what the user asked to see?
     if ($colsRaw) {
       if (is_string($colsRaw)) {
         $customColumns = array_values(array_filter(explode(',', $colsRaw)));
@@ -192,11 +193,15 @@ class Record extends \Bdus\Controller
       $colMap = [];
       foreach ($customColumns as $col) {
         $col = preg_replace('/[^a-zA-Z0-9_]/', '', $col);  // sanitise
-        if (!$col || $col === 'id' || !isset($allFields[$col])) continue;
+        if ($col === 'id') {
+          $showId = true;   // always selected anyway; this only says it is displayed
+          continue;
+        }
+        if (!$col || !isset($allFields[$col])) continue;
         $colMap[$col] = $allFields[$col]['label'] ?? $col;
       }
       // Only override the preview default when at least one real column remains.
-      if ($colMap) {
+      if ($colMap || $showId) {
         $qRequest['fields'] = array_merge(['id' => 'id'], $colMap);
       }
     }
@@ -208,6 +213,11 @@ class Record extends \Bdus\Controller
 
     // use_preview=true unless we are supplying a custom column list
     $usePreview = !isset($qRequest['fields']);
+    if ($usePreview) {
+      // Default columns: `id` is displayed only when the table's preview lists it
+      // (it is selected in any case — the list needs it to open a record).
+      $showId = in_array('id', $this->cfg->get("tables.{$tb}.preview") ?: [], true);
+    }
 
     try {
       $qObj = new \SQL\QueryFromRequest($this->db, $this->cfg, $qRequest, $usePreview, true);
@@ -279,6 +289,7 @@ class Record extends \Bdus\Controller
         "status"  => "success",
         'total'   => $total,
         'fields'  => $fields,
+        'show_id' => $showId,
         'data'    => $data,
         'can_add' => \Auth\Authorization::can('add_new', table: $tb),
         'can'     => \Auth\Authorization::tableAbilities($tb),

@@ -107,6 +107,28 @@ HTTP 200
 jsonpath "$.data" count == 1
 jsonpath "$.data[0].sigla" == "P5403"
 
+# ── show_id: `id` is a displayed column only when asked for ──────────
+GET {{base_url}}/{{app_name}}/api/records/crud_test?columns=sigla&per_page=1
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.show_id" == false
+jsonpath "$.fields[0].name" == "id"
+
+GET {{base_url}}/{{app_name}}/api/records/crud_test?columns=id,sigla&per_page=1
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.show_id" == true
+jsonpath "$.fields[*].name" contains "sigla"
+
+GET {{base_url}}/{{app_name}}/api/records/crud_test?columns=id&per_page=1
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.show_id" == true
+jsonpath "$.fields" count == 1
+
 # ── cleanup ──────────────────────────────────────────────────────────
 DELETE {{base_url}}/{{app_name}}/api/record/crud_test/{{f54_1}}
 Authorization: Bearer {{jwt}}

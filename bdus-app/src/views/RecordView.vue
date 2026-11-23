@@ -106,7 +106,7 @@
 
         <!-- Files (always first, before fields, for visibility) -->
         <fieldset
-          v-if="record.files?.length || mode === 'edit'"
+          v-if="!isNew && (record.files?.length || mode === 'edit')"
           class="record-section"
         >
           <legend>{{ t('files') }}</legend>

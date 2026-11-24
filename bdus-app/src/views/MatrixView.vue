@@ -159,7 +159,6 @@ import { ApartmentOutlined, ArrowLeftOutlined, CalendarOutlined, DeleteOutlined,
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter }  from 'vue-router'
 import { useToast } from '@/composables/useNotify'
-import { useAuthStore }         from '@/stores/auth'
 import AppLayout       from '@/components/AppLayout.vue'
 import {
   Button as AButton,
@@ -180,11 +179,12 @@ const { t }     = useI18n()
 const route     = useRoute()
 const router    = useRouter()
 const toast     = useToast()
-const auth      = useAuthStore()
 const { tables, loadTables } = useTables()
 
 // ── Permissions ───────────────────────────────────────────────────
-const canWrite = computed(() => auth.user?.can_write === true)
+// Edits the relations of this table's records: what the API says the user may update here
+// (level or group rule), not a guess from the level.
+const canWrite = computed(() => tables.value.find(x => x.name === route.params.tb)?.can?.update === true)
 
 // ── Route params ─────────────────────────────────────────────────
 const tb          = computed(() => route.params.tb)

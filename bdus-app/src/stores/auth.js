@@ -6,7 +6,8 @@ import { getToken, setToken, clearToken, decodePayload, isExpired } from '@/toke
 /**
  * Build a normalised user object from a decoded JWT payload.
  * Privilege logic: lower numeric value = higher privilege.
- * Writers (prv ≤ 25) can create / edit records.
+ * Data permissions are not derived from it: the API says what a user may do per
+ * table (`can` in GET /api/tables), because groups grant them too.
  */
 function userFromPayload(p) {
   if (!p) return null
@@ -16,7 +17,6 @@ function userFromPayload(p) {
     email:           p.eml   ?? '',
     app:             p.app   ?? '',
     privilege_value: p.prv,
-    can_write:       p.prv <= 25,
     can_admin:       p.prv <= 10,
   }
 }

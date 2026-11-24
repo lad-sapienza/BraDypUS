@@ -818,7 +818,7 @@ class Record extends \Bdus\Controller
     // (A plugin row is a change to its host record and is judged as one.)
     $isPluginTb = $tb && $this->cfg->get("tables.{$tb}.is_plugin");
     $allowed    = $isPluginTb
-      ? \Auth\Authorization::can('add_new') && $id && $this->mayChange('update', $tb, $id)
+      ? \Auth\Authorization::canOnSomeTable('add_new') && $id && $this->mayChange('update', $tb, $id)
       : \Auth\Authorization::can('add_new', table: $tb);
     if ($allowed && $tb && $id && !$this->access()->unrestricted('read', $tb)) {
       $allowed = $this->access()->rowAllowed('read', $tb, $id);

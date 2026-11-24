@@ -107,7 +107,7 @@ const saving          = ref(false)
 
 const isAdmin = computed(() => {
   const priv = auth.user?.privilege_value
-  return priv !== undefined && priv <= 20   // adm or super_adm
+  return priv !== undefined && priv <= 1    // super admin: FrontpageEditor::saveWelcome
 })
 
 // Render MD + raw HTML (marked passes HTML through unchanged)

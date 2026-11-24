@@ -69,4 +69,12 @@ class EnterGroupEditGateTest extends BdusTestCase
             $this->assertNotSame('not_enough_privilege', $code, $call);
         }
     }
+
+    public function testUserListSaysWhetherTheCallerMayCreate(): void
+    {
+        $ask = fn() => $this->callController($this->makeController('Bdus\\Controllers\\User'), 'showList')['can_write'] ?? null;
+        $this->assertFalse($ask());
+        $this->joinGroup('create');
+        $this->assertTrue($ask());
+    }
 }

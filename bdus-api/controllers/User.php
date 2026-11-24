@@ -36,7 +36,7 @@ class User extends \Bdus\Controller
 	{
 		$data = [
 			'admin'     => \Auth\Authorization::can('admin'),
-			'can_write' => \Auth\Authorization::can('add_new'),
+			'can_write' => \Auth\Authorization::canOnSomeTable('add_new'),
 		];
 
 		if (\Auth\Authorization::can('admin')) {

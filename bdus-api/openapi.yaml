@@ -4378,6 +4378,15 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/User'
+                      data_levels:
+                        type: object
+                        description: >
+                          Admins only. How many users and active API keys still use a deprecated
+                          data level (Writer 20, Self writer 25, Reader 30): the move to level Enter
+                          plus a group is complete when both are 0.
+                        properties:
+                          users: { type: integer }
+                          keys:  { type: integer }
         '403':
           $ref: '#/components/responses/Forbidden'
 

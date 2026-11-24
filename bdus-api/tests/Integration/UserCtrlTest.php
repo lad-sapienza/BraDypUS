@@ -38,6 +38,23 @@ class UserCtrlTest extends BdusTestCase
         $this->assertCount(2, $res['users']);
     }
 
+    public function testShowListCountsWhoStillUsesADataLevel(): void
+    {
+        // Fixture: one Reader (30). Add a Writer, a Self writer, an Enter user,
+        // an active Reader key, an Enter key and a revoked Writer key.
+        static::$db->exec("INSERT INTO bdus_users (id, name, email, password, privilege) VALUES
+            (71, 'w', 'w71@example.com', 'x', 20), (72, 's', 's72@example.com', 'x', 25), (73, 'e', 'e73@example.com', 'x', 39)");
+        static::$db->exec("INSERT INTO bdus_api_keys (key_hash, label, created_at, privilege, revoked_at) VALUES
+            ('c1', 'reader key', 1, 30, NULL), ('c2', 'enter key', 1, 39, NULL), ('c3', 'revoked', 1, 20, 5)");
+
+        $res = $this->callController($this->makeController('Bdus\\Controllers\\User'), 'showList');
+
+        static::$db->exec('DELETE FROM bdus_api_keys');
+        static::$db->exec('DELETE FROM bdus_users WHERE id IN (71, 72, 73)');
+
+        $this->assertSame(['users' => 3, 'keys' => 1], $res['data_levels']);
+    }
+
     public function testShowListUserRowShape(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\User');

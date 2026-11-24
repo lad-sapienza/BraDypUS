@@ -132,6 +132,14 @@ HTTP 200
 [Asserts]
 jsonpath "$.can_download" == true
 
+# the admin's user list says how many still use a deprecated data level
+GET {{base_url}}/{{app_name}}/api/users
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.data_levels.users" isInteger
+jsonpath "$.data_levels.keys" isInteger
+
 # ── Cleanup ───────────────────────────────────────────────
 DELETE {{base_url}}/{{app_name}}/api/backup/{{g58_backup}}
 Authorization: Bearer {{jwt}}

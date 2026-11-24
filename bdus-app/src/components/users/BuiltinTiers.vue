@@ -13,6 +13,7 @@
           <td class="bt-lvl">
             <strong>{{ t(`grp_lvl_${lvl.key}`) }}</strong>
             <small>{{ lvl.value }}</small>
+            <small v-if="[20, 25, 30].includes(lvl.value)" class="bt-dep">· {{ t('grp_level_deprecated_tag') }}</small>
             <div class="bt-desc">{{ t(`grp_lvl_${lvl.key}_desc`) }}</div>
           </td>
           <td v-for="a in ACTIONS" :key="a" :class="`bt-${lvl.can[a]}`">
@@ -52,6 +53,7 @@ const LEVELS = [
 
 <style scoped>
 .bt { display: flex; flex-direction: column; gap: 0.75rem; }
+.bt-dep { margin-left: 0.25rem; color: var(--p-text-muted-color); }
 .bt-hint { margin: 0; color: var(--p-text-muted-color); font-size: 0.85rem; }
 .bt-table { width: 100%; border-collapse: collapse; }
 .bt-table th, .bt-table td {

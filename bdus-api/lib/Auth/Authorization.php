@@ -21,6 +21,12 @@ class Authorization
     public const READ     = 30;
     public const ENTER    = 39;
 
+    /**
+     * Levels that stand for the data side of a system group (deprecated: use level
+     * ENTER plus the group Writer, Self writer or Reader). Admin and super admin are not here.
+     */
+    public const DATA_LEVELS = [self::UPDATE, self::CREATE, self::READ];
+
     /** Maps privilege codes to their string keys. */
     private const PRIVILEGE_MAP = [
         1  => 'super_admin',

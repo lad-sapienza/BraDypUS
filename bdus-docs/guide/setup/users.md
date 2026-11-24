@@ -31,6 +31,10 @@ access on specific tables and rows, never take it away.
 | 40 | **Pending** | Nothing until an admin changes the level |
 
 ::: warning Deprecated: levels 20, 25 and 30
+The *Users* page shows admins a banner with how many users and active API keys still
+use one of these levels, and tags each such user *deprecated*; the same notice appears
+when creating or editing an API key. <Badge type="tip" text="v5.28.0" />
+
 The data side of levels **Writer**, **Self writer** and **Reader** is replaced by the
 [system groups](./groups#default-groups) of the same name: give the user level
 **Enter** and add them to the group. Both work today and nothing changes for existing

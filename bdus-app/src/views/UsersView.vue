@@ -29,6 +29,13 @@
         </AButton>
       </div>
 
+      <!-- How many still rely on a deprecated data level (admins only) -->
+      <AAlert
+        v-if="isAdmin && (dataLevels.users + dataLevels.keys) > 0"
+        type="warning" show-icon class="users-levels-banner"
+        :message="t('grp_levels_banner', dataLevels.users, dataLevels.keys)"
+      />
+
       <!-- ── Table ───────────────────────────────────────────── -->
       <ATable
         :columns="columns"
@@ -56,6 +63,7 @@
             <ATag :color="severityToTagColor(privilegeSeverity(record.privilege_value))">
               {{ record.privilege }}
             </ATag>
+            <ATag v-if="DATA_LEVELS.includes(record.privilege_value)" :title="t('grp_lvl_deprecated_note')">{{ t('grp_level_deprecated_tag') }}</ATag>
           </template>
           <template v-else-if="column.key === 'groups'">
             <ATag v-for="gid in record.groups" :key="gid" class="users-group-tag">{{ groupName(gid) }}</ATag>
@@ -121,7 +129,7 @@ import AppLayout        from '@/components/AppLayout.vue'
 import UserForm         from '@/components/users/UserForm.vue'
 import GroupsPanel      from '@/components/users/GroupsPanel.vue'
 import LocksPanel       from '@/components/users/LocksPanel.vue'
-import { Table as ATable, Button as AButton, Tag as ATag, Modal as AModal, Input as AInput, Tabs as ATabs, TabPane as ATabPane } from 'ant-design-vue'
+import { Alert as AAlert, Table as ATable, Button as AButton, Tag as ATag, Modal as AModal, Input as AInput, Tabs as ATabs, TabPane as ATabPane } from 'ant-design-vue'
 import { api }          from '@/api'
 import { useGroups }    from '@/composables/useGroups'
 import { useI18n }      from '@/i18n'
@@ -164,6 +172,8 @@ const groupOptions = computed(() => groupList.value.map(g => ({ value: g.id, lab
 const users            = ref([])
 const loading          = ref(false)
 const isAdmin          = ref(false)
+const dataLevels       = ref({ users: 0, keys: 0 })
+const DATA_LEVELS      = [20, 25, 30]   // deprecated: level Enter + a system group
 const formVisible      = ref(false)
 const saving           = ref(false)
 const formData         = ref({})
@@ -189,6 +199,7 @@ async function loadUsers() {
     }
     users.value   = res.users ?? []
     isAdmin.value = res.admin ?? false
+    dataLevels.value = res.data_levels ?? { users: 0, keys: 0 }
   } catch (e) {
     toast.add({ severity: 'error', summary: t('users'), detail: String(e), life: 4000 })
   } finally {
@@ -274,6 +285,7 @@ onMounted(loadUsers)
 </script>
 
 <style scoped>
+.users-levels-banner { margin-bottom: 0.75rem; }
 .users-view {
   display: flex;
   flex-direction: column;

@@ -37,6 +37,7 @@
             :allow-clear="newPrivilege !== PRIV_ENTER"
             style="min-width: 14rem"
           />
+          <small v-if="isDataLevel(newPrivilege)" class="hint">{{ t('grp_key_level_deprecated_hint') }}</small>
           <AButton :loading="creating" :disabled="newPrivilege === PRIV_ENTER && !newGroup" @click="createKey">
             <template #icon><PlusOutlined /></template>
             {{ t('create_api_key') }}
@@ -168,6 +169,7 @@
             :allow-clear="edit.privilege !== PRIV_ENTER"
           />
         </label>
+        <small v-if="isDataLevel(edit.privilege)" class="hint">{{ t('grp_key_level_deprecated_hint') }}</small>
         <small class="hint">{{ t('api_key_edit_hint') }}</small>
       </div>
     </AModal>
@@ -200,6 +202,9 @@ const privilegeOptions = computed(() => [
   { value: PRIV_ADMIN, label: t('priv_admin') },
   { value: PRIV_ENTER, label: t('priv_enter') },
 ])
+
+// Deprecated data levels: level Enter + a group replaces them
+const isDataLevel = priv => [20, 25, 30].includes(Number(priv))
 
 function privilegeLabel(priv) {
   if (priv <= PRIV_ADMIN) return t('priv_admin')

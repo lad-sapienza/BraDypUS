@@ -70,6 +70,12 @@ class User extends \Bdus\Controller
 					'oauth_provider'  => $user['oauth_provider'] ?? null,
 				];
 			}
+			// Who still relies on a deprecated data level (Writer 20, Self writer 25, Reader 30):
+			// users and active API keys. Tells an admin how far the move to groups has got.
+			$data['data_levels'] = [
+				'users' => count(array_filter($all_users, fn($u) => in_array((int) $u['privilege'], \Auth\Authorization::DATA_LEVELS, true))),
+				'keys'  => $this->countDataLevelKeys(),
+			];
 		} else {
 			$data['users'][] = [
 				'id'              => \Auth\CurrentUser::id(),
@@ -83,6 +89,21 @@ class User extends \Bdus\Controller
 		}
 		$data["status"] = "success";
 		$this->returnJson($data);
+	}
+
+	/** Active (not revoked) API keys whose level is a data level; 0 when the table is missing. */
+	private function countDataLevelKeys(): int
+	{
+		try {
+			$marks = implode(',', array_fill(0, count(\Auth\Authorization::DATA_LEVELS), '?'));
+			return (int) ($this->db->query(
+				"SELECT COUNT(*) AS n FROM bdus_api_keys WHERE revoked_at IS NULL AND privilege IN ({$marks})",
+				\Auth\Authorization::DATA_LEVELS,
+				'read'
+			)[0]['n'] ?? 0);
+		} catch (\Throwable $e) {
+			return 0;
+		}
 	}
 
 	/**

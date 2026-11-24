@@ -23,8 +23,8 @@ access on specific tables and rows, never take it away.
 | Level | Name | Can do |
 |---|---|---|
 | 1 | **Super admin** | Everything, including the system configuration and schema changes |
-| 10 | **Admin** | All the data (records frozen by a [lock](./groups#locks) included); manages users, groups, locks, backups and logs |
-| 20 | **Writer** | Read, create, edit and delete records |
+| 10 | **Admin** | All the data (records frozen by a [lock](./groups#locks) included); manages users, groups, locks and logs; downloads and deletes backups |
+| 20 | **Writer** | Read, create, edit and delete records; create backups |
 | 25 | **Self writer** | Read and create records; edit and delete only the ones they created |
 | 30 | **Reader** | Read every table, change nothing |
 | 39 | **Enter** | Sign in, but see no data: access comes only from [groups](./groups) |

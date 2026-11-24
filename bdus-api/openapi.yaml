@@ -4014,6 +4014,7 @@ paths:
       operationId: getBackups
       tags: [backup]
       summary: List available backups
+      description: Needs a level or group that may edit records (the response says whether the caller may also download, delete or restore).
       responses:
         '200':
           description: Backup list
@@ -4024,6 +4025,13 @@ paths:
                   - $ref: '#/components/schemas/Success'
                   - type: object
                     properties:
+                      can_download:
+                        type: boolean
+                        description: True for admins; the file can be downloaded and deleted only by them.
+                      can_delete:
+                        type: boolean
+                      can_restore:
+                        type: boolean
                       backups:
                         type: array
                         items:
@@ -4042,6 +4050,7 @@ paths:
       operationId: postBackups
       tags: [backup]
       summary: Create a new backup
+      description: Needs a level or group that may edit records.
       responses:
         '200':
           description: Backup created
@@ -4057,6 +4066,7 @@ paths:
       operationId: getBackupDownloadByFile
       tags: [backup]
       summary: Download a backup file
+      description: Admin only (a backup holds every table, beyond group rules and locks).
       parameters:
         - $ref: '#/components/parameters/file'
       responses:

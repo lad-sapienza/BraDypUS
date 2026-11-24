@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Groups open the same read-only screens as the levels (step 1 of moving data permissions to groups).** *Info*, *Vocabularies*, *My history* and *Widgets* checked only the numeric level, so a user at level Enter in a reading group got `not_enough_privilege`. They now need at least one table readable through the level or a group. For a user at level Enter, *My history* lists only the edits of the records their groups let them read; levels Reader and above see the whole history as before.
 - **Groups can edit file metadata.** Renaming/describing a file, replacing its binary and sorting a record's files (`File::updateFile`, `replaceFile`, `sortFiles`) needed level Writer. They now need a level or a group rule that allows updating some table, like uploading, linking and deleting files already did.
+- **Backups: writers create, admins download.** Listing and creating a backup now needs a level or group that may edit records (a safety copy before a big edit or a find-and-replace). **Downloading** a backup is admin only, as the docs always said: a backup holds every table, beyond group rules and locks. Until now level Reader could list and download backups and level Writer could create them. `GET /api/backups` answers a new `can_download` flag; the Backup menu entry follows the same rule; the download button is hidden when `can_download` is false. Self writers (level 25) can now create backups too; Readers no longer see the module.
 
 ## [5.27.2] - 2026-11-24
 

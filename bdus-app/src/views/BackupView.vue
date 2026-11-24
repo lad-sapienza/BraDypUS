@@ -36,6 +36,7 @@
           <template v-else-if="column.key === 'actions'">
             <div class="row-actions">
               <AButton
+                v-if="canDownload"
                 type="text"
                 :title="t('download')"
                 size="small"
@@ -94,6 +95,7 @@ const creating   = ref(false)
 const fetchError = ref(null)
 const backups    = ref([])
 const engine     = ref('')
+const canDownload = ref(false)
 const canDelete  = ref(false)
 const canRestore = ref(false)
 
@@ -106,6 +108,7 @@ async function loadBackups() {
     if (res.status === 'error') throw new Error(responseMessage(res, t))
     backups.value    = res.backups    ?? []
     engine.value     = res.engine     ?? ''
+    canDownload.value = res.can_download ?? false
     canDelete.value  = res.can_delete  ?? false
     canRestore.value = res.can_restore ?? false
   } catch (e) {

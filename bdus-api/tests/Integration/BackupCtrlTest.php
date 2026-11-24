@@ -312,6 +312,61 @@ class BackupCtrlTest extends BdusTestCase
         $this->assertSame('error', $res['status']);
     }
 
+    // ── Who may do what: create/list = writers, download/delete = admin ──────
+
+    private function asLevel(int $level): \Bdus\Controller
+    {
+        $this->setPrivilege($level);
+        return $this->makeController('Bdus\\Controllers\\Backup', ['file' => 'x.sql.gz']);
+    }
+
+    public function testWriterCreatesAndListsButCannotDownload(): void
+    {
+        $ctrl = $this->asLevel(20);
+        $list = $this->callController($ctrl, 'listBackups');
+        $this->assertSame('success', $list['status']);
+        $this->assertFalse($list['can_download']);
+        $this->assertSame('success', $this->callController($ctrl, 'doBackup')['status']);
+        $this->assertSame('not_enough_privilege', $this->callController($ctrl, 'downloadBackup')['code']);
+        $this->setPrivilege(1);
+    }
+
+    public function testReaderCannotListCreateOrDownload(): void
+    {
+        $ctrl = $this->asLevel(30);
+        foreach (['listBackups', 'doBackup', 'downloadBackup'] as $m) {
+            $this->assertSame('not_enough_privilege', $this->callController($ctrl, $m)['code'], $m);
+        }
+        $this->setPrivilege(1);
+    }
+
+    public function testAdminMayDownload(): void
+    {
+        $ctrl = $this->asLevel(10);
+        $this->assertTrue($this->callController($ctrl, 'listBackups')['can_download']);
+        $this->assertNotSame('not_enough_privilege', $this->callController($ctrl, 'downloadBackup')['code'] ?? null);
+        $this->setPrivilege(1);
+    }
+
+    public function testEnterInAnUpdatingGroupCreatesButCannotDownload(): void
+    {
+        static::$db->exec("INSERT INTO bdus_users (id, name, email, password, privilege) VALUES (63, 'ent', 'ent3@example.com', 'x', 39)");
+        $g = (int) static::$db->query("INSERT INTO bdus_groups (name) VALUES ('G')", [], 'id');
+        static::$db->exec("INSERT INTO bdus_group_rules (group_id, table_name, action) VALUES ({$g}, 'items', 'update')");
+        static::$db->exec("INSERT INTO bdus_user_groups (user_id, group_id) VALUES (63, {$g})");
+        \Auth\CurrentUser::set(['id' => 63, 'name' => 'ent', 'email' => 'ent3@example.com', 'privilege' => 39, 'app' => 'test']);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Backup', ['file' => 'x.sql.gz']);
+
+        $this->assertSame('success', $this->callController($ctrl, 'doBackup')['status']);
+        $this->assertSame('not_enough_privilege', $this->callController($ctrl, 'downloadBackup')['code']);
+
+        static::$db->exec('DELETE FROM bdus_user_groups');
+        static::$db->exec('DELETE FROM bdus_group_rules');
+        static::$db->exec('DELETE FROM bdus_groups');
+        static::$db->exec('DELETE FROM bdus_users WHERE id = 63');
+        $this->setPrivilege(1);
+    }
+
     // ── Privilege checks ──────────────────────────────────────────────────
 
     public function testListBackupsRequiresReadPrivilege(): void

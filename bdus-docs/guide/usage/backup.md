@@ -5,7 +5,16 @@ title: Database backup
 # Database backup <Badge type="tip" text="v5.0.0" />
 
 The **Backup** module creates and manages snapshots of your database.
-Admin privilege is required to access it.
+Who can do what <Badge type="tip" text="v5.28.0" />:
+
+| Action | Who |
+|---|---|
+| See the list and create a backup | Anyone who can edit records: level Writer, or a [group](../setup/groups) that may update some table (a safety copy before a big edit) |
+| Download or delete a backup | Admin |
+| Restore a backup | Super admin |
+
+A backup holds every table, whatever the group rules and locks say, so only an
+admin can take the file out of the server.
 
 Open **Backup** from the sidebar.
 

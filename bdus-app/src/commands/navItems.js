@@ -38,7 +38,7 @@ export function buildNavGroups(app) {
         { labelKey: 'history',              icon: 'pi-history',     to: `${a}/history`,         minPrivilege: PRIVILEGE.READER, groupAction: 'read' },
         { labelKey: 'deleted_records',      icon: 'pi-trash',       to: `${a}/deleted-records`, minPrivilege: PRIVILEGE.READER, groupAction: 'read' },
         { labelKey: 'import_data',          icon: 'pi-download',    to: `${a}/import`,          minPrivilege: PRIVILEGE.WRITER, groupAction: ['create', 'update'] },
-        { labelKey: 'backup',               icon: 'pi-save',        to: `${a}/backups`,         minPrivilege: PRIVILEGE.READER },
+        { labelKey: 'backup',               icon: 'pi-save',        to: `${a}/backups`,         minPrivilege: PRIVILEGE.WRITER, groupAction: 'update' },
       ],
     },
     {

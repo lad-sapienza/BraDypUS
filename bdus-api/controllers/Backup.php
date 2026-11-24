@@ -28,6 +28,7 @@ class Backup extends \Bdus\Controller
    * Response:
    * {
    *   engine:       string,          // current DB engine
+   *   can_download: bool,            // \Auth\Authorization::can('admin')
    *   can_delete:   bool,            // \Auth\Authorization::can('admin')
    *   can_restore:  bool,            // \Auth\Authorization::can('super_admin') && engine !== 'pgsql'
    *   backups: [
@@ -37,7 +38,8 @@ class Backup extends \Bdus\Controller
    */
   public function listBackups(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    // Whoever may create a backup may see that it exists; only an admin gets the file.
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -62,6 +64,7 @@ class Backup extends \Bdus\Controller
     $this->returnJson([
       "status"      => "success",
       'engine'      => $engine,
+      'can_download' => \Auth\Authorization::can('admin'),
       'can_delete'  => \Auth\Authorization::can('admin'),
       'can_restore' => \Auth\Authorization::can('super_admin') && $engine !== 'pgsql',
       'backups'     => $backups,
@@ -77,7 +80,8 @@ class Backup extends \Bdus\Controller
    */
   public function doBackup(): void
   {
-    if (!\Auth\Authorization::can('edit')) {
+    // A writer (level or group) may take a safety backup before a big edit.
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -145,7 +149,8 @@ class Backup extends \Bdus\Controller
    */
   public function downloadBackup(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    // A backup holds every table, whatever the group rules and locks say: admins only.
+    if (!\Auth\Authorization::can('admin')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }

@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.27.2] - 2026-11-24
+
+### Fixed
+
+- **A user at level Enter in a data group (e.g. Writer) could not open the data screens.** Menu, command palette and route guard checked only the numeric level, so the user got "Access denied" even though the API allowed the calls. Data screens (data, files, vocabularies, assemblage, charts, history, deleted records, info; import for create/update) now also open when a group rule grants the action on some table. Admin screens are unchanged. The frontend level of *Enter* was 38 instead of 39.
+
 ## [5.27.1] - 2026-11-23
 
 ### Fixed

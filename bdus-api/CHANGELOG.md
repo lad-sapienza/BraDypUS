@@ -5,6 +5,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.27.3] - 2026-11-24
+
+### Fixed
+
+- **Groups open the same read-only screens as the levels (step 1 of moving data permissions to groups).** *Instance info*, *Vocabularies* and *Widgets* checked only the numeric level, so a user at level Enter in the Reader or Writer group got `not_enough_privilege`. They now accept the level Reader or groups that read every table in full; a group scoped to some tables or rows is still refused (deny by default). *My history* needs one readable table and, for a user at level Enter, lists only the edits of the records their groups let them read; levels Reader and above see the whole history as before.
+- **Groups can edit file metadata.** Renaming/describing a file, replacing its binary and sorting a record's files (`File::updateFile`, `replaceFile`, `sortFiles`) needed level Writer. They now need a level or a group rule that allows updating some table, like uploading, linking and deleting files already did.
+- **Backups: writers create, admins download.** Listing and creating a backup now needs a level or group that may edit records (a safety copy before a big edit or a find-and-replace). **Downloading** a backup is admin only, as the docs always said: a backup holds every table, beyond group rules and locks. Until now level Reader could list and download backups and level Writer could create them. `GET /api/backups` answers a new `can_download` flag; the Backup menu entry follows the same rule; the download button is hidden when `can_download` is false. Self writers (level 25) can now create backups too; Readers no longer see the module.
+- **Charts, Zotero search, Pleiades and the GeoFace colour field open to groups.** `saveChart`, Zotero `search`, Pleiades `search`/`getPlace` and GeoFace `saveColorField` needed level Writer; they now accept a level or a group that may update some table (for the colour field: the table itself).
+- **The interface no longer guesses data permissions from the level.** The Harris matrix edit toggle follows what the API says the user may update on that table (level or group); `GET /api/users` `can_write` and duplicating a plugin row use the same table-less gate as the rest. The home page offers *Edit welcome text* only to super admins, who are the only ones the API lets save it (it was shown to every level up to 20).
+
 ## [5.27.2] - 2026-11-24
 
 ### Fixed

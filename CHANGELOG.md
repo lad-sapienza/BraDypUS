@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.27.3] - 2026-11-24
+
 ### Fixed
 
 - **Groups open the same read-only screens as the levels (step 1 of moving data permissions to groups).** *Instance info*, *Vocabularies* and *Widgets* checked only the numeric level, so a user at level Enter in the Reader or Writer group got `not_enough_privilege`. They now accept the level Reader or groups that read every table in full; a group scoped to some tables or rows is still refused (deny by default). *My history* needs one readable table and, for a user at level Enter, lists only the edits of the records their groups let them read; levels Reader and above see the whole history as before.

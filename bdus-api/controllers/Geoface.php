@@ -387,7 +387,7 @@ class Geoface extends \Bdus\Controller
             return;
         }
 
-        if (!\Auth\Authorization::can('edit')) {
+        if (!\Auth\Authorization::can('edit', table: (string) $tb)) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }

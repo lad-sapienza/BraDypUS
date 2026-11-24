@@ -122,7 +122,7 @@ class Zotero extends \Bdus\Controller
      */
     public function search(): void
     {
-        if (!\Auth\Authorization::can('edit')) {
+        if (!\Auth\Authorization::canOnSomeTable('edit')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }

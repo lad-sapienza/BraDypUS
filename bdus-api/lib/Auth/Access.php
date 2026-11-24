@@ -316,6 +316,39 @@ class Access
         return false;
     }
 
+    /**
+     * Does the principal read every configured table, every row? What the level
+     * Reader (30) gives, and what the system groups Reader and Writer give. The
+     * test for application-wide screens (vocabularies, widgets, instance info)
+     * that are no part of one table: a group scoped to some tables or rows
+     * does not open them (deny by default).
+     */
+    public function readsEverything(): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+        if (!$this->mayEnter()) {
+            return false;
+        }
+        if ($this->tierGrantsAll('read')) {
+            return true;
+        }
+        $tables = array_filter(
+            (array) ($this->cfg->get('tables.*.name') ?: []),
+            fn($t) => is_string($t) && !str_starts_with($t, 'bdus_')
+        );
+        if (!$tables) {
+            return false;
+        }
+        foreach ($tables as $t) {
+            if (!$this->unrestricted('read', $t)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /** True when no row of $table is withheld from the principal for $action (no query needed). */
     public function unrestricted(string $action, string $table): bool
     {

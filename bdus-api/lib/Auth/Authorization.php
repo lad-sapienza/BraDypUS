@@ -163,6 +163,25 @@ class Authorization
             : $access->can($action, $table, false);
     }
 
+    /**
+     * Read gate of the application-wide screens (vocabularies, widgets, instance
+     * info): the level Reader, or groups that together read every table in full.
+     * A user scoped to some tables or rows is refused (see Access::readsEverything()).
+     */
+    public static function canReadAll(): bool
+    {
+        if (self::canByTier('read', null)) {
+            return true;
+        }
+        if (self::$accessProvider === null || !CurrentUser::privilege()) {
+            return false;
+        }
+        if (self::$appStatus === 'off' && CurrentUser::privilege() > 1) {
+            return false;
+        }
+        return (self::$accessProvider)()->readsEverything();
+    }
+
     private static function canByTier(string $privilege, ?int $creator): bool
     {
         $app_status = self::$appStatus;

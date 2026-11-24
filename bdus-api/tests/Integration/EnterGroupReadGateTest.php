@@ -5,9 +5,10 @@ namespace Tests\Integration;
 use Tests\Support\BdusTestCase;
 
 /**
- * Table-less read gates (Info, Vocabularies, MyHistory, Widget) for a user at
- * level Enter (39): the level alone grants nothing, a group that reads some
- * table opens them. MyHistory shows such a user only the edits of the records
+ * Table-less read gates for a user at level Enter (39): the level alone grants
+ * nothing. Info, Vocabularies and Widget are application-wide and need a group
+ * that reads every table in full (Reader, Writer); MyHistory opens with any
+ * readable table. MyHistory shows such a user only the edits of the records
  * their groups let them read; levels Reader and above keep the whole history.
  */
 class EnterGroupReadGateTest extends BdusTestCase
@@ -69,13 +70,23 @@ class EnterGroupReadGateTest extends BdusTestCase
         }
     }
 
-    public function testEnterInAReadingGroupIsAllowed(): void
+    public function testEnterInAGroupThatReadsEverythingIsAllowed(): void
     {
-        $this->joinGroup('items');
+        $this->joinGroup('*');
         foreach ([['Info', 'getInfo'], ['Vocabularies', 'list'], ['Vocabularies', 'usages'],
                   ['MyHistory', 'getHistory'], ['Widget', 'listWidgets']] as [$c, $m]) {
             $this->assertNotSame('not_enough_privilege', $this->call($c, $m)['code'] ?? null, "$c::$m");
         }
+    }
+
+    public function testEnterInAScopedGroupGetsNoApplicationWideScreen(): void
+    {
+        // Deny by default: one table, some rows. History is filtered to those rows instead.
+        $this->joinGroup('items', ['id' => ['_eq' => 1]]);
+        foreach ([['Info', 'getInfo'], ['Vocabularies', 'list'], ['Vocabularies', 'usages'], ['Widget', 'listWidgets']] as [$c, $m]) {
+            $this->assertSame('not_enough_privilege', $this->call($c, $m)['code'] ?? null, "$c::$m");
+        }
+        $this->assertSame('success', $this->call('MyHistory', 'getHistory')['status']);
     }
 
     public function testHistoryOfAnEnterUserIsLimitedToReadableRecords(): void

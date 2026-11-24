@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.27.4] - 2026-11-24
+
 ### Changed
 
 - **Levels Writer, Self writer and Reader are marked deprecated everywhere they are chosen (step 2a of moving data permissions to groups).** The behaviour does not change. The *Users* page shows admins a banner with how many users and active API keys still use one of them (`GET /api/users` answers `data_levels: {users, keys}` for admins), tags those users *deprecated*, and the API-key form and the built-in levels table carry the same notice. The levels will be removed only when nobody uses them.

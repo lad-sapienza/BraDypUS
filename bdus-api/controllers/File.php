@@ -233,7 +233,7 @@ class File extends \Bdus\Controller
 	 */
 	public function updateFile(): void
 	{
-		if (!\Auth\Authorization::can('edit')) {
+		if (!\Auth\Authorization::canOnSomeTable('edit')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
@@ -300,7 +300,7 @@ class File extends \Bdus\Controller
 	 */
 	public function replaceFile(): void
 	{
-		if (!\Auth\Authorization::can('edit')) {
+		if (!\Auth\Authorization::canOnSomeTable('edit')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
@@ -480,7 +480,7 @@ class File extends \Bdus\Controller
 	 */
 	public function sortFiles(): void
 	{
-		if (!\Auth\Authorization::can('edit')) {
+		if (!\Auth\Authorization::canOnSomeTable('edit')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}

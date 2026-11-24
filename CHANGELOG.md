@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Groups open the same read-only screens as the levels (step 1 of moving data permissions to groups).** *Info*, *Vocabularies*, *My history* and *Widgets* checked only the numeric level, so a user at level Enter in a reading group got `not_enough_privilege`. They now need at least one table readable through the level or a group. For a user at level Enter, *My history* lists only the edits of the records their groups let them read; levels Reader and above see the whole history as before.
+
 ## [5.27.2] - 2026-11-24
 
 ### Fixed

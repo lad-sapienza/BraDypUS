@@ -54,7 +54,7 @@ class Info extends \Bdus\Controller
    */
   public function getInfo(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    if (!\Auth\Authorization::canOnSomeTable('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }

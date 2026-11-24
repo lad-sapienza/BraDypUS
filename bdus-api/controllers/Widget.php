@@ -21,7 +21,7 @@ class Widget extends \Bdus\Controller
      */
     public function listWidgets(): void
     {
-        if (!\Auth\Authorization::can('read')) {
+        if (!\Auth\Authorization::canOnSomeTable('read')) {
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
@@ -50,7 +50,7 @@ class Widget extends \Bdus\Controller
      */
     public function serveWidget(): void
     {
-        if (!\Auth\Authorization::can('read')) {
+        if (!\Auth\Authorization::canOnSomeTable('read')) {
             http_response_code(403);
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;

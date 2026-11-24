@@ -21,7 +21,7 @@ class MyHistory extends \Bdus\Controller
    */
   public function getHistory(): void
   {
-    if (!\Auth\Authorization::can('read')) {
+    if (!\Auth\Authorization::canOnSomeTable('read')) {
       $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
       return;
     }
@@ -42,6 +42,28 @@ class MyHistory extends \Bdus\Controller
     if ($user !== '') {
       $where   .= ' AND userid LIKE ?';
       $values[] = "%{$user}%";
+    }
+
+    // Level Reader and above keep the whole history. A user at level Enter sees
+    // only the edits of the records their groups let them read.
+    $level = \Auth\CurrentUser::privilege();
+    if ($level !== null && $level > \Auth\Authorization::READ) {
+      $parts = [];
+      foreach ($this->cfg->get('tables.*.name') ?: [] as $name) {
+        if (!is_string($name) || preg_match('/^[A-Za-z0-9_]+$/', $name) !== 1
+            || !\Auth\Authorization::can('read', table: $name)) {
+          continue;
+        }
+        [$cond, $condValues] = $this->access()->rowCondition('read', $name);
+        if ($cond === '1=1') {
+          $parts[]  = 'tb = ?';
+          $values[] = $name;
+        } else {
+          $parts[]  = "(tb = ? AND rowid IN (SELECT id FROM {$name} WHERE {$cond}))";
+          $values   = array_merge($values, [$name], $condValues);
+        }
+      }
+      $where .= $parts ? ' AND (' . implode(' OR ', $parts) . ')' : ' AND 1=0';
     }
 
     try {

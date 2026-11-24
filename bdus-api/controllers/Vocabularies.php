@@ -41,7 +41,7 @@ class Vocabularies extends \Bdus\Controller
 
 	public function usages(): void
 	{
-		if (!\Auth\Authorization::can('read')) {
+		if (!\Auth\Authorization::canOnSomeTable('read')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
@@ -70,7 +70,7 @@ class Vocabularies extends \Bdus\Controller
 
 	public function list()
 	{
-		if (!\Auth\Authorization::can('read')) {
+		if (!\Auth\Authorization::canOnSomeTable('read')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}

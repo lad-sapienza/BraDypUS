@@ -61,7 +61,7 @@ import { useI18n } from '@/i18n'
 import { useTables } from '@/composables/useTables'
 import { useDarkMode } from '@/composables/useDarkMode'
 import { buildNavGroups } from '@/commands/navItems'
-import { hasPrivilege } from '@/commands/privilege'
+import { navAllowed } from '@/commands/privilege'
 import { resolveIcon } from '@/utils/icons'
 
 const AMenu          = Menu
@@ -78,10 +78,13 @@ const { t }  = useI18n()
 const { isDark } = useDarkMode()
 const { tables: navTables, loading: tablesLoading, loadTables } = useTables()
 
+// Level Enter: the menu depends on the group rules, known from the table list.
+if (auth.user && auth.user.privilege_value > 30) loadTables().catch(() => {})
+
 const navGroups = computed(() => buildNavGroups(route.params.app))
 
 function isDisabled(item) {
-  return !hasPrivilege(auth.user?.privilege_value, item.minPrivilege)
+  return !navAllowed(item, auth.user?.privilege_value, navTables.value)
 }
 
 function go(to) {

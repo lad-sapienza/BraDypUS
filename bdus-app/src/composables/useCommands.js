@@ -24,7 +24,7 @@ import { useTables } from '@/composables/useTables'
 import { useDarkMode } from '@/composables/useDarkMode'
 import { useAuthStore } from '@/stores/auth'
 import { buildNavGroups } from '@/commands/navItems'
-import { PRIVILEGE, hasPrivilege } from '@/commands/privilege'
+import { PRIVILEGE, hasPrivilege, navAllowed } from '@/commands/privilege'
 
 export function useCommands({ onOpenProfile } = {}) {
   const router  = useRouter()
@@ -47,7 +47,7 @@ export function useCommands({ onOpenProfile } = {}) {
     void locale.value // re-run when locale changes so labels re-translate
     return buildNavGroups(app.value)
       .flatMap(g => g.items)
-      .filter(i => allowed(i.minPrivilege))
+      .filter(i => navAllowed(i, auth.user?.privilege_value, tables.value))
       .map(i => ({
         id:    `nav:${i.to}`,
         type:  'nav',

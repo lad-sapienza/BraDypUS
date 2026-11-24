@@ -2,7 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { syncDarkModeWithApp } from '@/composables/useDarkMode'
 import { buildNavGroups } from '@/commands/navItems'
-import { hasPrivilege } from '@/commands/privilege'
+import { navAllowed } from '@/commands/privilege'
+import { useTables } from '@/composables/useTables'
 
 const routes = [
   // ── Root redirect ──────────────────────────────────────────────────────────
@@ -214,7 +215,7 @@ const router = createRouter({
   }
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   if (!to.meta.requiresAuth) return true
 
   // Token is validated client-side (expiry check). Signature verification
@@ -238,21 +239,29 @@ router.beforeEach((to) => {
   // the calls anyway, this just avoids showing a screen that cannot work.
   const app = to.params.app
   if (app && to.path !== `/${app}/not-authorized`) {
-    const required = requiredPrivilege(app, to.path)
-    if (required !== null && !hasPrivilege(auth.user?.privilege_value, required)) {
-      return { path: `/${app}/not-authorized` }
+    const item = navItemFor(app, to.path)
+    if (item) {
+      const level = auth.user?.privilege_value
+      let ok = navAllowed(item, level)
+      if (!ok && item.groupAction) {
+        // Level Enter: the group rules decide, and they are known once the table list is loaded.
+        const { tables, loadTables } = useTables()
+        try { await loadTables() } catch { /* denied below */ }
+        ok = navAllowed(item, level, tables.value)
+      }
+      if (!ok) return { path: `/${app}/not-authorized` }
     }
   }
 
   return true
 })
 
-/** Privilege needed for a path, from the navigation items; null when none listed. */
-function requiredPrivilege(app, path) {
+/** Navigation item a path belongs to; null when none listed. */
+function navItemFor(app, path) {
   for (const group of buildNavGroups(app)) {
     for (const item of group.items) {
       if (item.to === `/${app}`) continue // dashboard: any logged-in user
-      if (path === item.to || path.startsWith(item.to + '/')) return item.minPrivilege
+      if (path === item.to || path.startsWith(item.to + '/')) return item
     }
   }
   return null

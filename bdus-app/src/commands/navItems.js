@@ -13,6 +13,9 @@ import { PRIVILEGE } from '@/commands/privilege'
  * backend today; their minPrivilege here follows lib/Bdus/Router.php's
  * documented intent rather than actual enforcement (a real gap tracked
  * separately, not something this UI-only mapping can fix).
+ *
+ * groupAction: data screens are also open to a user at level Enter whose group
+ * rules grant that action on some table (see navAllowed in privilege.js).
  */
 export function buildNavGroups(app) {
   const a = `/${app}`
@@ -26,15 +29,15 @@ export function buildNavGroups(app) {
     {
       labelKey: 'nav_data',
       items: [
-        { labelKey: 'data_mng',             icon: 'pi-database',    to: `${a}/data`,            minPrivilege: PRIVILEGE.READER },
-        { labelKey: 'files_mng',            icon: 'pi-images',      to: `${a}/files`,           minPrivilege: PRIVILEGE.READER },
+        { labelKey: 'data_mng',             icon: 'pi-database',    to: `${a}/data`,            minPrivilege: PRIVILEGE.READER, groupAction: 'read' },
+        { labelKey: 'files_mng',            icon: 'pi-images',      to: `${a}/files`,           minPrivilege: PRIVILEGE.READER, groupAction: 'read' },
         { labelKey: 'find_replace',         icon: 'pi-search-plus', to: `${a}/find-replace`,    minPrivilege: PRIVILEGE.ADMIN },
-        { labelKey: 'vocabulary_mng',       icon: 'pi-book',        to: `${a}/vocabularies`,    minPrivilege: PRIVILEGE.READER },
-        { labelKey: 'assemblage_analysis',  icon: 'pi-th-large',    to: `${a}/assemblages`,     minPrivilege: PRIVILEGE.READER },
-        { labelKey: 'charts',               icon: 'pi-chart-bar',   to: `${a}/charts`,          minPrivilege: PRIVILEGE.READER },
-        { labelKey: 'history',              icon: 'pi-history',     to: `${a}/history`,         minPrivilege: PRIVILEGE.READER },
-        { labelKey: 'deleted_records',      icon: 'pi-trash',       to: `${a}/deleted-records`, minPrivilege: PRIVILEGE.READER },
-        { labelKey: 'import_data',          icon: 'pi-download',    to: `${a}/import`,          minPrivilege: PRIVILEGE.WRITER },
+        { labelKey: 'vocabulary_mng',       icon: 'pi-book',        to: `${a}/vocabularies`,    minPrivilege: PRIVILEGE.READER, groupAction: 'read' },
+        { labelKey: 'assemblage_analysis',  icon: 'pi-th-large',    to: `${a}/assemblages`,     minPrivilege: PRIVILEGE.READER, groupAction: 'read' },
+        { labelKey: 'charts',               icon: 'pi-chart-bar',   to: `${a}/charts`,          minPrivilege: PRIVILEGE.READER, groupAction: 'read' },
+        { labelKey: 'history',              icon: 'pi-history',     to: `${a}/history`,         minPrivilege: PRIVILEGE.READER, groupAction: 'read' },
+        { labelKey: 'deleted_records',      icon: 'pi-trash',       to: `${a}/deleted-records`, minPrivilege: PRIVILEGE.READER, groupAction: 'read' },
+        { labelKey: 'import_data',          icon: 'pi-download',    to: `${a}/import`,          minPrivilege: PRIVILEGE.WRITER, groupAction: ['create', 'update'] },
         { labelKey: 'backup',               icon: 'pi-save',        to: `${a}/backups`,         minPrivilege: PRIVILEGE.READER },
       ],
     },
@@ -52,7 +55,7 @@ export function buildNavGroups(app) {
       items: [
         { labelKey: 'app_log',    icon: 'pi-list',        to: `${a}/log`,        minPrivilege: PRIVILEGE.ADMIN },
         { labelKey: 'migrations', icon: 'pi-database',    to: `${a}/migrations`, minPrivilege: PRIVILEGE.ADMIN },
-        { labelKey: 'info',       icon: 'pi-info-circle', to: `${a}/info`,       minPrivilege: PRIVILEGE.READER },
+        { labelKey: 'info',       icon: 'pi-info-circle', to: `${a}/info`,       minPrivilege: PRIVILEGE.READER, groupAction: 'read' },
       ],
     },
   ]

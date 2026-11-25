@@ -1413,32 +1413,15 @@ class Record extends \Bdus\Controller
     $idOne  = (int)$idOne;
     $idTwo  = (int)$idTwo;
 
-    // A link shows on both records: both must be changeable.
-    if (!$this->mayChange('update', (string) $tbOne, $idOne) || !$this->mayChange('update', (string) $tbTwo, $idTwo)) {
-      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-      return;
-    }
-
     try {
-      // Dedup: check both directions
-      $count = (int) ($this->db->query(
-        "SELECT COUNT(*) AS c FROM bdus_userlinks
-         WHERE (tb_one = ? AND id_one = ? AND tb_two = ? AND id_two = ?)
-            OR (tb_one = ? AND id_one = ? AND tb_two = ? AND id_two = ?)",
-        [$tbOne, $idOne, $tbTwo, $idTwo, $tbTwo, $idTwo, $tbOne, $idOne],
-        'read'
-      )[0]['c'] ?? 0);
-
-      if ($count > 0) {
-        $this->returnJson(['status' => 'error', 'code' => 'link_already_exists']);
+      // Both records must be changeable; a duplicate is looked for in both directions.
+      $links = new \Record\ManualLinks($this->db, $this->cfg, $this->access());
+      $res   = $links->add((string) $tbOne, $idOne, (string) $tbTwo, $idTwo, $label);
+      if ($res['status'] !== 'success') {
+        $this->returnJson(['status' => 'error', 'code' => $res['code']]);
         return;
       }
-
-      $newId = (int) $this->db->query(
-        "INSERT INTO bdus_userlinks (tb_one, id_one, tb_two, id_two, label) VALUES (?, ?, ?, ?, ?)",
-        [$tbOne, $idOne, $tbTwo, $idTwo, $label],
-        'id'
-      );
+      $newId = $res['id'];
 
       // Resolve the label of the linked record
       $idFld = $this->cfg->get("tables.$tbTwo.id_field") ?? 'id';
@@ -1490,24 +1473,14 @@ class Record extends \Bdus\Controller
       return;
     }
 
-    $link = $this->db->query("SELECT tb_one, id_one, tb_two, id_two FROM bdus_userlinks WHERE id = ?", [(int) $id], 'read')[0] ?? null;
-    if ($link && (!$this->mayChange('update', (string) $link['tb_one'], (int) $link['id_one'])
-               || !$this->mayChange('update', (string) $link['tb_two'], (int) $link['id_two']))) {
-      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-      return;
-    }
-
     try {
-      $affected = $this->db->query(
-        "DELETE FROM bdus_userlinks WHERE id = ?",
-        [(int)$id],
-        'affected'
-      );
+      $res = (new \Record\ManualLinks($this->db, $this->cfg, $this->access()))->remove((int) $id);
 
-      $this->returnJson($affected > 0
-        ? ['status' => 'success', 'code' => 'ok_userlink_erased']
-        : ['status' => 'error',   'code' => 'not_found']
-      );
+      if ($res['status'] === 'success') {
+        $this->returnJson(['status' => 'success', 'code' => 'ok_userlink_erased']);
+      } else {
+        $this->returnJson(['status' => 'error', 'code' => $res['code']]);
+      }
 
     } catch (\Throwable $e) {
       $this->log->error($e);

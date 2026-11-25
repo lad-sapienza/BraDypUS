@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.28.0] - 2026-11-25
+
 ### Changed
 
 - **Users page: a click on a row opens the edit form.** The pencil stays, and buttons keep their own action. The email is plain text instead of a `mailto:` link, so a stray click no longer opens a mail client.

@@ -5,6 +5,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.28.0] - 2026-11-25
+
+### Changed
+
+- **Users page: a click on a row opens the edit form.** The pencil stays, and buttons keep their own action. The email is plain text instead of a `mailto:` link, so a stray click no longer opens a mail client.
+
+### Added
+
+- **Move users and API keys from a data level to Enter + group, and back (step 2b of moving data permissions to groups; ).** `POST /api/user/{id}/move-to-group` puts a user at level Writer, Self writer or Reader at level Enter in the system group of the same name; `POST /api/user/{id}/restore-level` undoes it. The same two exist under `/api/api-key/{id}/`, and `POST /api/levels/move-to-groups` moves everyone at once (`dry_run` reports without writing). A move is refused (`not_equivalent`, with the differences) unless the group gives exactly the same access as the level on every table and action; a key that already has its own group is refused (`key_has_group`); a restore is refused if the level was edited after the move (`level_changed`). Admin only; effective immediately. Migration **M058** adds the columns that remember the old level (`bdus_users.legacy_privilege`, `legacy_group_id`; `bdus_api_keys.legacy_privilege`); login and the user list tolerate apps that have not run it yet (`Manage::USERS_LATE_COLUMNS`). In the interface: a *Move to level Enter + group* button on each user and API key at level Writer, Self writer or Reader, a *moved from Writer* tag with *Restore the previous level* once moved, and *Move everyone equivalent…* in the deprecation banner of the Users page, which first shows who would be moved and who would not, and why.
+
 ## [5.27.4] - 2026-11-24
 
 ### Changed

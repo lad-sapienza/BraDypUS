@@ -32,7 +32,8 @@ class RecordsValidate extends Base
         return [
             'title'       => 'Validate records (dry run)',
             'description' => 'Checks records to create (`id` null or absent) or update (`id` given) without writing: '
-                . 'permissions, field names, required fields, types, ranges, uniqueness, lookup ids. Returns, per record, '
+                . 'permissions, field names, required fields, types, ranges, uniqueness, lookup ids and, if given, the `bibliography` '
+                . '(Zotero links) of a record. Returns, per record, '
                 . 'the errors or the values as they would be written and the stored values they replace. When all pass, '
                 . 'returns `validation_token`: show the user what will change, and only after they agree call '
                 . '`records_write` with the same `table`, the same `records` and that token.',
@@ -60,6 +61,7 @@ class RecordsValidate extends Base
                             'description' => '{ plugin_table: [ { "fields": { … } } to add a row, { "id": 7, "fields": { … } } to '
                                 . 'change one, { "id": 7, "_delete": true } to remove one ] }',
                         ],
+                        'bibliography' => Bibliography::schema(),
                     ],
                     'required' => ['core'],
                 ],
@@ -83,6 +85,9 @@ class RecordsValidate extends Base
         $allOk   = true;
         foreach ($records as $i => $rec) {
             $res = $save->check($tb, $rec['id'], $rec['core'], $rec['plugins']);
+            if ($res['status'] === 'success' && ($refused = Bibliography::check($tb, $rec['id'], $rec['bibliography'], $ctx))) {
+                $res = ['status' => 'error'] + $refused;
+            }
             if ($res['status'] !== 'success') {
                 $allOk     = false;
                 $results[] = array_filter([
@@ -102,7 +107,7 @@ class RecordsValidate extends Base
                 'core'    => $res['core'],
                 'plugins' => $res['plugins'],
                 'current' => $res['current'],
-            ];
+            ] + (Bibliography::isEmpty($rec['bibliography']) ? [] : ['bibliography' => $rec['bibliography']]);
         }
 
         return [
@@ -119,7 +124,7 @@ class RecordsValidate extends Base
     /**
      * The `records` argument, normalised: [ [id|null, core, plugins], … ].
      *
-     * @return array<int, array{id: ?int, core: mixed, plugins: mixed}>
+     * @return array<int, array{id: ?int, core: mixed, plugins: mixed, bibliography: array}>
      */
     public static function records(array $args): array
     {
@@ -142,6 +147,7 @@ class RecordsValidate extends Base
                 'id'      => $id === null ? null : (int) $id,
                 'core'    => $rec['core'] ?? [],
                 'plugins' => self::pluginRows($rec['plugins'] ?? [], $i),
+                'bibliography' => Bibliography::parse($rec['bibliography'] ?? null, $i),
             ];
         }
         return $out;

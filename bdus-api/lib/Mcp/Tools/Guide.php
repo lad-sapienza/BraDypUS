@@ -80,6 +80,11 @@ class Guide extends Base
     - `rs_read` lists the relations of a record with the id to remove each by. Records are addressed
       by id: find them with `resolve` first.
 
+    Bibliography (Zotero; only for tables with the feature `bibliography`)
+    - `records_read` with `bibliography: true` adds to each row its Zotero links (id of the link,
+      citation, pages, notes). `bibliography_search` lists the Zotero libraries and finds the item
+      to link (its `key`); it needs the right to edit.
+
     Reports
     - For totals and breakdowns use `aggregate` (count, sum, avg, min, max, grouped by one or two
       fields) with the same filters; do not read and count rows yourself.
@@ -98,6 +103,10 @@ class Guide extends Base
     - Relations are changed the same way: `rs_validate` with `add` (`{ first, relation, second }`)
       and `remove` (relation ids), show the user, wait, then `rs_write` with the same payload and
       the token. A relation is part of both records it joins: you must be allowed to change both.
+    - Zotero links go in the `bibliography` section of a record, with the same `records_validate` /
+      `records_write` calls: `add` (`{ lib_id, zotero_key, pages?, notes? }`), `edit` (`{ id, pages?,
+      notes?, sort? }`, id of the link) and `remove` (link ids). They are written with the record,
+      all or none. Only tables with bibliography accept the section (`zotero_not_configured`).
     - Every change to a record is recorded in the history (`history`); an administrator can restore a
       version. Relations are not in the history: a removed relation cannot be restored.
 

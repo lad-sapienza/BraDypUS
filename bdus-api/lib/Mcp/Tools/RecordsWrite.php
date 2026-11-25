@@ -12,7 +12,7 @@ use Mcp\ToolError;
 use Record\Save;
 
 /**
- * Creates and updates records, with their plugin rows, through Record\Save —
+ * Creates and updates records, with their plugin rows and Zotero links, through Record\Save —
  * the write path of the REST API. One call is one transaction: if any record
  * is refused, nothing is written.
  */
@@ -34,7 +34,8 @@ class RecordsWrite extends Base
             'title'       => 'Create or update records',
             'description' => 'Writes the records validated by `records_validate`: same `table`, same `records`, and its '
                 . '`validation_token`. Call it only after the user has seen and approved what will change. All records '
-                . 'are written together or none is: on a refusal nothing changes and the failing record is named.',
+                . 'are written together or none is: on a refusal nothing changes and the failing record is named. '
+                . 'A record may carry a `bibliography` section (Zotero links to add, edit, remove) on tables that have bibliography.',
             'inputSchema' => RecordsValidate::inputSchema(true),
             'annotations' => ['readOnlyHint' => false, 'destructiveHint' => true, 'idempotentHint' => false, 'openWorldHint' => false],
         ];
@@ -52,7 +53,10 @@ class RecordsWrite extends Base
             );
         }
 
-        $this->budgetRows(count($records));
+        $this->budgetRows(count($records) + array_sum(array_map(fn($r) => Bibliography::count($r['bibliography']), $records)));
+
+        // Citations come from Zotero: asked for before the transaction opens.
+        $caches = array_map(fn($r) => Bibliography::prefetch($r['bibliography'], $ctx), $records);
 
         $save    = new Save($ctx->db, $ctx->cfg, $ctx->access, $ctx->log);
         $results = [];
@@ -68,6 +72,16 @@ class RecordsWrite extends Base
                         'code'   => $res['code'] ?? 'error',
                         'errors' => $res['errors'] ?? null,
                         'detail' => $res['detail'] ?? null,
+                        'note'   => 'Nothing was written.',
+                    ], fn($v) => $v !== null));
+                }
+                $refused = Bibliography::apply($tb, (int) $res['id'], $rec['bibliography'], $caches[$i], $ctx);
+                if ($refused) {
+                    $ctx->db->rollBack();
+                    throw new ToolError('write_refused', array_filter([
+                        'index'  => $i,
+                        'code'   => $refused['code'],
+                        'detail' => $refused['detail'] ?? null,
                         'note'   => 'Nothing was written.',
                     ], fn($v) => $v !== null));
                 }

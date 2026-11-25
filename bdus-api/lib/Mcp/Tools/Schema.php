@@ -63,6 +63,7 @@ class Schema extends Base
             'is_view'     => $isView ?: null,
             'writable'    => $isView ? (($ctx->cfg->get("tables.{$tb}.view_writable") ?: 'none') !== 'none') : null,
             'features'    => $this->features($schema),
+            'bibliography' => !empty($schema['has_zotero']) ? self::bibliography() : null,
             'stratigraphy' => !empty($schema['rs']) ? self::stratigraphy() : null,
             'fields'      => $this->compact($schema['fields']),
             'plugins'     => $plugins,
@@ -86,6 +87,17 @@ class Schema extends Base
             ], fn($v) => $v !== null);
         }
         return $out;
+    }
+
+    /** How to read and write the Zotero links of a table that has bibliography. */
+    private static function bibliography(): array
+    {
+        return [
+            'reading' => 'records_read with bibliography: true returns the links of each record.',
+            'finding' => 'bibliography_search lists the Zotero libraries and finds the item (its key) to link.',
+            'writing' => 'The `bibliography` section of a record in records_validate / records_write: '
+                . '{ add: [{ lib_id, zotero_key, pages?, notes? }], edit: [{ id, pages?, notes?, sort? }], remove: [link id] }.',
+        ];
     }
 
     /** How to read and write the relations of a table that has them (tools rs_read, rs_validate, rs_write). */

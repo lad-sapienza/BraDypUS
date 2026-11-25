@@ -78,7 +78,7 @@ Content-Type: application/json
 { "jsonrpc": "2.0", "id": 2, "method": "tools/list" }
 HTTP 200
 [Asserts]
-jsonpath "$.result.tools" count == 13
+jsonpath "$.result.tools" count == 14
 jsonpath "$.result.tools[0].name" == "guide"
 jsonpath "$.result.tools[3].name" == "records_read"
 jsonpath "$.result.tools[3].inputSchema.type" == "object"

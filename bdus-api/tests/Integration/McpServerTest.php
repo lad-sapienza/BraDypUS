@@ -140,7 +140,7 @@ class McpServerTest extends BdusTestCase
     {
         [, $body] = $this->legacy('tools/list');
         $tools = $body['result']['tools'];
-        $this->assertSame(['guide', 'schema', 'vocabulary', 'records_read', 'aggregate', 'resolve', 'history', 'rs_read', 'records_validate', 'records_write', 'rs_validate', 'rs_write', 'records_delete'], array_column($tools, 'name'));
+        $this->assertSame(['guide', 'schema', 'vocabulary', 'records_read', 'aggregate', 'resolve', 'history', 'rs_read', 'bibliography_search', 'records_validate', 'records_write', 'rs_validate', 'rs_write', 'records_delete'], array_column($tools, 'name'));
         foreach ($tools as $tool) {
             $this->assertSame('object', $tool['inputSchema']['type'], $tool['name']);
             $this->assertSame(
@@ -174,7 +174,7 @@ class McpServerTest extends BdusTestCase
     public function testModernToolsListAndCall(): void
     {
         [, $list] = $this->modern('tools/list');
-        $this->assertCount(13, $list['result']['tools']);
+        $this->assertCount(14, $list['result']['tools']);
         $this->assertSame('complete', $list['result']['resultType']);
 
         [$status, $call] = $this->modern('tools/call', ['name' => 'schema', 'arguments' => []]);

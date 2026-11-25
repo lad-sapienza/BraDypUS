@@ -70,6 +70,7 @@ class Server
             new Tools\Resolve(),
             new Tools\History(),
             new Tools\RsRead(),
+            new Tools\BibliographySearch(),
             new Tools\RecordsValidate(),
             new Tools\RecordsWrite(),
             new Tools\RsValidate(),

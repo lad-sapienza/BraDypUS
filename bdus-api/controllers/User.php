@@ -44,9 +44,7 @@ class User extends \Bdus\Controller
 			// getBySQLSafe: tolerates M039/M040 columns not existing yet on this
 			// app (migrations apply only after a successful login) — see
 			// Manage::getBySQLSafe() and Login::authenticate().
-			$all_users   = $sys_manager->getBySQLSafe('bdus_users', '1=1', [], [
-				'failed_login_count', 'locked_until', 'reset_token_hash', 'reset_token_expires',
-			]);
+			$all_users   = $sys_manager->getBySQLSafe('bdus_users', '1=1', [], Manage::USERS_LATE_COLUMNS);
 
 			// Group memberships, one query for the whole list (none before M046).
 			$groupsOf = [];
@@ -68,6 +66,8 @@ class User extends \Bdus\Controller
 					'editable'        => (\Auth\Authorization::can('admin') && $user['privilege'] >= \Auth\CurrentUser::privilege()),
 					'groups'          => $groupsOf[(int) $user['id']] ?? [],
 					'oauth_provider'  => $user['oauth_provider'] ?? null,
+					// level before an admin moved the user to Enter + group (M058); null = never moved
+					'legacy_privilege' => isset($user['legacy_privilege']) ? (int) $user['legacy_privilege'] : null,
 				];
 			}
 			// Who still relies on a deprecated data level (Writer 20, Self writer 25, Reader 30):

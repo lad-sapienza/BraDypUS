@@ -55,6 +55,19 @@ class UserCtrlTest extends BdusTestCase
         $this->assertSame(['users' => 3, 'keys' => 1], $res['data_levels']);
     }
 
+    public function testShowListSaysWhoWasMovedFromALevel(): void
+    {
+        static::$db->exec("INSERT INTO bdus_users (id, name, email, password, privilege, legacy_privilege) VALUES
+            (74, 'moved', 'm74@example.com', 'x', 39, 20), (75, 'plain', 'p75@example.com', 'x', 39, NULL)");
+
+        $res = $this->callController($this->makeController('Bdus\\Controllers\\User'), 'showList');
+        static::$db->exec('DELETE FROM bdus_users WHERE id IN (74, 75)');
+
+        $by = array_column($res['users'], 'legacy_privilege', 'id');
+        $this->assertSame(20, $by[74]);
+        $this->assertNull($by[75]);
+    }
+
     public function testShowListUserRowShape(): void
     {
         $ctrl = $this->makeController('Bdus\\Controllers\\User');

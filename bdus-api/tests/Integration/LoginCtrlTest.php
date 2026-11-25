@@ -237,6 +237,31 @@ class LoginCtrlTest extends BdusTestCase
         }
     }
 
+    /**
+     * Same for M058 (level memory): an app that has not run it yet must still log in,
+     * or nobody could reach the upgrade that adds the columns.
+     */
+    public function testAuthWorksBeforeTheLevelMemoryColumnsExist(): void
+    {
+        static::$db->execInTransaction('ALTER TABLE bdus_users DROP COLUMN legacy_privilege');
+        static::$db->execInTransaction('ALTER TABLE bdus_users DROP COLUMN legacy_group_id');
+
+        try {
+            $ok = $this->makeController('Bdus\\Controllers\\Login', [], [
+                'email'    => 'test@example.com',
+                'password' => static::$testPassword,
+            ]);
+            $this->assertSame('success', $this->callController($ok, 'auth')['status']);
+
+            $list = $this->callController($this->makeController('Bdus\\Controllers\\User'), 'showList');
+            $this->assertSame('success', $list['status']);
+            $this->assertNull($list['users'][0]['legacy_privilege']);
+        } finally {
+            static::$db->execInTransaction('ALTER TABLE bdus_users ADD COLUMN legacy_privilege INTEGER');
+            static::$db->execInTransaction('ALTER TABLE bdus_users ADD COLUMN legacy_group_id INTEGER');
+        }
+    }
+
     // ── refresh ───────────────────────────────────────────────────────────────
 
     public function testRefreshReturnsNewToken(): void

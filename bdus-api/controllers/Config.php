@@ -1594,9 +1594,7 @@ class Config extends \Bdus\Controller
       // getBySQLSafe: tolerates M039/M040 columns not existing yet on this
       // app (migrations apply only after a successful login) — see
       // Manage::getBySQLSafe() and Login::authenticate() for the same reasoning.
-      $rows = $sys_manage->getBySQLSafe('bdus_users', '1=1', [], [
-        'failed_login_count', 'locked_until', 'reset_token_hash', 'reset_token_expires',
-      ]);
+      $rows = $sys_manage->getBySQLSafe('bdus_users', '1=1', [], Manage::USERS_LATE_COLUMNS);
       foreach ($rows as $u) {
         $u['verbose_privilege'] = \Auth\Authorization::privilege($u['privilege'], 1);
         $users[] = $u;

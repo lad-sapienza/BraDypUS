@@ -51,6 +51,7 @@ class Api extends \Bdus\Controller
         $result = array_map(function (array $r) use ($groups): array {
             unset($r['key_hash']);
             $r['disabled_at'] = $r['disabled_at'] ?? null;   // column added by M055
+            $r['legacy_privilege'] = isset($r['legacy_privilege']) ? (int) $r['legacy_privilege'] : null;   // M058
             $r['is_revoked']  = !empty($r['revoked_at']);
             $r['is_disabled'] = !empty($r['disabled_at']);
             $r['is_active']   = !$r['is_revoked'] && !$r['is_disabled'];

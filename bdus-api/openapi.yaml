@@ -8517,6 +8517,12 @@ components:
         oauth_sub:
           type: [string, 'null']
           description: Provider-issued unique subject ID (linked to oauth_provider)
+        legacy_privilege:
+          type: [integer, 'null']
+          description: >
+            Admins' user list only. The data level (20, 25 or 30) the user had before an admin moved
+            them to level Enter plus the system group (`POST /api/user/{id}/move-to-group`); null =
+            never moved, or restored since.
 
     UserInput:
       allOf:
@@ -8752,6 +8758,9 @@ components:
           description: Revoked for good.
         disabled_at:
           type: [integer, "null"]
+        legacy_privilege:
+          type: [integer, "null"]
+          description: The data level the key had before it was moved to Enter plus a system group (M058); null = never moved.
         created_at:
           type: integer
         last_used_at:

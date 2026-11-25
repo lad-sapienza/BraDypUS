@@ -306,9 +306,7 @@ class Login extends \Bdus\Controller
 	public const MIN_PASSWORD_LENGTH           = 8;
 
 	/** Columns that may not exist yet on this app — see Manage::getBySQLSafe(). */
-	private const MAY_BE_MISSING_COLUMNS = [
-		'failed_login_count', 'locked_until', 'reset_token_hash', 'reset_token_expires',
-	];
+	private const MAY_BE_MISSING_COLUMNS = \DB\System\Manage::USERS_LATE_COLUMNS;
 
 	/**
 	 * Requests a password-reset email. Always responds with the same generic

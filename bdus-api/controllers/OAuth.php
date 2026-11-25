@@ -519,7 +519,7 @@ class OAuth extends \Bdus\Controller
         // app (migrations apply only after a successful login, and OAuth
         // callback resolves the user before that gate runs) — see
         // Manage::getBySQLSafe() and Login::authenticate().
-        $mayBeMissing = ['failed_login_count', 'locked_until', 'reset_token_hash', 'reset_token_expires'];
+        $mayBeMissing = Manage::USERS_LATE_COLUMNS;
 
         // 1. Sub match
         if ($sub) {

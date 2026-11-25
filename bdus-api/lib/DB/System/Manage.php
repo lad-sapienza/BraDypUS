@@ -506,6 +506,16 @@ class Manage
     }
 
     /**
+     * Columns of `bdus_users` that older apps do not have until the minor upgrade has run
+     * (M039/M040 lockout and reset token, M058 level memory). Reads that can happen before
+     * that, such as login, pass this list to {@see getBySQLSafe()}.
+     */
+    public const USERS_LATE_COLUMNS = [
+        'failed_login_count', 'locked_until', 'reset_token_hash', 'reset_token_expires',
+        'legacy_privilege', 'legacy_group_id',
+    ];
+
+    /**
      * Like getBySQL(), but tolerates columns a pending migration hasn't
      * added yet on this app: any name in $mayBeMissingColumns that isn't
      * actually on the table is left out of the SELECT instead of failing

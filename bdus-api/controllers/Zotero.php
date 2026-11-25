@@ -43,15 +43,8 @@ class Zotero extends \Bdus\Controller
             $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
             return;
         }
-        $manage = new Manage($this->db);
-        $rows   = $manage->getBySQL('bdus_zotero_libs', '1=1 ORDER BY name') ?: [];
-
-        foreach ($rows as &$r) {
-            // Never expose the API key over the wire.
-            $r['has_api_key'] = !empty($r['api_key']);
-            unset($r['api_key']);
-        }
-        unset($r);
+        // Never exposes the API key over the wire.
+        $rows = $this->links()->libs();
 
         $this->returnJson(['status' => 'success', 'libs' => $rows]);
     }
@@ -141,29 +134,8 @@ class Zotero extends \Bdus\Controller
             return;
         }
 
-        $client = $this->makeClient($lib);
-
         try {
-            $items   = $client->search($q, $limit);
-            $results = [];
-
-            foreach ($items as $item) {
-                $key     = $item['key'] ?? null;
-                if (!$key) {
-                    continue;
-                }
-                $style    = $lib['citation_style'] ?: Client::DEFAULT_STYLE;
-                $citation = $client->getFormattedCitation($key, $style);
-
-                $results[] = [
-                    'key'          => $key,
-                    'author_year'  => $client->extractAuthorYear($item),
-                    'full_citation' => $citation,
-                    'zotero_version' => $item['version'] ?? null,
-                    'zotero_url'   => $client->buildPublicUrl($key),
-                    'title'        => $item['data']['title'] ?? '',
-                ];
-            }
+            $results = $this->links()->search($lib, $q, $limit);
 
             $this->returnJson(['status' => 'success', 'results' => $results]);
 
@@ -199,21 +171,7 @@ class Zotero extends \Bdus\Controller
             return;
         }
 
-        $rows = $this->db->query(
-            "SELECT l.*, libs.type AS lib_type, libs.zotero_id AS lib_zotero_id
-               FROM bdus_zotero_links l
-               JOIN bdus_zotero_libs libs ON libs.id = l.lib_id
-              WHERE l.tb = ? AND l.record_id = ?
-              ORDER BY l.sort, l.id",
-            [$tb, $recordId],
-            'read'
-        ) ?: [];
-
-        foreach ($rows as &$r) {
-            $r['zotero_url'] = $this->buildUrl($r['lib_type'], $r['lib_zotero_id'], $r['zotero_key']);
-            unset($r['lib_type'], $r['lib_zotero_id']);
-        }
-        unset($r);
+        $rows = $this->links()->forRecord($tb, $recordId);
 
         $this->returnJson(['status' => 'success', 'links' => $rows]);
     }
@@ -254,20 +212,8 @@ class Zotero extends \Bdus\Controller
             return;
         }
 
-        // Fetch and cache citation immediately on add.
-        $cacheData = $this->fetchCacheData($lib, $zoteroKey);
-
-        $manage = new Manage($this->db);
-        $id = $manage->addRow('bdus_zotero_links', array_merge([
-            'tb'         => $tb,
-            'record_id'  => $recordId,
-            'lib_id'     => $libId,
-            'zotero_key' => $zoteroKey,
-            'pages'      => $pages,
-            'notes'      => $notes,
-            'sort'       => $sort,
-            'created_at' => time(),
-        ], $cacheData));
+        // Fetches and caches the citation immediately on add.
+        $id = $this->links()->add($tb, $recordId, $libId, $zoteroKey, $pages, $notes, $sort);
 
         $this->returnJson(['status' => 'success', 'code' => 'ok_link_added', 'id' => $id]);
     }
@@ -504,40 +450,11 @@ class Zotero extends \Bdus\Controller
         return [$updated, $detached];
     }
 
-    /**
-     * Fetches citation data from Zotero for a single item.
-     * Returns an array ready to merge into a bdus_zotero_links row.
-     * On error returns empty cache fields (item can still be saved).
-     */
-    private function fetchCacheData(array $lib, string $zoteroKey): array
+    private function links(): \Zotero\Links
     {
-        $style  = $lib['citation_style'] ?: Client::DEFAULT_STYLE;
-        $client = $this->makeClient($lib);
-
-        try {
-            $items = $client->getItems([$zoteroKey]);
-            $item  = $items[$zoteroKey] ?? null;
-
-            if (!$item) {
-                return ['detached' => 1, 'synced_at' => time()];
-            }
-
-            $citation = $client->getFormattedCitation($zoteroKey, $style);
-
-            return [
-                'author_year'    => $client->extractAuthorYear($item),
-                'full_citation'  => $citation,
-                'zotero_version' => (int) ($item['version'] ?? 0),
-                'synced_at'      => time(),
-                'detached'       => 0,
-            ];
-        } catch (ZoteroException $e) {
-            $this->log->warning("Zotero cache fetch failed for {$zoteroKey}: " . $e->getMessage());
-            return ['synced_at' => time()];
-        }
+        return new \Zotero\Links($this->db, $this->log);
     }
 
-    /** Loads a library row (with api_key). Returns null if not found. */
     /** May the principal change the record a Zotero link belongs to? (a missing link passes: nothing to protect) */
     private function mayChangeLinkedRecord(int $linkId): bool
     {
@@ -549,27 +466,11 @@ class Zotero extends \Bdus\Controller
 
     private function getLib(int $id): ?array
     {
-        $manage = new Manage($this->db);
-        $row    = $manage->getById('bdus_zotero_libs', $id);
-        return $row ?: null;
+        return $this->links()->getLib($id);
     }
 
-    /** Instantiates a Zotero\Client from a library row. */
     private function makeClient(array $lib): Client
     {
-        return new Client(
-            $lib['type'],
-            $lib['zotero_id'],
-            $lib['api_key'] ?? null
-        );
-    }
-
-    /** Builds public Zotero URL; null for user libraries. */
-    private function buildUrl(string $type, string $zoteroId, string $key): ?string
-    {
-        if ($type === 'user') {
-            return null;
-        }
-        return "https://www.zotero.org/groups/{$zoteroId}/items/{$key}";
+        return $this->links()->makeClient($lib);
     }
 }

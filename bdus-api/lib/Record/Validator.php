@@ -186,6 +186,41 @@ class Validator
     return !empty($this->db->query("SELECT 1 FROM {$target} WHERE id = ? LIMIT 1", [(int) $value], 'read'));
   }
 
+  /** @var array<string,array<string,int>> table => column => max characters */
+  private array $columnLengths = [];
+
+  /**
+   * Maximum length (characters) of a bounded text column (VARCHAR(n) / CHAR(n)), or null.
+   * Only MySQL/MariaDB and PostgreSQL enforce it; SQLite never does, so it is not asked.
+   */
+  private function columnMaxLength(string $tb, string $fld): ?int
+  {
+    if (!isset($this->columnLengths[$tb])) {
+      $this->columnLengths[$tb] = [];
+      $engine = $this->db->getEngine();
+      if (in_array($engine, ['mysql', 'pgsql'], true)) {
+        $schema = $engine === 'mysql' ? 'DATABASE()' : 'current_schema()';
+        try {
+          $rows = $this->db->query(
+            "SELECT column_name AS c, character_maximum_length AS l FROM information_schema.columns "
+              . "WHERE table_schema = {$schema} AND table_name = ? AND character_maximum_length IS NOT NULL",
+            [$tb],
+            'read'
+          ) ?: [];
+          foreach ($rows as $r) {
+            // MySQL TEXT/LONGTEXT report a byte length: only real character limits are useful.
+            if ((int) $r['l'] > 0 && (int) $r['l'] < 65535) {
+              $this->columnLengths[$tb][(string) $r['c']] = (int) $r['l'];
+            }
+          }
+        } catch (\Throwable) {
+          // introspection is a courtesy: the database itself stays the last guard
+        }
+      }
+    }
+    return $this->columnLengths[$tb][$fld] ?? null;
+  }
+
   /**
    * Validates a single field value against its config rules.
    * Returns an array of error objects (empty = valid).
@@ -272,7 +307,8 @@ class Validator
     }
 
     // max_length
-    $maxLen = $cfg['max_length'] ?? null;
+    // Without a configured limit, the physical column's own length (VARCHAR(n)) applies.
+    $maxLen = $cfg['max_length'] ?? $this->columnMaxLength($tb, $fldName);
     if ($maxLen && mb_strlen((string)$value) > (int)$maxLen) {
       $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'max_length', 'max_length' => $maxLen];
     }

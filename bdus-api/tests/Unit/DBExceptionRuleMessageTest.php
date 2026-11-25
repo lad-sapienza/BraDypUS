@@ -43,4 +43,24 @@ class DBExceptionRuleMessageTest extends TestCase
     {
         $this->assertNull((new DBException('Missing database name'))->getRuleMessage());
     }
+
+    #[DataProvider('tooLongCases')]
+    public function testValueTooLong(string $state, int $driverCode, bool $expected): void
+    {
+        $e = new \PDOException('x');
+        $e->errorInfo = [$state, $driverCode, 'whatever'];
+
+        $this->assertSame($expected, DBException::fromPdo($e)->isValueTooLong());
+    }
+
+    public static function tooLongCases(): array
+    {
+        return [
+            'pgsql 22001'      => ['22001', 7, true],
+            'mysql 1406'       => ['22001', 1406, true],
+            'mysql 1406 other' => ['HY000', 1406, true],
+            'unique'           => ['23000', 1062, false],
+            'pgsql unique'     => ['23505', 7, false],
+        ];
+    }
 }

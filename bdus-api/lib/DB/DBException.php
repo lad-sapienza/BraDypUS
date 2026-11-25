@@ -27,6 +27,20 @@ class DBException extends \Exception
     }
 
     /**
+     * True for "string data right truncation" (SQLSTATE 22001, MySQL strict mode and
+     * PostgreSQL; MySQL also reports it as driver error 1406).
+     */
+    public function isValueTooLong(): bool
+    {
+        $prev = $this->getPrevious();
+        if (!$prev instanceof \PDOException) {
+            return false;
+        }
+        $state = $prev->errorInfo[0] ?? (string) $prev->getCode();
+        return $state === '22001' || (int) ($prev->errorInfo[1] ?? 0) === 1406;
+    }
+
+    /**
      * Message of a user-defined database rule (trigger SIGNAL / RAISE
      * EXCEPTION), or null for any other database error.
      */

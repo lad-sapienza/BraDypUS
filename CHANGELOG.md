@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Text longer than its column: a clear error instead of "Database error".** Validation (`records_validate`, `rs_validate`, REST and UI) now also enforces the length of a bounded database column (`VARCHAR(n)` / `CHAR(n)` on MySQL/MariaDB and PostgreSQL) when the field has no `max_length` of its own; the error is the usual `max_length` one. A value that still reaches the database too long is answered with `db_value_too_long` instead of the generic `error_saved`.
+
 ## [5.28.1] - 2026-11-25
 
 ### Fixed

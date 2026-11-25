@@ -171,6 +171,9 @@ class Save
       if ($rule !== null) {
         return ['status' => 'error', 'code' => 'db_rule_violation', 'detail' => $rule];
       }
+      if ($e instanceof \DB\DBException && $e->isValueTooLong()) {
+        return ['status' => 'error', 'code' => 'db_value_too_long', 'detail' => 'A text value is longer than its database column allows'];
+      }
       return ['status' => 'error', 'code' => 'error_saved', 'detail' => $e->getMessage()];
     }
   }

@@ -520,6 +520,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "60"; then
+    header "Phase 60 — MCP bibliography"
+    run_phase "MCP bibliography" "60_mcp_bibliography.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

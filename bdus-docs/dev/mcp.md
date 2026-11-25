@@ -304,5 +304,6 @@ sheet entry". `Mcp\Prompts` is the store: validation on write, order, rendering.
 - `tests/Integration/McpViewsTest.php` — read-only and writable SQL views.
 - `tests/api/55_mcp.hurl` — the endpoint over HTTP: 401, 404 while off, 405 on
   GET, handshake, modern headers, `Origin`, prompts without any prompt written.
+- `tests/api/60_mcp_bibliography.hurl` — Zotero links over HTTP on every engine: create a record with a link, read it with `bibliography: true`, edit, add, remove, a foreign link refused, checked also through `GET /api/zotero/links`.
 - `tests/api/56_mcp_prompts.hurl` — prompts written through the REST endpoints and read
   back as an MCP client reads them.

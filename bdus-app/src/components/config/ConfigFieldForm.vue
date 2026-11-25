@@ -23,6 +23,8 @@
   <form :id="formId" class="cfg-fld-form" @submit.prevent="submit">
 
     <div v-if="error" class="cfg-fld-error">{{ error }}</div>
+    <!-- A field saved before the three sources became alternatives can carry more than one -->
+    <div v-if="sourceConflict" class="cfg-fld-error">{{ t('fld_source_conflict_msg', sourceNames) }}</div>
 
     <div class="cfg-fld-sections">
       <component
@@ -112,7 +114,7 @@
               :allow-clear="!meta.required"
               size="small"
               :status="errors[key] ? 'error' : undefined"
-              @change="validate(key, meta)"
+              @change="validate(key, meta); onSourceChange(key)"
             />
             <small v-if="meta.help" class="cfg-fld-help">{{ meta.help }}</small>
             <small v-if="errors[key]" class="cfg-fld-err-msg">{{ errors[key] }}</small>
@@ -285,6 +287,25 @@ function onGvftFieldChange() {
     gvftTable.value && gvftField.value
       ? `${gvftTable.value}:${gvftField.value}`
       : ''
+  onSourceChange('get_values_from_tb')
+}
+
+// ── Sources of values are alternatives ────────────────────────────────────
+// Vocabulary, values from a table and FK table: picking one clears the other two.
+const sourcesSet     = computed(() => shouldShow('id_from_tb') ? SELECT_ONLY_KEYS.filter(k => form.value[k]) : [])
+const sourceConflict = computed(() => sourcesSet.value.length > 1)
+const sourceNames    = computed(() => sourcesSet.value.map(k => t('fld_' + k)).join(', '))
+
+function onSourceChange(key) {
+  if (!SELECT_ONLY_KEYS.includes(key) || !form.value[key]) return
+  for (const other of SELECT_ONLY_KEYS.filter(k => k !== key)) {
+    form.value[other] = ''
+    if (other === 'get_values_from_tb') {
+      gvftTable.value = ''
+      gvftField.value = ''
+      gvftFields.value = {}
+    }
+  }
 }
 
 // ── Sync field prop ───────────────────────────────────────────────────────
@@ -341,6 +362,10 @@ function validateAll() {
 
 // ── Submit ────────────────────────────────────────────────────────────────
 async function submit() {
+  if (sourceConflict.value) {
+    error.value = t('fld_source_conflict_msg', sourceNames.value)
+    return
+  }
   if (!validateAll()) {
     error.value = t('errors_in_form')
     return

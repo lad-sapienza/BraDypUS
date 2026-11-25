@@ -1788,5 +1788,7 @@
   "not_moved": "This was not moved to a group, so there is nothing to restore",
   "level_changed": "The level (or the group) was changed after the move: it is not restored over that choice",
   "user_not_found": "User not found",
-  "key_not_found": "API key not found"
+  "key_not_found": "API key not found",
+  "fld_source_conflict_msg": "Vocabulary, Values from table and FK table are alternatives, and this field has more than one (%s). Keep only one and save: FK table is the one that keeps the data consistent (the id is stored).",
+  "field_source_conflict": "A field takes only one source of values: Vocabulary, Values from table or FK table"
 }

@@ -1788,5 +1788,7 @@
   "not_moved": "Non è stato spostato in un gruppo, quindi non c'è nulla da ripristinare",
   "level_changed": "Il livello (o il gruppo) è stato cambiato dopo lo spostamento: non viene ripristinato sopra quella scelta",
   "user_not_found": "Utente non trovato",
-  "key_not_found": "Chiave API non trovata"
+  "key_not_found": "Chiave API non trovata",
+  "fld_source_conflict_msg": "Vocabolario, Valori dalla tabella e Tabella FK sono alternative, e questo campo ne ha più d'una (%s). Tienine una sola e salva: la Tabella FK è quella che mantiene i dati coerenti (si salva l'id).",
+  "field_source_conflict": "Un campo accetta una sola fonte di valori: Vocabolario, Valori dalla tabella o Tabella FK"
 }

@@ -221,9 +221,10 @@ class Validator
       return $errors;
     }
 
-    // lookup (`id_from_tb`): the id must exist in the target table. On update only
+    // lookup (`id_from_tb`): the id must exist in the target table, unless another source
+    // (values from a column) is in force: it stores text, see Config\FieldSources. On update only
     // when the value changes, so an old record with a dangling reference stays savable.
-    if (!empty($cfg['id_from_tb']) && !$this->lookupExists((string) $cfg['id_from_tb'], $value)) {
+    if (\Config\FieldSources::effective($cfg) === 'id_from_tb' && !$this->lookupExists((string) $cfg['id_from_tb'], $value)) {
       $unchanged = false;
       if ($excludeId) {
         $cur = $this->db->query("SELECT {$fldName} AS v FROM {$tb} WHERE id = ?", [$excludeId], 'read');

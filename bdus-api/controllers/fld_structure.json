@@ -45,17 +45,17 @@
         "values": [
             "list-of-system-defined-vocabularies-here"
         ],
-        "help": "Select from the list the vocabulary whose values will be offered to the user. Only for `select`, `combo_select` and `multi_select` field types.",
+        "help": "Select from the list the vocabulary whose values will be offered to the user. Only for `select`, `combo_select` and `multi_select` field types. It is an alternative to the other two sources of values (vocabulary, values from table, FK table): choosing one clears the others.",
         "required": false
     },
     "get_values_from_tb": {
         "type": "input",
-        "help": "Select the table and field whose unique values will be used as suggestions. Only for `select`, `combo_select` and `multi_select` field types.",
+        "help": "Select the table and field whose unique values will be used as suggestions. Only for `select`, `combo_select` and `multi_select` field types. It is an alternative to the other two sources of values (vocabulary, values from table, FK table): choosing one clears the others.",
         "required": false
     },
     "id_from_tb": {
         "type": "select",
-        "help": "Select the table whose record IDs will be stored in this field. The id_field of that table is shown to users, but the integer id is saved. Only for `select`, `combo_select` and `multi_select` field types.",
+        "help": "Select the table whose record IDs will be stored in this field. The id_field of that table is shown to users, but the integer id is saved. Only for `select`, `combo_select` and `multi_select` field types. Recommended: the data keep their referential integrity. It is an alternative to the other two sources of values (vocabulary, values from table, FK table): choosing one clears the others.",
         "values": [
             "list-of-available-tables-here"
         ],

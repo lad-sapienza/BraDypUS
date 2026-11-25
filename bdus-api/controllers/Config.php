@@ -577,6 +577,7 @@ class Config extends \Bdus\Controller
       if (!$post['name'] || !$post['type']) {
         throw new \Exception('Both field name and field type are required');
       }
+      if ($this->rejectSourceConflict($post)) return;
 
       $this->cfg->setFld($tb, $fld, $post);
 
@@ -585,6 +586,20 @@ class Config extends \Bdus\Controller
       $this->log->error($e);
       $this->returnJson(['status' => 'error', 'code' => 'error_cfg_data_updated']);
     }
+  }
+
+  /**
+   * `get_values_from_tb`, `id_from_tb` and `vocabulary_set` are alternatives: refuses a field
+   * that sets more than one (`field_source_conflict`, `detail` names them). True when refused.
+   */
+  private function rejectSourceConflict(array $fld): bool
+  {
+    $sources = \Config\FieldSources::set($fld);
+    if (count($sources) < 2) {
+      return false;
+    }
+    $this->returnJson(['status' => 'error', 'code' => 'field_source_conflict', 'detail' => implode(', ', $sources)]);
+    return true;
   }
 
   public function add_new_fld()
@@ -607,6 +622,7 @@ class Config extends \Bdus\Controller
         $this->returnJson(['status' => 'error', 'code' => 'invalid_db_name']);
         return;
       }
+      if ($this->rejectSourceConflict($post)) return;
       $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));
       if (in_array($fld, $available_flds)) {
         $this->returnJson(['status' => 'error', 'code' => 'fld_already_available']);

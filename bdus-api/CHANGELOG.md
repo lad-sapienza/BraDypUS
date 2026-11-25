@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.28.2] - 2026-11-25
+
 ### Fixed
 
 - **PostgreSQL: the first upload after a migration or import failed with a duplicate key.** Rows loaded with explicit ids (the Directus migration's `bdus_files`, imports, partial restores) did not advance the id sequence, so the next ordinary insert took an id that already existed (`bdus_files_pkey`). Migration M059 moves every sequence that is behind `MAX(id)` up to it, once, on every PostgreSQL application at its next upgrade (`bdus update`, `bin/upgrade-app.php` or the admin login); it does nothing on SQLite/MySQL or when nothing is behind. `Manage::realignSequences()` is the reusable part. The `directus2bdus` file migration now ends with the same `setval`.

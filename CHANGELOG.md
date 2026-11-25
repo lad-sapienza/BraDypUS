@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **PostgreSQL: the first upload after a migration or import failed with a duplicate key.** Rows loaded with explicit ids (the Directus migration's `bdus_files`, imports, partial restores) did not advance the id sequence, so the next ordinary insert took an id that already existed (`bdus_files_pkey`). Migration M059 moves every sequence that is behind `MAX(id)` up to it, once, on every PostgreSQL application at its next upgrade (`bdus update`, `bin/upgrade-app.php` or the admin login); it does nothing on SQLite/MySQL or when nothing is behind. `Manage::realignSequences()` is the reusable part. The `directus2bdus` file migration now ends with the same `setval`.
 - **Text longer than its column: a clear error instead of "Database error".** Validation (`records_validate`, `rs_validate`, REST and UI) now also enforces the length of a bounded database column (`VARCHAR(n)` / `CHAR(n)` on MySQL/MariaDB and PostgreSQL) when the field has no `max_length` of its own; the error is the usual `max_length` one. A value that still reaches the database too long is answered with `db_value_too_long` instead of the generic `error_saved`.
 
 ## [5.28.1] - 2026-11-25

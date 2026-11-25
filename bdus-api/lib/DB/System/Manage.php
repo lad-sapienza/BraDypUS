@@ -682,6 +682,57 @@ class Manage
     }
 
     /**
+     * PostgreSQL only: moves every serial/identity sequence of the current schema that has
+     * fallen behind its column up to MAX(column), so the next INSERT without an id does not
+     * collide with an existing row. Rows inserted with explicit ids (data imports, restores,
+     * the Directus migration) leave the sequence where it was. Idempotent; on any other
+     * engine, or when nothing is behind, it does nothing.
+     *
+     * @return list<array{table:string,column:string,max:int,was:int}> the sequences it moved
+     */
+    public function realignSequences(): array
+    {
+        if ($this->driver !== 'pgsql') {
+            return [];
+        }
+
+        $cols = $this->db->query(
+            "SELECT c.relname AS tbl, a.attname AS col,
+                    pg_get_serial_sequence(quote_ident(n.nspname) || '.' || quote_ident(c.relname), a.attname) AS seq
+             FROM pg_class c
+             JOIN pg_namespace n ON n.oid = c.relnamespace
+             JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+             WHERE c.relkind IN ('r', 'p') AND n.nspname = current_schema()
+               AND a.atttypid IN (20, 21, 23)",
+            [],
+            'read'
+        ) ?: [];
+
+        $moved = [];
+        foreach ($cols as $c) {
+            if (empty($c['seq'])) {
+                continue;
+            }
+            $tb  = '"' . str_replace('"', '""', $c['tbl']) . '"';
+            $col = '"' . str_replace('"', '""', $c['col']) . '"';
+            $max = $this->db->query("SELECT MAX({$col}) AS m FROM {$tb}", [], 'read')[0]['m'] ?? null;
+            if ($max === null) {
+                continue;
+            }
+            $seq = $this->db->query("SELECT last_value AS l, is_called AS called FROM {$c['seq']}", [], 'read')[0] ?? null;
+            if (!$seq) {
+                continue;
+            }
+            $next = filter_var($seq['called'], FILTER_VALIDATE_BOOLEAN) ? (int) $seq['l'] + 1 : (int) $seq['l'];
+            if ($next <= (int) $max) {
+                $this->db->query("SELECT setval(?, ?)", [$c['seq'], (int) $max], 'read');
+                $moved[] = ['table' => $c['tbl'], 'column' => $c['col'], 'max' => (int) $max, 'was' => (int) $seq['l']];
+            }
+        }
+        return $moved;
+    }
+
+    /**
      * Checks whether a table exists (cross-engine).
      * Used by migrations that must guard against running on missing tables.
      */

@@ -67,6 +67,7 @@ use DB\System\Migrations\M055_AddDisabledAtToApiKeys;
 use DB\System\Migrations\M056_AddCharMapsToCfgApp;
 use DB\System\Migrations\M057_AddLabelToVocabularies;
 use DB\System\Migrations\M058_AddLegacyLevelColumns;
+use DB\System\Migrations\M059_RealignPostgresSequences;
 use Monolog\Logger;
 
 /**
@@ -170,6 +171,7 @@ class Migrate
         M056_AddCharMapsToCfgApp::class,
         M057_AddLabelToVocabularies::class,
         M058_AddLegacyLevelColumns::class,
+        M059_RealignPostgresSequences::class,
     ];
 
     /**

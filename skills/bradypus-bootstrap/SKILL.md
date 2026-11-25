@@ -195,7 +195,12 @@ the app, the schema validator (Config → Validation).
   (a `<` ref, or a table that already existed).
 - Users, groups, permissions and locks (the Users view, guide: `guide/setup/groups.md`):
   decide with the user who reads, edits and sees which rows; create accounts yourself
-  only if the user asks. Rules work on whole rows; the only written values they check are the ones a
+  only if the user asks. Access comes from groups: give new users and API keys level **Enter**
+  plus a group (the system groups Reader, Self writer and Writer stand for the usual roles; or
+  a group of your own). The levels Writer (20), Self writer (25) and Reader (30) are deprecated:
+  do not propose them, and for existing ones point to *Move to level Enter + group* in the
+  Users page (refused when the group would not give exactly the same access). Admin and
+  super admin remain levels. Rules work on whole rows; the only written values they check are the ones a
   create/update rule *pins* (`enforce`, e.g. `site = $GROUP.site` from a group attribute): if
   some roles must not see some columns, or records must move through states (draft → review →
   validated), say it needs SQL views plus triggers in the database

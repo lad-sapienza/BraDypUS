@@ -69,7 +69,7 @@ versions of every record, files, maps and print templates on top of them.
   requests per key and per address); personal data collected that way can be deleted or anonymised
   after a time with the retention command, history included ([Deploy](/guide/deploy/#deleting-old-records-retention)).
 - You need **permissions per field** or a **workflow engine** with notifications:
-  BraDypUS's own permission engine works per table and per row (a rule can use group
+  BraDypUS's own permission engine works per table and per row (access is given through groups, with the system groups Reader, Self writer and Writer for the usual roles; a rule can use group
   attributes, e.g. "the records of my site", and pin the value a field may take when
   records are created or saved), and locks freeze rows; there is nothing finer. A group's *record layout* chooses which template (fields, order, sections) its
   members get, but it is a convenience: a field it leaves out is still reachable through the API, search and

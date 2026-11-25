@@ -49,6 +49,7 @@
         size="small"
         rowKey="id"
         class="users-table"
+        :customRow="rowProps"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'name'">
@@ -61,7 +62,7 @@
             />
           </template>
           <template v-else-if="column.key === 'email'">
-            <a :href="`mailto:${record.email}`" class="users-email">{{ record.email }}</a>
+            <span class="users-email">{{ record.email }}</span>
           </template>
           <template v-else-if="column.key === 'privilege'">
             <ATag :color="severityToTagColor(privilegeSeverity(record.privilege_value))">
@@ -234,6 +235,18 @@ async function loadUsers() {
   }
 }
 
+// A click anywhere on the row opens the edit form (the pencil stays); buttons keep their own action.
+function rowProps(record) {
+  if (!record.editable) return {}
+  return {
+    class: 'users-row-clickable',
+    onClick: e => {
+      if (e.target.closest('button, a, input, .ant-btn')) return
+      openForm(record)
+    },
+  }
+}
+
 // ── Open user form ────────────────────────────────────────────────
 async function openForm(user) {
   const res = await api.get(user ? `/api/user/${user.id}` : '/api/user')
@@ -347,11 +360,9 @@ onMounted(loadUsers)
 }
 
 .users-email {
-  color: var(--p-text-color);
-  text-decoration: none;
   font-size: 0.875rem;
 }
-.users-email:hover { text-decoration: underline; }
+.users-table :deep(.users-row-clickable) { cursor: pointer; }
 
 .users-oauth-icon {
   margin-left: 0.4rem;

@@ -4,7 +4,7 @@
 # Runs after the demo seed (--seed), not with --tests: it needs the seeded
 # dataset and the two demo users the seed creates —
 #
-#   Editor Demo    writer (20)
+#   Editor Demo    level Enter (39), in the system group "Writer"
 #   Revisore Demo  level Enter (39), in the group "Revisori" that reads all
 #                  of `sepolture` and the verified stratigraphic units, with a
 #                  lock freezing the verified units
@@ -139,7 +139,7 @@ jsonpath "$.metadata.locked"     == true
 
 
 # ════════════════════════════════════════════════════════════════════
-# Editor Demo (writer, 20): reads and writes everything but frozen units
+# Editor Demo (level Enter + group Writer): reads and writes everything but frozen units
 # ════════════════════════════════════════════════════════════════════
 GET {{base_url}}/{{app_name}}/api/tables
 Authorization: Bearer {{editor_jwt}}

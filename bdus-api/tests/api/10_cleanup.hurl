@@ -24,12 +24,12 @@ jsonpath "$.status" == "error"
 jsonpath "$.code"   == "table_active"
 
 # The system plugin of phase 39 is attached again at the end of that phase: detach it
-# (its table and data stay, as before) so that crud_test has no plugin on.
+# (its table and data stay, as before) so that crud_test has no plugin on. Without
+# the correctness phases (`--setup --seed`) it was never attached: the answer is then
+# an error, and that is fine.
 DELETE {{base_url}}/{{app_name}}/api/config/table/crud_test/radiocarbon
 Authorization: Bearer {{jwt}}
 HTTP 200
-[Asserts]
-jsonpath "$.status" == "success"
 
 PUT {{base_url}}/{{app_name}}/api/config/table/crud_test_plg/active
 Authorization: Bearer {{jwt}}

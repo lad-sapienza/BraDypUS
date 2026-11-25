@@ -3494,9 +3494,11 @@ jsonpath "$.status" == "success"
 
 
 # ── 19v. Utenti, gruppo di revisori e blocco — demo di "Gruppi e permessi" ─
-# Un "Editor Demo" (writer) e un "Revisore Demo" di livello Enter, senza
-# accesso proprio: vede solo ciò che il gruppo "Revisori" gli concede (le
-# sepolture e le US verificate). Un blocco congela le US verificate:
+# Un "Editor Demo" e un "Revisore Demo", entrambi di livello Enter, senza
+# accesso proprio (i livelli Writer/Self writer/Reader sono deprecati dalla
+# 5.28.0: i seed usano i gruppi). L'editor sta nel gruppo di sistema "Writer"
+# e fa ciò che faceva il livello; il revisore vede solo ciò che il gruppo
+# "Revisori" gli concede (le sepolture e le US verificate). Un blocco congela le US verificate:
 # non le modifica nessuno tranne gli admin.
 POST {{base_url}}/{{app_name}}/api/user
 Authorization: Bearer {{jwt}}
@@ -3505,13 +3507,27 @@ Content-Type: application/json
   "name": "Editor Demo",
   "email": "editor@example.com",
   "password": "Editor1234!",
-  "privilege": 20
+  "privilege": 39
 }
 HTTP 200
 [Asserts]
 jsonpath "$.status" == "success"
 [Captures]
 editor_user_id: jsonpath "$.id"
+
+GET {{base_url}}/{{app_name}}/api/groups
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Captures]
+seed_writer_group: jsonpath "$.groups[?(@.name=='Writer')].id"
+
+PUT {{base_url}}/{{app_name}}/api/user/{{editor_user_id}}/groups
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "group_ids": [ {{seed_writer_group}} ] }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
 
 POST {{base_url}}/{{app_name}}/api/user
 Authorization: Bearer {{jwt}}

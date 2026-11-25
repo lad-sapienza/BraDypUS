@@ -260,8 +260,8 @@ User guide: [Record layouts per group](/guide/setup/record-layouts).
   in a group that reads a slice of one table, against every data and every
   administrative entry point. When you add an endpoint, add it there.
 - Hurl phase 47 — the demo profiles on the **demo data** (runs with `--seed`):
-  Editor Demo, Revisore Demo, a key in its group, plus a self writer (25) and a
-  pending user (40). If you change what the seed builds, keep it passing.
+  Editor Demo (level Enter in the system group Writer), Revisore Demo, a key in its group, plus
+  a self writer (25, a level kept on purpose to exercise it) and a pending user (40). If you change what the seed builds, keep it passing.
 - `RouterGroupKeyTest` checks that every `GROUP_KEY_ROUTES` entry is a real
   read/edit route.
 

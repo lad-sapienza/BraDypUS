@@ -213,6 +213,7 @@ function devSidebar() {
         { text: 'Record lifecycle',     link: '/dev/record-lifecycle' },
         { text: 'Config & access control',         link: '/dev/config' },
         { text: 'Groups & permissions',            link: '/dev/groups-permissions' },
+        { text: 'Removing the data levels (plan)', link: '/dev/levels-removal-plan' },
       ],
     },
     {

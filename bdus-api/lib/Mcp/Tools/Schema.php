@@ -64,6 +64,7 @@ class Schema extends Base
             'writable'    => $isView ? (($ctx->cfg->get("tables.{$tb}.view_writable") ?: 'none') !== 'none') : null,
             'features'    => $this->features($schema),
             'bibliography' => !empty($schema['has_zotero']) ? self::bibliography() : null,
+            'links'        => $isView ? null : self::links(),
             'stratigraphy' => !empty($schema['rs']) ? self::stratigraphy() : null,
             'fields'      => $this->compact($schema['fields']),
             'plugins'     => $plugins,
@@ -97,6 +98,16 @@ class Schema extends Base
             'finding' => 'bibliography_search lists the Zotero libraries and finds the item (its key) to link.',
             'writing' => 'The `bibliography` section of a record in records_validate / records_write: '
                 . '{ add: [{ lib_id, zotero_key, pages?, notes? }], edit: [{ id, pages?, notes?, sort? }], remove: [link id] }.',
+        ];
+    }
+
+    /** How to read and write the manual links between records (any table). */
+    private static function links(): array
+    {
+        return [
+            'reading' => 'records_read with links: true returns the manual links of each record (id of the link, table and id of the other record).',
+            'writing' => 'The `links` section of a record in records_validate / records_write: '
+                . '{ add: [{ table, id, label? }], remove: [link id] }. A link shows on both records: you must be allowed to change both.',
         ];
     }
 

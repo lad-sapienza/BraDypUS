@@ -85,6 +85,10 @@ class Guide extends Base
       citation, pages, notes). `bibliography_search` lists the Zotero libraries and finds the item
       to link (its `key`); it needs the right to edit.
 
+    Manual links (between records of any table)
+    - `records_read` with `links: true` adds to each row its manual links (id of the link, `table` and
+      `record_id` of the other record, its `label`).
+
     Reports
     - For totals and breakdowns use `aggregate` (count, sum, avg, min, max, grouped by one or two
       fields) with the same filters; do not read and count rows yourself.
@@ -107,8 +111,12 @@ class Guide extends Base
       `records_write` calls: `add` (`{ lib_id, zotero_key, pages?, notes? }`), `edit` (`{ id, pages?,
       notes?, sort? }`, id of the link) and `remove` (link ids). They are written with the record,
       all or none. Only tables with bibliography accept the section (`zotero_not_configured`).
+    - Manual links go in the `links` section of a record, same calls: `add` (`{ table, id, label? }`, the
+      other record) and `remove` (link ids). A link shows on both records: you must be allowed to change
+      both, the other record must exist (`record_not_found`) and the pair must not be linked already
+      (`link_already_exists`). Written with the record, all or none.
     - Every change to a record is recorded in the history (`history`); an administrator can restore a
-      version. Relations are not in the history: a removed relation cannot be restored.
+      version. Relations and links are not in the history: a removed one cannot be restored.
 
     Limits
     - Lists are paged: 25 rows by default, 200 at most. `total` is the size of the whole result;

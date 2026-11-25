@@ -34,7 +34,11 @@
         v-if="isAdmin && (dataLevels.users + dataLevels.keys) > 0"
         type="warning" show-icon class="users-levels-banner"
         :message="t('grp_levels_banner', dataLevels.users, dataLevels.keys)"
-      />
+      >
+        <template #action>
+          <AButton size="small" @click="moveAllOpen = true">{{ t('lvl_move_all') }}</AButton>
+        </template>
+      </AAlert>
 
       <!-- ── Table ───────────────────────────────────────────── -->
       <ATable
@@ -64,6 +68,7 @@
               {{ record.privilege }}
             </ATag>
             <ATag v-if="DATA_LEVELS.includes(record.privilege_value)" :title="t('grp_lvl_deprecated_note')">{{ t('grp_level_deprecated_tag') }}</ATag>
+            <ATag v-if="record.legacy_privilege && record.privilege_value === 39" color="blue">{{ t('lvl_moved_tag', LEVEL_GROUP[record.legacy_privilege] ?? record.legacy_privilege) }}</ATag>
           </template>
           <template v-else-if="column.key === 'groups'">
             <ATag v-for="gid in record.groups" :key="gid" class="users-group-tag">{{ groupName(gid) }}</ATag>
@@ -77,6 +82,22 @@
               :title="t('edit')"
               @click="openForm(record)"
             ><template #icon><EditOutlined /></template></AButton>
+            <AButton
+              v-if="isAdmin && record.editable && DATA_LEVELS.includes(record.privilege_value)"
+              type="text"
+              shape="circle"
+              size="small"
+              :title="t('lvl_move_to_group')"
+              @click="move('user', { id: record.id, name: record.name, level: record.privilege_value }, loadUsers)"
+            ><template #icon><SwapOutlined /></template></AButton>
+            <AButton
+              v-if="isAdmin && record.editable && record.legacy_privilege && record.privilege_value === 39"
+              type="text"
+              shape="circle"
+              size="small"
+              :title="t('lvl_restore')"
+              @click="restore('user', { id: record.id, name: record.name, legacy: record.legacy_privilege }, loadUsers)"
+            ><template #icon><UndoOutlined /></template></AButton>
             <AButton
               v-if="isAdmin && record.editable && record.id !== auth.user?.id"
               type="text"
@@ -102,6 +123,8 @@
 
     </div>
 
+    <LevelMoveModal v-model:open="moveAllOpen" @done="loadUsers" />
+
     <!-- ── User form dialog ───────────────────────────────────── -->
     <AModal
       v-model:open="formVisible"
@@ -122,13 +145,15 @@
 </template>
 
 <script setup>
-import { DeleteOutlined, EditOutlined, GoogleOutlined, IdcardOutlined, PlusOutlined, StopOutlined } from '@ant-design/icons-vue'
+import { DeleteOutlined, EditOutlined, GoogleOutlined, IdcardOutlined, PlusOutlined, StopOutlined, SwapOutlined, UndoOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout        from '@/components/AppLayout.vue'
 import UserForm         from '@/components/users/UserForm.vue'
 import GroupsPanel      from '@/components/users/GroupsPanel.vue'
 import LocksPanel       from '@/components/users/LocksPanel.vue'
+import LevelMoveModal   from '@/components/users/LevelMoveModal.vue'
+import { useLevelMove, LEVEL_GROUP } from '@/composables/useLevelMove'
 import { Alert as AAlert, Table as ATable, Button as AButton, Tag as ATag, Modal as AModal, Input as AInput, Tabs as ATabs, TabPane as ATabPane } from 'ant-design-vue'
 import { api }          from '@/api'
 import { useGroups }    from '@/composables/useGroups'
@@ -140,6 +165,8 @@ const { t }   = useI18n()
 const auth    = useAuthStore()
 const confirm = useConfirm()
 const toast   = useToast()
+const { move, restore } = useLevelMove()
+const moveAllOpen = ref(false)
 
 // ── Privilege severity map ────────────────────────────────────────
 const SEVERITY = { 1: 'danger', 10: 'warning', 20: 'info', 25: 'info', 30: 'success', 40: 'secondary' }
@@ -156,7 +183,7 @@ const columns = computed(() => [
     sorter: (a, b) => (a.email ?? '').localeCompare(b.email ?? ''), width: 220 },
   { title: t('global_privilege'), key: 'privilege', width: 170 },
   ...(isAdmin.value ? [{ title: t('grp_groups'), key: 'groups' }] : []),
-  { title: '',                    key: 'actions',   width: 170 },
+  { title: '',                    key: 'actions',   width: 210 },
 ])
 
 // ── Tabs (admins) ─────────────────────────────────────────────────

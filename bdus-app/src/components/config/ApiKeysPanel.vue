@@ -90,6 +90,7 @@
               <ATag :color="severityToTagColor(privilegeSeverity(record.privilege))">
                 {{ privilegeLabel(record.privilege) }}
               </ATag>
+              <ATag v-if="record.legacy_privilege && record.privilege === PRIV_ENTER" color="blue">{{ t('lvl_moved_tag', LEVEL_GROUP[record.legacy_privilege] ?? record.legacy_privilege) }}</ATag>
             </template>
             <template v-else-if="column.key === 'group'">
               <ATag v-if="record.group_name" color="blue">{{ record.group_name }}</ATag>
@@ -103,6 +104,16 @@
             <template v-else-if="column.key === 'actions'">
               <!-- A revoked key is final: nothing but deleting it is left -->
               <template v-if="!record.is_revoked">
+                <AButton
+                  v-if="isDataLevel(record.privilege) && !record.group_id"
+                  type="text" size="small" :title="t('lvl_move_to_group')"
+                  @click="move('key', { id: record.id, name: record.label, level: record.privilege }, load)"
+                ><template #icon><SwapOutlined /></template></AButton>
+                <AButton
+                  v-if="record.legacy_privilege && record.privilege === PRIV_ENTER"
+                  type="text" size="small" :title="t('lvl_restore')"
+                  @click="restore('key', { id: record.id, name: record.label, legacy: record.legacy_privilege }, load)"
+                ><template #icon><UndoOutlined /></template></AButton>
                 <AButton type="text" size="small" :title="t('api_key_edit')" @click="openEdit(record)">
                   <template #icon><EditOutlined /></template>
                 </AButton>
@@ -177,18 +188,20 @@
 </template>
 
 <script setup>
-import { CopyOutlined, DeleteOutlined, EditOutlined, KeyOutlined, LoadingOutlined, PauseCircleOutlined, PlayCircleOutlined, PlusOutlined, StopOutlined } from '@ant-design/icons-vue'
+import { CopyOutlined, DeleteOutlined, EditOutlined, KeyOutlined, LoadingOutlined, PauseCircleOutlined, PlayCircleOutlined, PlusOutlined, StopOutlined, SwapOutlined, UndoOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted } from 'vue'
 import { Table as ATable, Button as AButton, Input as AInput, Select as ASelect, Alert as AAlert, Tag as ATag, Modal as AModal } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n }  from '@/i18n'
 import { api }      from '@/api'
 import { useGroups } from '@/composables/useGroups'
+import { useLevelMove, LEVEL_GROUP } from '@/composables/useLevelMove'
 import { severityToTagColor } from '@/utils/severity'
 
 const { t }  = useI18n()
 const toast  = useToast()
 const confirm = useConfirm()
+const { move, restore } = useLevelMove()
 
 // Privilege levels mirror Authorization constants (lower = more privileged)
 const PRIV_ADMIN = 10

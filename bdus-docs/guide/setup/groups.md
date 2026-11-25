@@ -200,6 +200,12 @@ action; otherwise nothing changes and you are told what differs. The old level i
 kept. An API key already tied to a group of its own is not moved (a key has one group).
 The change is immediate: the user keeps working without signing in again.
 
+In the **Users** page, each user at one of those levels has a *Move to level Enter + group*
+button; once moved, the user shows a *moved from Writer* tag and a *Restore the previous
+level* button. The banner on top has *Move everyone equivalent…*, which lists who would be
+moved and who would not (and why) before you confirm. The same two buttons exist on each
+row of **Configuration → API keys**.
+
 Via the API: `POST /api/user/{id}/move-to-group`, `POST /api/user/{id}/restore-level`, the
 same two for `/api/api-key/{id}/`, and `POST /api/levels/move-to-groups` to move everyone
 who is equivalent at once (add `"dry_run": true` to see who would be moved without writing).

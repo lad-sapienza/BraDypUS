@@ -29,13 +29,14 @@ field names are yours: the assistant learns them from your configuration.
 |---|---|
 | `guide`, `schema` | Reads how the database is organised: tables, fields, help texts, rules, plugin tables, and your own [instructions](#instructions-for-the-assistant) |
 | `vocabulary` | Lists the values a field accepts |
-| `records_read` | Finds and reads records (filters, text search, sorting, related rows); 25 per call, 200 at most |
+| `records_read` | Finds and reads records (filters, text search, sorting, related rows, and with `bibliography` their Zotero links); 25 per call, 200 at most |
 | `aggregate` | Counts and breakdowns for reports (count, distinct, sum, average, min, max; up to two groupings) |
 | `resolve` | Turns names the user mentions ("US 1023", "Castro") into record ids |
 | `history` | Shows the versions of a record and what changed |
 | `rs_read` | Lists the stratigraphic relations of a record (Harris matrix), each read "first covers second", with the id to remove it by |
+| `bibliography_search` | Lists the [Zotero](../system-plugins/zotero) libraries and finds the item to link to a record (needs the right to edit; asks Zotero, so the search text goes to Zotero) |
 | `records_validate` | **Dry run** of a new or changed record: errors, or the values as they would be saved and those they replace |
-| `records_write` | Creates and updates records, with their plugin rows (radiocarbon, osteology…) |
+| `records_write` | Creates and updates records, with their plugin rows (radiocarbon, osteology…) and their Zotero links (the `bibliography` section: add, edit, remove) |
 | `rs_validate` | **Dry run** of stratigraphic relations to add and to remove: does the table have them, are the codes and records valid, may the key change both records, is the fact already there |
 | `rs_write` | Adds and removes stratigraphic relations |
 | `records_delete` | Deletes records |
@@ -43,8 +44,10 @@ field names are yours: the assistant learns them from your configuration.
 The three that write (`records_write`, `rs_write`) or delete (`records_delete`) are off
 until you switch them on: writing covers records and relations, deleting only records.
 It does **not** change the structure of the application, manage users, run SQL, upload
-files, restore versions, or edit geometries, bibliography and Pleiades links; those stay
-in the interface.
+files, restore versions, or edit geometries and Pleiades links; those stay in the
+interface. Zotero links can be read and changed, only on tables that have bibliography
+(otherwise `zotero_not_configured`), with the same right as the interface (edit the record);
+the assistant cannot add or remove Zotero libraries.
 
 ## Who sees what
 

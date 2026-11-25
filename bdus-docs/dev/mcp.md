@@ -15,7 +15,7 @@ and what is still to come (write tools, history, OAuth) are in the
 
 | Built | Not yet |
 |---|---|
-| Protocol layer, settings (and their page: system configuration → MCP, `McpPanel.vue`), the thirteen tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `rs_read`, `records_validate`, `records_write`, `rs_validate`, `rs_write`, `records_delete`, `prompts/list` and `prompts/get`, the REST endpoints and the page that edit prompts (system configuration → MCP, `McpPromptsEditor.vue`, with a button that adds two example prompts in the interface language) | OAuth |
+| Protocol layer, settings (and their page: system configuration → MCP, `McpPanel.vue`), the fourteen tools: `guide`, `schema`, `vocabulary`, `records_read`, `aggregate`, `resolve`, `history`, `rs_read`, `bibliography_search`, `records_validate`, `records_write`, `rs_validate`, `rs_write`, `records_delete`, `prompts/list` and `prompts/get`, the REST endpoints and the page that edit prompts (system configuration → MCP, `McpPromptsEditor.vue`, with a button that adds two example prompts in the interface language) | OAuth |
 
 ## Request flow
 
@@ -114,13 +114,14 @@ settings; it never learns how the principal was authenticated.
 | `guide` | conventions (constant) + `mcp.guide` | — |
 | `schema` | `Config\TableSchema`, `Authorization::tableAbilities()` | — |
 | `vocabulary` | `Record\FieldOptions` (readable rows only) | 200 values, 1,000 at most |
-| `records_read` | `SQL\QueryFromRequest`, `Record\Expand` — the classes behind `GET /api/records/{tb}` | 25 rows, 200 at most |
+| `records_read` | `SQL\QueryFromRequest`, `Record\Expand` — the classes behind `GET /api/records/{tb}`; `bibliography: true` adds `Zotero\Links::forRecords()` | 25 rows, 200 at most |
 | `aggregate` | `SQL\Aggregate` (also behind the charts) on the rows of a `QueryFromRequest` request | 2 grouping fields, 6 metrics, 200 groups, 1,000 at most |
 | `resolve` | `SQL\QueryFromRequest` on the key field | 100 values, 5 matches each |
 | `history` | `bdus_versions`, with the row rule of the REST history | read-only: no restore |
 | `rs_read` | `Record\Read::getRs()`, relations to records the principal cannot read left out | — |
-| `records_validate` | `Record\Save::check()` | 50 records |
-| `records_write` | `Record\Save::save()` in one transaction; needs `write` | 50 records |
+| `bibliography_search` | `Zotero\Links::libs()` / `search()` (the logic of `GET /api/zotero/libs` and `/search`); needs `edit` on some table | 100 items |
+| `records_validate` | `Record\Save::check()` + `Mcp\Tools\Bibliography::check()` | 50 records |
+| `records_write` | `Record\Save::save()` + `Bibliography::apply()` in one transaction; needs `write` | 50 records, 20 link changes per record |
 | `rs_validate` | `Record\Rs::checkAdd()` / `checkRemove()` | 50 relations (adds + removals) |
 | `rs_write` | `Record\Rs::add()` / `remove()` in one transaction; needs `write` | 50 relations |
 | `records_delete` | `Record\Delete` in one transaction; needs `delete` | 50 ids |
@@ -216,6 +217,32 @@ MCP. A removed relation is gone. Tracked in
 Tests: `RecordRsTest`, `RecordCtrlRsTest` (REST refusals), `McpRsTest` (tools, rights, hidden
 records, token, budget), hurl phase 55.
 
+## Bibliography (Zotero links)
+
+The logic that does not depend on HTTP lives in `Zotero\Links` (libraries, search, citation
+cache, add / edit / delete of a link); the REST controller `Zotero` delegates to it, so both entry
+points write links the same way. The MCP side is `Mcp\Tools\Bibliography`:
+
+- A record in `records_validate` / `records_write` may carry `bibliography: { add, edit, remove }`
+  (`add`: `{ lib_id, zotero_key, pages?, notes?, sort? }`; `edit`: `{ id, pages?, notes?, sort? }`;
+  `remove`: link ids; at most 20 items per record). It is part of the payload the
+  `validation_token` signs. Unknown keys are `invalid_parameters` (a client cannot forge
+  `full_citation`).
+- Refusals are codes: `zotero_not_configured` (table without `zotero`), `lib_not_found`,
+  `link_not_found` (a link that is not one of this record's), `link_already_exists` (same library and
+  key, also twice in one call), `not_enough_privilege`, `invalid_parameters`. In the dry run they
+  come per record; in the write as `write_refused` with the code in `detail`.
+- Rights: the record is changed first (`Record\Save`, so tier, group rules, row scope and locks
+  apply), then `WriteGate::mayChange('update')` is asked again for the links, as the REST routes do.
+  A bibliography-only update (`core: {}`) is allowed.
+- The citations are fetched from Zotero **before** the transaction opens (`Bibliography::prefetch()`),
+  so the network is not waited for with a lock held; if Zotero does not answer the link is stored
+  without a cache and the next sync fills it (as in the REST `POST /api/zotero/link`). The dry run
+  never asks Zotero.
+- Reading: `records_read` with `bibliography: true` (refused with `zotero_not_configured` on other
+  tables); `bibliography_search` without `query` lists the libraries (no API key), with `query`
+  searches one.
+
 ## Prompts
 
 `prompts/list` and `prompts/get` serve the text templates an administrator wrote
@@ -273,6 +300,7 @@ sheet entry". `Mcp\Prompts` is the store: validation on write, order, rendering.
 - `tests/Integration/McpWriteRulesTest.php` — locks, tiers, self writer, group rules (create,
   update, delete scoped separately), pinned values, group keys and their trace in the history,
   plugin rows (add, change, remove, a client's own `_isNew`), `creator`/`id` not client fields.
+- `tests/Integration/McpBibliographyTest.php` — reading links, searching, add / edit / remove inside the record's transaction, creating a record with links, every refusal code, the token, atomicity, self writer.
 - `tests/Integration/McpViewsTest.php` — read-only and writable SQL views.
 - `tests/api/55_mcp.hurl` — the endpoint over HTTP: 401, 404 while off, 405 on
   GET, handshake, modern headers, `Origin`, prompts without any prompt written.

@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **MCP: Zotero bibliography** (scope 1 of #87). `records_read` takes `bibliography: true` and returns the Zotero links of each row; the new tool `bibliography_search` lists the Zotero libraries and finds the item to link (needs the right to edit); the `bibliography` section of a record in `records_validate` / `records_write` adds, edits and removes links in the same transaction as the record (all or nothing, behind the existing write switch). Tables without Zotero answer `zotero_not_configured`. The Zotero logic moved to `Zotero\Links`, shared with the REST controller (no change to the endpoints).
+
 ## [5.28.2] - 2026-11-25
 
 ### Fixed

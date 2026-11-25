@@ -217,6 +217,30 @@ MCP. A removed relation is gone. Tracked in
 Tests: `RecordRsTest`, `RecordCtrlRsTest` (REST refusals), `McpRsTest` (tools, rights, hidden
 records, token, budget), hurl phase 55.
 
+## Manual links (bdus_userlinks)
+
+`Record\ManualLinks` holds the logic that does not depend on HTTP, as `Record\Rs` does for
+relations; the REST endpoints `POST /api/manual-link` and `DELETE /api/manual-link/{id}` delegate to it
+(their answers are unchanged). It gates **both** records with `WriteGate::mayChange('update')`,
+looks for a duplicate in both directions, and `forRecords()` reads the links of many records in
+few queries (files, `tb = 'bdus_files'`, are not manual links). The MCP side is `Mcp\Tools\Links`:
+
+- A record in `records_validate` / `records_write` may carry `links: { add, remove }` (`add`:
+  `{ table, id, label?, sort? }`; `remove`: link ids; at most 20 items per record), part of the
+  payload the `validation_token` signs. Unknown keys are `invalid_parameters`.
+- The other table is resolved with `Base::table()` (`unknown_table` for an unknown, `bdus_*` or plugin
+  table, or one the key cannot read; `view_read_only` for a read-only view). Refusals beyond the REST
+  ones, MCP only: `record_not_found` (asked after the rights, as `Record\Rs`, so existence of a
+  record is not told to someone who may not change it) and `link_with_itself`. The others are
+  `link_not_found` (a link that is not one of this record's), `link_already_exists` (also twice in one
+  call; removing and re-adding the same pair in one call is fine), `not_enough_privilege`.
+- Rights: the record is changed first (`Record\Save`), then both ends of each link go through the
+  gate; removing a link needs the right on the other record too. A links-only update (`core: {}`)
+  is allowed. Deleting a record already drops its links in both directions (`Record\Persist`).
+- Reading: `records_read` with `links: true` (any table; links to tables the key cannot read are
+  left out, since the label is a value of the other record).
+- Links are not in the version history, as relations.
+
 ## Bibliography (Zotero links)
 
 The logic that does not depend on HTTP lives in `Zotero\Links` (libraries, search, citation
@@ -301,9 +325,11 @@ sheet entry". `Mcp\Prompts` is the store: validation on write, order, rendering.
   update, delete scoped separately), pinned values, group keys and their trace in the history,
   plugin rows (add, change, remove, a client's own `_isNew`), `creator`/`id` not client fields.
 - `tests/Integration/McpBibliographyTest.php` — reading links, searching, add / edit / remove inside the record's transaction, creating a record with links, every refusal code, the token, atomicity, self writer.
+- `tests/Integration/McpLinksTest.php` — reading links from both sides, add / remove inside the record's transaction, another table, every refusal code, the token, atomicity, both records gated (self writer, reader).
 - `tests/Integration/McpViewsTest.php` — read-only and writable SQL views.
 - `tests/api/55_mcp.hurl` — the endpoint over HTTP: 401, 404 while off, 405 on
   GET, handshake, modern headers, `Origin`, prompts without any prompt written.
 - `tests/api/60_mcp_bibliography.hurl` — Zotero links over HTTP on every engine: create a record with a link, read it with `bibliography: true`, edit, add, remove, a foreign link refused, checked also through `GET /api/zotero/links`.
+- `tests/api/61_mcp_links.hurl` — manual links over HTTP on every engine: add with a record, read from both sides, refusals, REST `POST/DELETE /api/manual-link` cross-checked.
 - `tests/api/56_mcp_prompts.hurl` — prompts written through the REST endpoints and read
   back as an MCP client reads them.

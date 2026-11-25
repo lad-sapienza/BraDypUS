@@ -29,14 +29,14 @@ field names are yours: the assistant learns them from your configuration.
 |---|---|
 | `guide`, `schema` | Reads how the database is organised: tables, fields, help texts, rules, plugin tables, and your own [instructions](#instructions-for-the-assistant) |
 | `vocabulary` | Lists the values a field accepts |
-| `records_read` | Finds and reads records (filters, text search, sorting, related rows, and with `bibliography` their Zotero links); 25 per call, 200 at most |
+| `records_read` | Finds and reads records (filters, text search, sorting, related rows, and with `bibliography` their Zotero links or with `links` their manual links to other records); 25 per call, 200 at most |
 | `aggregate` | Counts and breakdowns for reports (count, distinct, sum, average, min, max; up to two groupings) |
 | `resolve` | Turns names the user mentions ("US 1023", "Castro") into record ids |
 | `history` | Shows the versions of a record and what changed |
 | `rs_read` | Lists the stratigraphic relations of a record (Harris matrix), each read "first covers second", with the id to remove it by |
 | `bibliography_search` | Lists the [Zotero](../system-plugins/zotero) libraries and finds the item to link to a record (needs the right to edit; asks Zotero, so the search text goes to Zotero) |
 | `records_validate` | **Dry run** of a new or changed record: errors, or the values as they would be saved and those they replace |
-| `records_write` | Creates and updates records, with their plugin rows (radiocarbon, osteology…) and their Zotero links (the `bibliography` section: add, edit, remove) |
+| `records_write` | Creates and updates records, with their plugin rows (radiocarbon, osteology…) their Zotero links (the `bibliography` section: add, edit, remove) and their manual links to other records (the `links` section: add, remove) |
 | `rs_validate` | **Dry run** of stratigraphic relations to add and to remove: does the table have them, are the codes and records valid, may the key change both records, is the fact already there |
 | `rs_write` | Adds and removes stratigraphic relations |
 | `records_delete` | Deletes records |
@@ -48,6 +48,13 @@ files, restore versions, or edit geometries and Pleiades links; those stay in th
 interface. Zotero links can be read and changed, only on tables that have bibliography
 (otherwise `zotero_not_configured`), with the same right as the interface (edit the record);
 the assistant cannot add or remove Zotero libraries.
+
+**Manual links** between records (the *links* of the record form, of any two tables) can be read
+with `records_read` (`links: true`) and added or removed in the `links` section of a record. A link
+shows on **both** records, so the key must be allowed to change both; the other record must exist
+(`record_not_found`), a pair already linked, in either direction, is refused
+(`link_already_exists`) and so is a record with itself (`link_with_itself`). Like all writes, the
+links are saved together with the record, all or none. Links to files are not part of this.
 
 ## Who sees what
 
@@ -156,7 +163,7 @@ locks. On top of that:
    to change both; the same fact read from the other side ("2 covers 1" after "1 is covered
    by 2") counts as a duplicate; a record cannot be related to itself. Relations are
    **not** in the version history (neither through the API nor the interface): a removed
-   relation cannot be restored from it.
+   relation cannot be restored from it. The same holds for manual links between records.
 5. **Ids, not names.** Records are changed by `id`; the assistant looks names up with
    `resolve` and shows you the match first, because a key field is not always unique.
 

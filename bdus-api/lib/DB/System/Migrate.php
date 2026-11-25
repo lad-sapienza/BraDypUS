@@ -66,6 +66,7 @@ use DB\System\Migrations\M054_CreateMcpPrompts;
 use DB\System\Migrations\M055_AddDisabledAtToApiKeys;
 use DB\System\Migrations\M056_AddCharMapsToCfgApp;
 use DB\System\Migrations\M057_AddLabelToVocabularies;
+use DB\System\Migrations\M058_AddLegacyLevelColumns;
 use Monolog\Logger;
 
 /**
@@ -168,6 +169,7 @@ class Migrate
         M055_AddDisabledAtToApiKeys::class,
         M056_AddCharMapsToCfgApp::class,
         M057_AddLabelToVocabularies::class,
+        M058_AddLegacyLevelColumns::class,
     ];
 
     /**

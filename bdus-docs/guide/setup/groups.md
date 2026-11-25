@@ -186,9 +186,23 @@ Writer, Self writer and Reader (levels 20, 25, 30) are kept working and unchange
 they are deprecated: new users should get level **Enter** plus the group. The levels will
 be removed only when all of this holds: the groups have been compared with the levels on
 real data without differences (`bin/groups-equivalence.php`), there is a tool to move users
-with a way back, and at least one release has shipped with both. Admin and super admin
+with a way back (done: see below), and at least one release has shipped with both. Admin and super admin
 stay levels for now.
 :::
+
+### Moving users and keys from a level to a group <Badge type="tip" text="v5.28.0" />
+
+An admin can move a user (or an API key) from level Writer, Self writer or Reader to level
+**Enter** plus the system group of the same name, and move them back. The move is made
+only when the group gives **exactly the same access** as the level on every table and
+action; otherwise nothing changes and you are told what differs. The old level is kept, so
+**Restore level** undoes it, removing the group the move added. A user's other groups are
+kept. An API key already tied to a group of its own is not moved (a key has one group).
+The change is immediate: the user keeps working without signing in again.
+
+Via the API: `POST /api/user/{id}/move-to-group`, `POST /api/user/{id}/restore-level`, the
+same two for `/api/api-key/{id}/`, and `POST /api/levels/move-to-groups` to move everyone
+who is equivalent at once (add `"dry_run": true` to see who would be moved without writing).
 
 ### Example: a reviewer for one site
 

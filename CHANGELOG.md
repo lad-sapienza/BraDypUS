@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Move users and API keys from a data level to Enter + group, and back (step 2b of moving data permissions to groups; API only, the interface follows).** `POST /api/user/{id}/move-to-group` puts a user at level Writer, Self writer or Reader at level Enter in the system group of the same name; `POST /api/user/{id}/restore-level` undoes it. The same two exist under `/api/api-key/{id}/`, and `POST /api/levels/move-to-groups` moves everyone at once (`dry_run` reports without writing). A move is refused (`not_equivalent`, with the differences) unless the group gives exactly the same access as the level on every table and action; a key that already has its own group is refused (`key_has_group`); a restore is refused if the level was edited after the move (`level_changed`). Admin only; effective immediately. Migration **M058** adds the columns that remember the old level (`bdus_users.legacy_privilege`, `legacy_group_id`; `bdus_api_keys.legacy_privilege`).
+
 ## [5.27.4] - 2026-11-24
 
 ### Changed

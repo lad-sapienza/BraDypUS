@@ -4503,6 +4503,143 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/user/{id}/move-to-group:
+    post:
+      operationId: postUserMoveToGroupById
+      tags: [users]
+      summary: Move a user from a data level to Enter + its system group
+      description: |
+        Moves a user at a data level (Writer 20, Self writer 25, Reader 30) to level Enter
+        plus the system group that stands for it (Writer, Self writer, Reader). Admin only.
+
+        Refused, writing nothing, unless the group gives exactly the same access as the
+        level on every table and action (`not_equivalent`, with `differences`). The old level
+        is kept so the move can be undone (`restore-level`). Effective immediately.
+
+        Other error codes: `user_not_found`, `not_data_level`, `group_missing`, `db_error`.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Result (`status: success` with the old level and the group), or an error `code`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LevelMigrationResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/user/{id}/restore-level:
+    post:
+      operationId: postUserRestoreLevelById
+      tags: [users]
+      summary: Undo the move of a user to a group
+      description: |
+        Undoes `move-to-group`: puts the user back at the level they had and removes the
+        group the move added (a membership the user already had is left alone).
+
+        Error codes: `user_not_found`, `not_moved`, `level_changed` (the level was edited
+        after the move: that choice is kept), `db_error`.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Result (`status: success` with the old level and the group), or an error `code`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LevelMigrationResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/api-key/{id}/move-to-group:
+    post:
+      operationId: postApiKeyMoveToGroupById
+      tags: [api-keys]
+      summary: Move an API key from a data level to Enter + its system group
+      description: |
+        Same as for a user, for an API key at a data level without a group of its own.
+        A key has one group only, so a key that already has one is refused (`key_has_group`).
+
+        Other error codes: `key_not_found`, `api_key_revoked`, `not_data_level`,
+        `group_missing`, `not_equivalent`, `db_error`.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Result (`status: success` with the old level and the group), or an error `code`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LevelMigrationResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/api-key/{id}/restore-level:
+    post:
+      operationId: postApiKeyRestoreLevelById
+      tags: [api-keys]
+      summary: Undo the move of an API key to a group
+      description: |
+        Undoes `move-to-group` for a key: restores its level and removes its group.
+
+        Error codes: `key_not_found`, `api_key_revoked`, `not_moved`, `level_changed`
+        (the level or the group was edited after the move), `db_error`.
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Result (`status: success` with the old level and the group), or an error `code`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LevelMigrationResult'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/levels/move-to-groups:
+    post:
+      operationId: postLevelsMoveToGroups
+      tags: [users]
+      summary: Move every equivalent user and API key from its data level to Enter + group
+      description: |
+        Applies `move-to-group` to every user and every ungrouped, unrevoked API key at level
+        20, 25 or 30. Those whose group gives exactly the same access are moved; the others are
+        listed in `refused` with the reason. With `dry_run: true` nothing is written and
+        `moved` lists who would be moved. Admin only.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dry_run:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: Who was (or would be) moved and who was refused
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                  dry_run:
+                    type: boolean
+                  moved:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LevelMigrationItem'
+                  refused:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LevelMigrationItem'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   # ── Templates ─────────────────────────────────────────────────────────────
 
   /api/templates:
@@ -7628,6 +7765,56 @@ components:
           properties:
             code:
               type: string
+
+    LevelMigrationResult:
+      oneOf:
+        - type: object
+          properties:
+            status:
+              type: string
+              enum: [success]
+            code:
+              type: string
+              enum: [moved, restored]
+            id:
+              type: integer
+            level:
+              type: integer
+              description: The level before a move, or the level restored
+            group:
+              type: string
+              description: The system group (only after a move)
+        - type: object
+          properties:
+            status:
+              type: string
+              enum: [error]
+            code:
+              type: string
+            differences:
+              type: array
+              description: With `not_equivalent`, what differs between the level and the group
+              items:
+                type: object
+                properties:
+                  table: {type: string}
+                  action: {type: string}
+                  kind: {type: string, enum: [gate, rows]}
+                  level_only: {type: integer}
+                  group_only: {type: integer}
+
+    LevelMigrationItem:
+      type: object
+      properties:
+        type: {type: string, enum: [user, key]}
+        id: {type: integer}
+        name: {type: string}
+        code: {type: string}
+        level: {type: integer}
+        group: {type: string}
+        differences:
+          type: array
+          items: {type: object}
 
     CodedResult:
       oneOf:

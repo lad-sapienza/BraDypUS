@@ -9,7 +9,8 @@
         { "name": "revoked_at",   "type": "INTEGER",            "notnull": false },
         { "name": "privilege",    "type": "INTEGER",            "notnull": false, "default": 30 },
         { "name": "group_id",     "type": "INTEGER",            "notnull": false },
-        { "name": "disabled_at",  "type": "INTEGER",            "notnull": false }
+        { "name": "disabled_at",  "type": "INTEGER",            "notnull": false },
+        { "name": "legacy_privilege", "type": "INTEGER",        "notnull": false }
     ],
     "indexes": [
         { "name": "api_keys_hash_idx", "columns": ["key_hash"], "unique": true }

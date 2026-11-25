@@ -12,7 +12,9 @@
         { "name": "failed_login_count", "type": "INTEGER", "notnull": true, "default": 0 },
         { "name": "locked_until",       "type": "INTEGER", "notnull": true, "default": 0 },
         { "name": "reset_token_hash",    "type": "TEXT",    "notnull": true, "default": "" },
-        { "name": "reset_token_expires", "type": "INTEGER", "notnull": true, "default": 0 }
+        { "name": "reset_token_expires", "type": "INTEGER", "notnull": true, "default": 0 },
+        { "name": "legacy_privilege",    "type": "INTEGER", "notnull": false },
+        { "name": "legacy_group_id",     "type": "INTEGER", "notnull": false }
     ],
     "indexes": [
         { "name": "users_email_idx", "columns": ["email"], "unique": true }

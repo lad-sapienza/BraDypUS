@@ -514,6 +514,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "59"; then
+    header "Phase 59 — Move level → group"
+    run_phase "Move level to group" "59_level_to_group_move.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

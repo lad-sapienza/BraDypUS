@@ -159,6 +159,11 @@ class Router
         'Bdus\\Controllers\\User::saveUserData'                    => 'admin',
         'Bdus\\Controllers\\User::deleteOne'                       => 'admin',
         'Bdus\\Controllers\\User::revokeToken'                    => 'admin',
+        'Bdus\\Controllers\\LevelMigration::moveUser'             => 'admin',
+        'Bdus\\Controllers\\LevelMigration::restoreUser'          => 'admin',
+        'Bdus\\Controllers\\LevelMigration::moveKey'              => 'admin',
+        'Bdus\\Controllers\\LevelMigration::restoreKey'           => 'admin',
+        'Bdus\\Controllers\\LevelMigration::moveAll'              => 'admin',
         'Bdus\\Controllers\\ConfirmAdminPwd::check_pwd'      => 'admin',
         'Bdus\\Controllers\\Backup::listBackups'                   => 'edit',
         'Bdus\\Controllers\\Backup::doBackup'                      => 'edit',
@@ -656,6 +661,13 @@ class Router
             $r->addRoute('PUT',    '/api/group/{id:\d+}/layouts',   ['Bdus\\Controllers\\Groups', 'setLayouts']);
             $r->addRoute('GET',    '/api/user/{id:\d+}/groups',     ['Bdus\\Controllers\\Groups', 'getUserGroups']);
             $r->addRoute('PUT',    '/api/user/{id:\d+}/groups',     ['Bdus\\Controllers\\Groups', 'setUserGroups']);
+
+            // Move users and keys from a data level to Enter + system group, and back
+            $r->addRoute('POST',   '/api/user/{id:\d+}/move-to-group',     ['Bdus\\Controllers\\LevelMigration', 'moveUser']);
+            $r->addRoute('POST',   '/api/user/{id:\d+}/restore-level',     ['Bdus\\Controllers\\LevelMigration', 'restoreUser']);
+            $r->addRoute('POST',   '/api/api-key/{id:\d+}/move-to-group',  ['Bdus\\Controllers\\LevelMigration', 'moveKey']);
+            $r->addRoute('POST',   '/api/api-key/{id:\d+}/restore-level',  ['Bdus\\Controllers\\LevelMigration', 'restoreKey']);
+            $r->addRoute('POST',   '/api/levels/move-to-groups',            ['Bdus\\Controllers\\LevelMigration', 'moveAll']);
             $r->addRoute('GET',    '/api/locks',                    ['Bdus\\Controllers\\Groups', 'listLocks']);
             $r->addRoute('POST',   '/api/locks',                    ['Bdus\\Controllers\\Groups', 'createLock']);
             $r->addRoute('PUT',    '/api/lock/{id:\d+}',            ['Bdus\\Controllers\\Groups', 'updateLock']);

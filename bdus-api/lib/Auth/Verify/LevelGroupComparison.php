@@ -57,34 +57,21 @@ class LevelGroupComparison
     public function run(): array
     {
         $groups = $this->groupIds();
-        $tables = array_values(array_filter(
-            (array) ($this->cfg->get('tables.*.name') ?: []),
-            fn($t) => is_string($t) && preg_match('/^[A-Za-z0-9_]+$/', $t) === 1
-        ));
-        $notes = [];
+        $tables = $this->tables();
+        $notes  = [];
 
         $users = $this->db->query('SELECT id, name, email, privilege FROM bdus_users ORDER BY id', [], 'read') ?: [];
 
         $levels = [];
         $out    = [];
         foreach ($users as $u) {
-            $level = (int) $u['privilege'];
-            $name  = self::LEVEL_GROUP[$level] ?? null;
+            $row   = $this->userRow($u, $groups, $tables, $notes);
+            $level = $row['level'];
+            $name  = $row['group'];
             $levels[$level] ??= ['users' => 0, 'group' => $name, 'equivalent' => $name === null ? null : true];
             $levels[$level]['users']++;
-
-            $row = [
-                'id' => (int) $u['id'], 'name' => (string) $u['name'], 'email' => (string) $u['email'],
-                'level' => $level, 'group' => $name, 'equivalent' => null, 'differences' => [],
-            ];
-            if ($name !== null && ($groups[$name] ?? null) !== null) {
-                $row['differences'] = $this->differences($level, (int) $u['id'], (int) $groups[$name], $tables, $notes);
-                $row['equivalent']  = $row['differences'] === [];
-                if (!$row['equivalent']) {
-                    $levels[$level]['equivalent'] = false;
-                }
-            } elseif ($name !== null) {
-                $levels[$level]['equivalent'] = false;   // the group is missing: nothing to compare against
+            if ($name !== null && $row['equivalent'] !== true) {
+                $levels[$level]['equivalent'] = false;   // different, or the group is missing: nothing to compare against
             }
             $out[] = $row;
         }
@@ -111,6 +98,82 @@ class LevelGroupComparison
                                     && array_intersect($missing, $used) === [],
             ],
         ];
+    }
+
+    /**
+     * The comparison for one user, or null when there is no such user. Same row
+     * as in run()['users'], plus `group_id` (the system group's id, null when absent).
+     *
+     * @return ?array{id: int, name: string, email: string, level: int, group: ?string, group_id: ?int, equivalent: ?bool, differences: list<array>}
+     */
+    public function compareUser(int $id): ?array
+    {
+        $u = $this->db->query('SELECT id, name, email, privilege FROM bdus_users WHERE id = ?', [$id], 'read')[0] ?? null;
+        if (!$u) {
+            return null;
+        }
+        $notes = [];
+        return $this->userRow($u, $this->groupIds(), $this->tables(), $notes);
+    }
+
+    /**
+     * The comparison for one API key (its level alone against level Enter in the
+     * equivalent group; a key is not a user, so owner-based rules see id 0), or
+     * null when there is no such key. Only meaningful for a key without a group.
+     *
+     * @return ?array{id: int, label: string, level: int, group: ?string, group_id: ?int, has_group: bool, revoked: bool, equivalent: ?bool, differences: list<array>}
+     */
+    public function compareKey(int $id): ?array
+    {
+        $k = $this->db->query('SELECT id, label, privilege, group_id, revoked_at FROM bdus_api_keys WHERE id = ?', [$id], 'read')[0] ?? null;
+        if (!$k) {
+            return null;
+        }
+        $groups = $this->groupIds();
+        $level  = (int) $k['privilege'];
+        $name   = self::LEVEL_GROUP[$level] ?? null;
+        $gid    = $name === null ? null : ($groups[$name] ?? null);
+        $row = [
+            'id' => (int) $k['id'], 'label' => (string) $k['label'], 'level' => $level,
+            'group' => $name, 'group_id' => $gid, 'has_group' => !empty($k['group_id']),
+            'revoked' => !empty($k['revoked_at']), 'equivalent' => null, 'differences' => [],
+        ];
+        if ($gid !== null) {
+            $notes = [];
+            $row['differences'] = $this->differences($level, 0, $gid, $this->tables(), $notes);
+            $row['equivalent']  = $row['differences'] === [];
+        }
+        return $row;
+    }
+
+    /** @return string[] the configured tables whose name is safe to put in SQL */
+    private function tables(): array
+    {
+        return array_values(array_filter(
+            (array) ($this->cfg->get('tables.*.name') ?: []),
+            fn($t) => is_string($t) && preg_match('/^[A-Za-z0-9_]+$/', $t) === 1
+        ));
+    }
+
+    /**
+     * @param  array<string, ?int> $groups
+     * @param  string[]            $tables
+     * @param  string[]            $notes
+     */
+    private function userRow(array $u, array $groups, array $tables, array &$notes): array
+    {
+        $level = (int) $u['privilege'];
+        $name  = self::LEVEL_GROUP[$level] ?? null;
+        $gid   = $name === null ? null : ($groups[$name] ?? null);
+        $row = [
+            'id' => (int) $u['id'], 'name' => (string) $u['name'], 'email' => (string) $u['email'],
+            'level' => $level, 'group' => $name, 'group_id' => $gid, 'equivalent' => null, 'differences' => [],
+        ];
+        if ($gid !== null) {
+            $row['differences'] = $this->differences($level, (int) $u['id'], $gid, $tables, $notes);
+            $row['equivalent']  = $row['differences'] === [];
+        }
+        return $row;
     }
 
     /** @return array<string, ?int>  system group name => id (null when absent) */

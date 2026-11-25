@@ -60,7 +60,17 @@ same user at Enter in the equivalent group, table by table and action by action 
 rows), and lists differences, missing groups and API keys with a level and no group. Cells
 that cannot be compared (a creator test on a table without a `creator` column, e.g. plugin
 tables, whose owner the level takes from the host record) are reported as notes: check them
-before moving self writers to the group. Admin and super admin are not expressible as
+before moving self writers to the group. `Auth\LevelMigration` (controller `LevelMigration`, admin only, M058) moves a user or an
+API key from level 20/25/30 to Enter plus the system group and back; it reuses
+`LevelGroupComparison::compareUser()/compareKey()` and refuses with `not_equivalent` (and the
+differences) unless the group gives exactly the same access, so nothing is written for
+someone who would lose or gain anything. The user keeps their other groups; a membership they
+already had is not removed when restoring (`legacy_group_id` NULL). A key has one group, so a
+key with its own group is refused (`key_has_group`); restoring is refused when the level (or
+the key's group) was edited after the move (`level_changed`). Endpoints: `POST
+/api/user/{id}/move-to-group`, `…/restore-level`, the same under `/api/api-key/{id}/`, and
+`POST /api/levels/move-to-groups` (everyone equivalent; `dry_run` reports without writing).
+Hurl phase 59. Admin and super admin are not expressible as
 groups: `Router::ROUTE_PRIVILEGE`, configuration, users, backups and the lock bypass read the
 level. The grid keeps the rules it has no row for (`*`) when it saves.
 

@@ -161,6 +161,16 @@ HTTP 200
 jsonpath "$.status" == "error"
 jsonpath "$.code" == "link_already_exists"
 
+# a record with itself is refused by REST too
+POST {{base_url}}/{{app_name}}/api/manual-link
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+{ "tb_one": "crud_test", "id_one": {{recA61}}, "tb_two": "crud_test", "id_two": {{recA61}} }
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "error"
+jsonpath "$.code" == "link_with_itself"
+
 # ── remove through MCP ────────────────────────────────────────────────
 POST {{base_url}}/{{app_name}}/api/mcp
 Authorization: Bearer {{jwt}}

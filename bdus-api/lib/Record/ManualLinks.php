@@ -42,6 +42,10 @@ class ManualLinks
      */
     public function checkAdd(string $tbOne, int $idOne, string $tbTwo, int $idTwo): ?string
     {
+        // A link joins two records: a record cannot be linked to itself (it would show twice on it).
+        if ($tbOne === $tbTwo && $idOne === $idTwo) {
+            return 'link_with_itself';
+        }
         // A link shows on both records: both must be changeable.
         if (!$this->gate->mayChange('update', $tbOne, $idOne) || !$this->gate->mayChange('update', $tbTwo, $idTwo)) {
             return 'not_enough_privilege';

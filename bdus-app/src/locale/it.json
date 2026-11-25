@@ -421,6 +421,7 @@
   "no_link_saved": "Errore. Nessun link è stato salvato",
   "no_user_links": "Nessun collegamento disponibile per questo record",
   "link_already_exists": "Questo collegamento esiste già",
+  "link_with_itself": "Un record non può essere collegato a se stesso",
   "type_to_search": "Digita per cercare…",
   "new_link": "Aggiungi un nuovo collegamento",
   "select_tb_to_continue": "Seleziona una tabella per continuare",

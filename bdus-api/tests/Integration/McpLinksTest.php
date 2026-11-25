@@ -199,6 +199,15 @@ class McpLinksTest extends BdusTestCase
         ];
     }
 
+    public function testRestEndpointRefusesALinkWithItself(): void
+    {
+        $links = new \Record\ManualLinks(static::$db, static::$cfg, \Auth\Access::forCurrentUser(static::$db, static::$cfg));
+        $this->assertSame(['status' => 'error', 'code' => 'link_with_itself'], $links->add('items', 1, 'items', 1));
+        $this->assertCount(1, $this->stored());
+        // same id in another table is a different record
+        $this->assertSame('success', $links->add('items', 1, 'categories', 1)['status']);
+    }
+
     public function testLinkOfAnotherRecordCannotBeRemoved(): void
     {
         $res = $this->tool('records_validate', ['table' => 'items', 'records' => [$this->item(3, ['remove' => [1]])]]);

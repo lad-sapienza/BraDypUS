@@ -526,6 +526,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "61"; then
+    header "Phase 61 — MCP manual links"
+    run_phase "MCP manual links" "61_mcp_links.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

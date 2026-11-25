@@ -5,6 +5,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A select field with both _Values from table_ and _FK table_ could not be saved (since 5.22.0).** The form offered the text of the column and stored it, while the server, since #69, demanded the id of an existing record in the FK table: "Server-side validation failed for: …". A field that sets more than one of the three value sources (`vocabulary_set`, `get_values_from_tb`, `id_from_tb`) now follows the one in force (the first of that list, the order the form and `field-options` already used): with *Values from table* the text is accepted again, with only *FK table* the id is still checked.
+- **The three sources are alternatives, and the configuration says so.** Saving a field that sets more than one is refused (`field_source_conflict`, with the sources in `detail`); in the field form, choosing one clears the other two, and a field that already carries two shows a notice asking to keep one. The docs explain how to convert existing text values to ids when moving a field to *FK table*.
+
 ## [5.28.0] - 2026-11-25
 
 ### Changed

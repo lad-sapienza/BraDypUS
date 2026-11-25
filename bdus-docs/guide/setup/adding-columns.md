@@ -118,6 +118,12 @@ available values. Set exactly one of the following:
 | **Values from table** | A table and field whose unique values are used as autocomplete suggestions |
 | **FK table** | A table whose records appear in the dropdown; the record `id` is stored, but the preview fields are shown to users |
 
+The three are **alternatives**: the configuration refuses to save a field that sets more
+than one, and choosing one in the form clears the other two <Badge type="tip" text="v5.28.1" />.
+A field saved with two of them before that (for example **Values from table** and **FK
+table**) keeps working as its list is offered: the one first in the table above is in force,
+and the form asks you to keep only one the next time you open it.
+
 ## Foreign key fields
 
 A foreign key field stores the `id` of a record from another table. Use type `select`
@@ -125,6 +131,30 @@ and set **FK table** to the target table.
 
 The dropdown shows the target table's preview fields; the stored value is the integer `id`.
 This is the recommended way to avoid data duplication across tables.
+
+### From text values to a foreign key
+
+When a field that stored text (**Values from table**) becomes an **FK table** field, the
+records already saved still hold the text, not the `id`. Convert them once, after a backup and
+on a copy first. In SQL, for the field `saggio_scavo` of `quad_trincee` whose target table
+`saggi_scavo` shows its own `saggio_scavo` column (set that column as the target table's
+`id_field`):
+
+```sql
+-- 1. checks: both must come back empty
+SELECT saggio_scavo, COUNT(*) FROM saggi_scavo GROUP BY saggio_scavo HAVING COUNT(*) > 1;   -- duplicates
+SELECT saggio_scavo, COUNT(*) FROM quad_trincee
+ WHERE saggio_scavo IS NOT NULL AND saggio_scavo <> ''
+   AND saggio_scavo NOT IN (SELECT saggio_scavo FROM saggi_scavo) GROUP BY saggio_scavo;     -- no match
+
+-- 2. conversion: only the texts with exactly one match
+UPDATE quad_trincee
+   SET saggio_scavo = (SELECT MIN(s.id) FROM saggi_scavo s WHERE s.saggio_scavo = quad_trincee.saggio_scavo)
+ WHERE saggio_scavo IN (SELECT saggio_scavo FROM saggi_scavo GROUP BY saggio_scavo HAVING COUNT(*) = 1);
+```
+
+Duplicates and texts with no match are left untouched: fix them by hand first. A record that
+still holds text saves as long as you do not change that field.
 
 ## Reordering fields
 

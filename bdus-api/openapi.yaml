@@ -2620,6 +2620,9 @@ paths:
       operationId: postManualLink
       tags: [manual-links]
       summary: Create a manual cross-table link
+      description: >-
+        Error codes include `link_with_itself` (a record cannot be linked to itself),
+        `link_already_exists` and `not_enough_privilege`.
       requestBody:
         required: true
         content:

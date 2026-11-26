@@ -213,7 +213,9 @@ the app, the schema validator (Config → Validation).
 - **AI assistants (MCP)**, optional (Config → MCP, guide: `guide/setup/mcp.md`): once the data is in,
   the user may let an assistant (Claude Code, Cursor) question and, if allowed, change it through
   `POST /{app}/api/mcp` with an API key. It is **off by default** and a super admin switches it on;
-  separate switches for writing and deleting. The assistant sees only what the key's level and group
+  separate switches for writing and deleting. Besides records and stratigraphic relations, it can read
+  and change a record's Zotero links (only on tables with Zotero enabled) and its manual links to other
+  records, in the same call as the record. The assistant sees only what the key's level and group
   allow, so recommend a dedicated key at level Enter with a group, and SQL views (not layouts) for
   columns that must stay private. Everything it reads goes to the model's provider: say so. Do not
   switch it on, enable writing or deleting, or create API keys unless the user asks.

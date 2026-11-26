@@ -29,6 +29,16 @@ To disable, toggle the switch off. The columns — and any data already entered 
 **preserved**; the panel simply disappears from RecordView. Toggle it back on at any
 time to restore the panel without data loss.
 
+::: info After disabling
+The five `chrono_*` columns stay in the database but are removed from the table
+configuration, so **Validate application** lists them as "Database column … is not
+available in the model". This is expected, not an error, and records can be edited and
+saved as usual: a field that is a column of the table but is not in the configuration is
+ignored on save <Badge type="tip" text="next release" />. If you do not plan to enable the
+plugin again, you can delete the columns from that same check, but the data they contain
+is lost for good.
+:::
+
 ## The chronology panel
 
 Once enabled, a **Chronology** section appears in RecordView below the regular fields.

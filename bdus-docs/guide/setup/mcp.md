@@ -36,7 +36,7 @@ field names are yours: the assistant learns them from your configuration.
 | `rs_read` | Lists the stratigraphic relations of a record (Harris matrix), each read "first covers second", with the id to remove it by |
 | `bibliography_search` | Lists the [Zotero](../system-plugins/zotero) libraries and finds the item to link to a record (needs the right to edit; asks Zotero, so the search text goes to Zotero) |
 | `records_validate` | **Dry run** of a new or changed record: errors, or the values as they would be saved and those they replace |
-| `records_write` | Creates and updates records, with their plugin rows (radiocarbon, osteology…) their Zotero links (the `bibliography` section: add, edit, remove) and their manual links to other records (the `links` section: add, remove) |
+| `records_write` | Creates and updates records, with their plugin rows (radiocarbon, osteology…), their Zotero links (the `bibliography` section: add, edit, remove) and their manual links to other records (the `links` section: add, remove) |
 | `rs_validate` | **Dry run** of stratigraphic relations to add and to remove: does the table have them, are the codes and records valid, may the key change both records, is the fact already there |
 | `rs_write` | Adds and removes stratigraphic relations |
 | `records_delete` | Deletes records |

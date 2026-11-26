@@ -57,6 +57,31 @@ class RecordCtrlSaveValidationTest extends BdusTestCase
         $this->assertSame($items, $this->rows('items'));
     }
 
+    // A column that exists in the DB but is not in the config (e.g. left behind by
+    // deactivating the fuzzy-date plugin) is not a field of the table: a client that
+    // sends it back (the edit form copies every column of the record) must not make
+    // the save fail, and the stored value must stay untouched.
+    public function testColumnNotInConfigIsIgnoredNotRefused(): void
+    {
+        $alter = new \DB\Alter(static::$db);
+        $alter->addFld('items', 'orphan_col', 'VARCHAR(50)');
+        try {
+            $res = $this->save(['tb' => self::TB, 'core' => ['name' => 'Orphan ' . uniqid(), 'status' => 'active']]);
+            $id  = (int) $res['id'];
+            static::$db->query("UPDATE items SET orphan_col = 'kept' WHERE id = ?", [$id], 'boolean');
+
+            $res = $this->save(['tb' => self::TB, 'id' => $id, 'core' => ['status' => 'inactive', 'orphan_col' => 'changed']]);
+            $this->assertSame('success', $res['status'], json_encode($res));
+
+            $row = static::$db->query('SELECT status, orphan_col FROM items WHERE id = ?', [$id], 'read')[0];
+            $this->assertSame('inactive', $row['status']);
+            $this->assertSame('kept', $row['orphan_col'], 'a field outside the config is never written');
+            static::$db->query('DELETE FROM items WHERE id = ?', [$id], 'boolean');
+        } finally {
+            $alter->dropFld('items', 'orphan_col');
+        }
+    }
+
     // #67 — a required field left out of a create payload
     public function testRequiredFieldMissingFromCreatePayloadIsRefused(): void
     {

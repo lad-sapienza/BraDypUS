@@ -19,10 +19,37 @@ use Config\Config;
  */
 class Validator
 {
+  /**
+   * Payload fields dropped by the last payloadShapeErrors() call: physical
+   * columns that are not in the configuration (`table.field`).
+   *
+   * @var string[]
+   */
+  public array $ignored = [];
+
   public function __construct(
     private readonly DBInterface $db,
     private readonly Config $cfg,
   ) {}
+
+  /**
+   * Is $fld a physical column of $tb that the configuration does not know?
+   * (Left behind e.g. by deactivating the fuzzy-date plugin, or added by hand.)
+   * Such a column is not a field of the table: the record carries it back from a
+   * read, but it is never written nor validated.
+   */
+  private function isOrphanColumn(string $tb, string $fld): bool
+  {
+    if (!$this->db instanceof \DB\DB) {
+      return false;
+    }
+    try {
+      $cols = array_column((new \DB\Inspect($this->db))->tableColumns($tb), 'fld');
+    } catch (\Throwable) {
+      return false;
+    }
+    return in_array($fld, $cols, true);
+  }
 
   /**
    * Shape of a saveRecord payload: what the client may name and with which
@@ -42,13 +69,17 @@ class Validator
       return ['status' => 'error', 'code' => 'parameter_missing', 'detail' => 'core'];
     }
 
+    $this->ignored = [];
     $errors = [];
     $names  = fn(string $t): array => array_column($this->cfg->get("tables.{$t}.fields") ?: [], 'name');
 
     // `id` and `creator` are system fields the server sets itself (a client value is dropped).
     $coreNames = array_merge($names($tb), ['id', 'creator']);
     foreach ($core as $fld => $val) {
-      if (!is_string($fld) || !in_array($fld, $coreNames, true)) {
+      if (is_string($fld) && !in_array($fld, $coreNames, true) && $this->isOrphanColumn($tb, $fld)) {
+        unset($core[$fld]);
+        $this->ignored[] = "{$tb}.{$fld}";
+      } elseif (!is_string($fld) || !in_array($fld, $coreNames, true)) {
         $errors[] = ['field' => (string) $fld, 'label' => (string) $fld, 'rule' => 'unknown_field'];
       } elseif (is_array($val) || is_object($val)) {
         $errors[] = ['field' => $fld, 'label' => $fld, 'rule' => 'invalid_type'];
@@ -71,7 +102,10 @@ class Validator
           unset($plgs[$plgTb][$i]['fields']['id_link']);
         }
         foreach ($plgs[$plgTb][$i]['fields'] ?? [] as $fld => $val) {
-          if (!is_string($fld) || !in_array($fld, $plgNames, true)) {
+          if (is_string($fld) && !in_array($fld, $plgNames, true) && $this->isOrphanColumn($plgTb, $fld)) {
+            unset($plgs[$plgTb][$i]['fields'][$fld]);
+            $this->ignored[] = "{$plgTb}.{$fld}";
+          } elseif (!is_string($fld) || !in_array($fld, $plgNames, true)) {
             $errors[] = ['field' => $plgTb . '.' . $fld, 'label' => $plgTb . '.' . $fld, 'rule' => 'unknown_field'];
           } elseif (is_array($val) || is_object($val)) {
             $errors[] = ['field' => $plgTb . '.' . $fld, 'label' => $fld, 'rule' => 'invalid_type'];

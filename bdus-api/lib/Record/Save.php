@@ -267,6 +267,9 @@ class Save
     // table, with plain values: those names end up in SQL, and a value that is
     // an array would be stored as the text "Array". Before any write.
     $shape = $this->validator->payloadShapeErrors($tb, $id, $core, $plgs);
+    if ($this->validator->ignored) {
+      $this->log?->warning("Save {$tb}: ignored fields that are database columns but not in the configuration: " . implode(', ', $this->validator->ignored));
+    }
     if ($shape !== null) {
       return $shape;
     }

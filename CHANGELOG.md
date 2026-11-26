@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.29.0] - 2026-11-26
+
 ### Fixed
 
 - **Saving a record failed with "Server validation failed for: chrono_label, chrono_period"** (or any other column) on a table whose database has columns that the configuration does not list, typically after deactivating the fuzzy-date plugin (the columns stay, on purpose). The edit form sends back every column of the record and the server refused those as `unknown_field`. Now a payload field that is a real column of the table but not in the configuration is ignored (never written, never validated) and a warning is logged; a name that is not a column of the table is still refused.

@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.29.0] - 2026-11-26
+
+### Fixed
+
+- **Saving a record failed with "Server validation failed for: chrono_label, chrono_period"** (or any other column) on a table whose database has columns that the configuration does not list, typically after deactivating the fuzzy-date plugin (the columns stay, on purpose). The edit form sends back every column of the record and the server refused those as `unknown_field`. Now a payload field that is a real column of the table but not in the configuration is ignored (never written, never validated) and a warning is logged; a name that is not a column of the table is still refused.
+
 ### Added
 
 - **MCP: manual links between records** (scope 2 of #87). `records_read` takes `links: true` and returns the manual links of each row; the `links` section of a record in `records_validate` / `records_write` adds and removes links (to a record of any table) in the same transaction as the record, all or nothing, behind the write switch. A link shows on both records, so the key must be allowed to change both; unknown table or record, a pair already linked and a record with itself are refused with a code. The logic moved to `Record\ManualLinks`, shared with the REST endpoints `POST /api/manual-link` and `DELETE /api/manual-link/{id}` (no change to them, except that a record can no longer be linked to itself: `link_with_itself`).

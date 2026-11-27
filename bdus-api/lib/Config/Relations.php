@@ -95,6 +95,10 @@ class Relations
             $fromTb  = $existing[0]['from_tb'];
             $fromCol = $existing[0]['from_col'];
 
+            if (!self::typesCompatible($db, $fromTb, $fromCol, $toTb, $toCol)) {
+                return ['status' => 'error', 'code' => 'relation_type_mismatch'];
+            }
+
             // Drop old FK before re-applying with new params.
             $alter->dropForeignKey($fromTb, $fromCol);
 
@@ -111,6 +115,9 @@ class Relations
             );
             if (!empty($dup)) {
                 return ['status' => 'error', 'code' => 'relation_already_exists'];
+            }
+            if (!self::typesCompatible($db, $fromTb, $fromCol, $toTb, $toCol)) {
+                return ['status' => 'error', 'code' => 'relation_type_mismatch'];
             }
             $id = (int) $db->query(
                 'INSERT INTO bdus_cfg_relations (from_tb, from_col, to_tb, to_col, on_delete, on_update)
@@ -137,6 +144,50 @@ class Relations
         self::saveAutoIndex($db, $fromTb, $fromCol, $alter);
 
         return ['status' => 'success', 'code' => 'relation_saved', 'id' => $id];
+    }
+
+    /**
+     * Class of a physical column type: 'numeric', 'text' or null (anything else:
+     * dates, blobs, booleans, unknown…). Works on the type strings of all three
+     * engines (SQLite declared type, MySQL DESCRIBE, PostgreSQL data_type).
+     */
+    public static function typeClass(string $type): ?string
+    {
+        $t = strtolower(trim($type));
+        if (preg_match('/^((tiny|small|medium|big)?int|integer|(small|big)?serial|real|float|double|decimal|numeric|number)\b/', $t)) {
+            return 'numeric';
+        }
+        if (preg_match('/char|text|clob|string/', $t)) {
+            return 'text';
+        }
+        return null;
+    }
+
+    /**
+     * False only when one column is clearly numeric and the other clearly text:
+     * `Record\Read::getLinks()` would compare them, which returns nothing on
+     * SQLite/MySQL and raises an error on PostgreSQL. Columns that cannot be
+     * inspected (missing table/column) or are of another class are not judged.
+     */
+    public static function typesCompatible(DB $db, string $fromTb, string $fromCol, string $toTb, string $toCol): bool
+    {
+        $a = self::columnClass($db, $fromTb, $fromCol);
+        $b = self::columnClass($db, $toTb, $toCol);
+        return !($a !== null && $b !== null && $a !== $b);
+    }
+
+    private static function columnClass(DB $db, string $tb, string $col): ?string
+    {
+        $inspect = new \DB\Inspect($db);
+        if (!$inspect->tableExists($tb)) {
+            return null;
+        }
+        foreach ($inspect->tableColumns($tb) as $c) {
+            if (strcasecmp($c['fld'], $col) === 0) {
+                return self::typeClass((string) $c['type']);
+            }
+        }
+        return null;
     }
 
     /**

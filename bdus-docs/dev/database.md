@@ -379,7 +379,7 @@ listed in `DB\Export\Export::FORMATS`.
 
 `Validate` runs a suite of checks and returns a structured report:
 
-- **`DbCfgAlign`** — compares live DB columns vs. config-defined fields.
+- **`DbCfgAlign`** — compares live DB columns vs. config-defined fields, checks `db_type` (system `bdus_*` tables and the `chrono_*` fuzzy-date columns are skipped: BraDypUS seeds them) and that every table has `id` and every data table (not a plugin; a view only when writable) has `creator`, as column and as configured field (`cfgCoreFields()`).
 - **`SystemTables`** — verifies all required `bdus_*` tables exist.
 - **`Filesystem`** — checks runtime directories exist and are writable.
 - **`DumpExists`** — verifies at least one backup exists.

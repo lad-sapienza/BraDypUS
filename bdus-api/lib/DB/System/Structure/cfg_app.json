@@ -11,7 +11,13 @@
         { "name": "image_convert",  "type": "INTEGER",              "notnull": true,  "default": 0 },
         { "name": "image_format",   "type": "TEXT",                 "notnull": true,  "default": "webp" },
         { "name": "image_quality",  "type": "INTEGER",              "notnull": true,  "default": 85 },
-        { "name": "image_dpi",      "type": "INTEGER",              "notnull": true,  "default": 72 }
+        { "name": "image_dpi",      "type": "INTEGER",              "notnull": true,  "default": 72 },
+        { "name": "image_presets",  "type": "TEXT",                 "notnull": false, "default": null },
+        { "name": "char_maps",      "type": "TEXT",                 "notnull": false, "default": null },
+        { "name": "mcp_enabled",    "type": "INTEGER",              "notnull": false, "default": 0 },
+        { "name": "mcp_write",      "type": "INTEGER",              "notnull": false, "default": 0 },
+        { "name": "mcp_delete",     "type": "INTEGER",              "notnull": false, "default": 0 },
+        { "name": "mcp_guide",      "type": "TEXT",                 "notnull": false, "default": null }
     ],
     "indexes": [],
     "relations": []

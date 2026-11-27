@@ -62,6 +62,8 @@ class Validate
         $db_cfg->cfgHasDb();
         $this->resp->set('head', 'Configuration and database fields alignement');
         $db_cfg->cfgColsHasDb();
+        $this->resp->set('head', 'Required fields (id, creator)');
+        $db_cfg->cfgCoreFields();
         $this->resp->set('head', 'Tables and SQL views');
         $db_cfg->cfgViewFlags();
 

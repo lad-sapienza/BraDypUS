@@ -30,8 +30,18 @@ class DbCfgAlign
     {
         $cfg_tbs = $this->cfg->get('tables.*.name');
         foreach ($cfg_tbs as $cfg_tb) {
-            $db_types = $this->cfg->get("tables.$cfg_tb.fields.*.db_type");
+            // System tables (bdus_*, e.g. the geodata plugin) are seeded by BraDypUS,
+            // not configured by the user: nothing to fix on their side.
+            if (str_starts_with($cfg_tb, 'bdus_')) {
+                continue;
+            }
+            $db_types = $this->cfg->get("tables.$cfg_tb.fields.*.db_type") ?: [];
+            $fuzzy    = !empty($this->cfg->get("tables.$cfg_tb.fuzzy_date"));
             foreach ($db_types as $fld => $type) {
+                // chrono_* columns are added by the fuzzy date feature, not by the user.
+                if ($fuzzy && array_key_exists($fld, \Config\FuzzyDate::COLUMNS)) {
+                    continue;
+                }
                 if ($type && !empty($type)){
                     $this->resp->set(
                         'success',
@@ -41,6 +51,55 @@ class DbCfgAlign
                     $this->resp->set(
                         'danger',
                         "Missing db_type for column {$cfg_tb}.{$fld}"
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * Every table needs an `id` (column and configured field); every data table
+     * (not a plugin, and for a view only when it can be written) also needs a
+     * `creator`, which the permission checks (self writer) rely on.
+     */
+    public function cfgCoreFields(): void
+    {
+        foreach ($this->cfg->get('tables.*') ?: [] as $tb => $tbData) {
+            if (!$this->inspect->tableExists($tb)) {
+                continue;                                  // reported by cfgHasDb()
+            }
+            $dbCols  = array_column($this->inspect->tableColumns($tb), 'fld');
+            $cfgCols = array_keys($tbData['fields'] ?? []);
+
+            $needed = ['id'];
+            $isPlugin = !empty($tbData['is_plugin']);
+            $isView   = !empty($tbData['is_view']);
+            $writable = ($tbData['view_writable'] ?? 'none') !== 'none';
+            if (!$isPlugin && (!$isView || $writable)) {
+                $needed[] = 'creator';
+            }
+
+            foreach ($needed as $col) {
+                $inDb  = in_array($col, $dbCols, true);
+                $inCfg = in_array($col, $cfgCols, true);
+                if ($inDb && $inCfg) {
+                    $this->resp->set('success', "Table {$tb} has the required field {$col}");
+                    continue;
+                }
+                if (!$inDb) {
+                    $this->resp->set(
+                        'danger',
+                        "Table {$tb} has no {$col} column in the database",
+                        $isView
+                            ? "Add {$col} to the SQL view {$tb}, then activate it again from Database objects"
+                            : "Add the column {$tb}.{$col} to the database"
+                    );
+                }
+                if (!$inCfg) {
+                    $this->resp->set(
+                        'danger',
+                        "Table {$tb} has no {$col} field in the configuration",
+                        "Add the field {$col} to {$tb} (read-only, INTEGER)"
                     );
                 }
             }

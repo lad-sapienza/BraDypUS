@@ -63,9 +63,9 @@ class FuzzyDate
         $chronoFieldDefs = [
             'chrono_from'      => ['name' => 'chrono_from',      'label' => 'Cronologia da',   'type' => 'text', 'hide' => true, 'db_type' => 'INTEGER'],
             'chrono_to'        => ['name' => 'chrono_to',        'label' => 'Cronologia a',     'type' => 'text', 'hide' => true, 'db_type' => 'INTEGER'],
-            'chrono_label'     => ['name' => 'chrono_label',     'label' => 'Etichetta crono',  'type' => 'text', 'hide' => true],
+            'chrono_label'     => ['name' => 'chrono_label',     'label' => 'Etichetta crono',  'type' => 'text', 'hide' => true, 'db_type' => 'TEXT'],
             'chrono_certainty' => ['name' => 'chrono_certainty', 'label' => 'Certezza crono',   'type' => 'text', 'hide' => true, 'db_type' => 'INTEGER'],
-            'chrono_period'    => ['name' => 'chrono_period',    'label' => 'Periodo crono',    'type' => 'text', 'hide' => true],
+            'chrono_period'    => ['name' => 'chrono_period',    'label' => 'Periodo crono',    'type' => 'text', 'hide' => true, 'db_type' => 'TEXT'],
         ];
         $existingFields = array_keys($cfg->get("tables.$tb.fields") ?: []);
         foreach ($chronoFieldDefs as $fldName => $fldDef) {

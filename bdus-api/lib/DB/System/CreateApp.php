@@ -172,7 +172,7 @@ class CreateApp
             ['name' => 'id',         'label' => 'ID',              'type' => 'text', 'db_type' => 'INTEGER', 'readonly' => '1', 'hide' => '1'],
             ['name' => 'table_link', 'label' => 'Linked table',    'type' => 'text', 'db_type' => 'TEXT',    'readonly' => '1', 'hide' => '1'],
             ['name' => 'id_link',    'label' => 'Linked id',       'type' => 'text', 'db_type' => 'INTEGER', 'readonly' => '1', 'hide' => '1'],
-            ['name' => 'geometry',   'label' => 'Coordinates (WKT)','type' => 'text'],
+            ['name' => 'geometry',   'label' => 'Coordinates (WKT)','type' => 'text', 'db_type' => 'TEXT'],
         ] as $fld) {
             ToDB::upsertField($this->db, 'bdus_geodata', $fld);
         }

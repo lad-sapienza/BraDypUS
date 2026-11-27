@@ -566,9 +566,10 @@ final class MigrationVerifier
         $missing  = [];
         $unrenamed = [];
         foreach ($this->rows($this->db, 'SELECT id, uuid, ext FROM bdus_files') as $f) {
-            $suffix = $f['ext'] === '' || $f['ext'] === null ? '' : '.' . $f['ext'];
-            $new    = $f['uuid'] . $suffix;
-            $old    = $f['id'] . $suffix;
+            // old name: the extension as stored; new name: always lower-case (File\Store)
+            $ext    = (string) ($f['ext'] ?? '');
+            $new    = $f['uuid'] . ($ext === '' ? '' : '.' . strtolower($ext));
+            $old    = $f['id'] . ($ext === '' ? '' : '.' . $ext);
             if (!is_file($dir . $new)) {
                 if (is_file($dir . $old)) {
                     $unrenamed[] = "{$old} → {$new}";

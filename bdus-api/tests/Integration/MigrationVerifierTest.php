@@ -244,6 +244,37 @@ class MigrationVerifierTest extends TestCase
         $this->assertSame('pass', $this->check($report, 'file_uuids')['status']);
     }
 
+    public function testAnUpperCaseExtensionIsJudgedByItsLowerCaseNewName(): void
+    {
+        // Real data keeps the case of the upload in `ext` (JPG); the binary now lives under a lower-case name
+        $this->seedHealthy();
+        $u = '00000000-0000-4000-8000-000000000004';
+        $this->db->exec("INSERT INTO bdus_files (id, uuid, creator, ext, filename) VALUES (9, '{$u}', 'x', 'JPG', 'a')");
+        $proj = $this->filesProj();
+        file_put_contents($proj . "files/{$u}.jpg", 'x');
+
+        $report = (new MigrationVerifier($this->db, ['projDir' => $proj]))->run();
+        $this->rmProj($proj);
+
+        $this->assertSame('pass', $this->check($report, 'file_uuids')['status']);
+    }
+
+    public function testAnUpperCaseBinaryNotYetRenamedIsReportedUnderItsRealName(): void
+    {
+        $this->seedHealthy();
+        $u = '00000000-0000-4000-8000-000000000005';
+        $this->db->exec("INSERT INTO bdus_files (id, uuid, creator, ext, filename) VALUES (10, '{$u}', 'x', 'JPG', 'a')");
+        $proj = $this->filesProj();
+        file_put_contents($proj . 'files/10.JPG', 'x');
+
+        $report = (new MigrationVerifier($this->db, ['projDir' => $proj]))->run();
+        $this->rmProj($proj);
+
+        $c = $this->check($report, 'file_uuids');
+        $this->assertSame('warn', $c['status']);
+        $this->assertSame(["10.JPG → {$u}.jpg"], $c['items']);
+    }
+
     public function testBinaryStillNamedByIdIsReported(): void
     {
         $this->seedHealthy();

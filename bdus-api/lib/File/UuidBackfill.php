@@ -102,19 +102,28 @@ final class UuidBackfill
         return count($missing);
     }
 
-    /** @return array{0: string, 1: string}|null [old path by id, new path by uuid], null for an extension that cannot be named */
+    /**
+     * @return array{0: string, 1: string}|null [old path by id, new path by uuid]; null when the extension
+     *         cannot be named safely or the row has no uuid yet (a dry run)
+     *
+     * The OLD name uses the extension exactly as it is stored: the column keeps the case the file was
+     * uploaded with (`jpg`, `JPG`, `JPEG`…) and the binary was written under that very name, which a
+     * case-sensitive file system (Linux) will not find under another case. The NEW name is always
+     * lower-case, like every name File\Store builds.
+     */
     private static function paths(string $projDir, int $id, string $uuid, string $ext): ?array
     {
-        $ext = strtolower($ext);
-        if ($ext !== '' && preg_match('/^[a-z0-9]+$/D', $ext) !== 1) {
+        if ($ext !== '' && preg_match('/^[A-Za-z0-9]+$/D', $ext) !== 1) {
             return null;
         }
         if (!Store::isUuid($uuid)) {
-            return null; // not assigned yet (a dry run)
+            return null;
         }
-        $dir    = Store::dir($projDir);
-        $suffix = $ext === '' ? '' : '.' . $ext;
-        return [$dir . $id . $suffix, $dir . $uuid . $suffix];
+        $dir = Store::dir($projDir);
+        return [
+            $dir . $id . ($ext === '' ? '' : '.' . $ext),
+            $dir . $uuid . ($ext === '' ? '' : '.' . strtolower($ext)),
+        ];
     }
 
     /** Derived versions were named after the id: drop them, they are rebuilt on demand. */

@@ -71,6 +71,43 @@ class UuidBackfillTest extends BdusTestCase
         $this->assertFileDoesNotExist($this->proj . 'files/970.jpg');
     }
 
+    /**
+     * Real data (PAThs): the extension column keeps the case it was uploaded with (jpg, JPG, JPEG…) and
+     * the binary was stored under exactly that name. A case-sensitive file system (Linux, production)
+     * does not find `5.JPG` when asked for `5.jpg`: the old name must be built with the extension AS
+     * STORED; the new one is always lower-case (File\Store).
+     */
+    public function testAnExtensionKeepingItsUpperCaseIsFoundAndRenamedToALowerCaseName(): void
+    {
+        $this->bareRow(979, 'JPG', 'upper');
+        $this->bareRow(980, 'JPEG', 'mixed');
+        // This test only means something on a case-sensitive file system: check that it is one
+        file_put_contents($this->proj . 'files/case.jpg', 'a');
+        $sensitive = !is_file($this->proj . 'files/CASE.JPG');
+        $this->assertTrue($sensitive, 'the temporary folder is case-insensitive: this test cannot prove anything here');
+
+        $res = UuidBackfill::run(static::$db, $this->proj);
+
+        $this->assertSame(0, $res['failed']);
+        $u979 = $this->uuidOf(979);
+        $this->assertFileExists($this->proj . "files/{$u979}.jpg", 'the new name is lower-case');
+        $this->assertSame('upper', file_get_contents($this->proj . "files/{$u979}.jpg"));
+        $this->assertFileDoesNotExist($this->proj . 'files/979.JPG', 'the old upper-case name is gone');
+        $this->assertSame('mixed', file_get_contents($this->proj . 'files/' . $this->uuidOf(980) . '.jpeg'));
+        $this->assertSame(0, $res['missing'] - $this->fixtureRows(), 'nothing of ours was reported missing');
+    }
+
+    public function testTheServerFindsTheRenamedUpperCaseFile(): void
+    {
+        // After the rename, Store::path() (always lower-case) points at the right file
+        $this->bareRow(981, 'JPG', 'x');
+        UuidBackfill::run(static::$db, $this->proj);
+        $uuid = $this->uuidOf(981);
+
+        $this->assertSame($this->proj . "files/{$uuid}.jpg", Store::path($this->proj, $uuid, 'JPG'));
+        $this->assertFileExists(Store::path($this->proj, $uuid, 'JPG'));
+    }
+
     public function testItLeavesWhatIsAlreadyRightAlone(): void
     {
         $uuid = static::insertFile(972, 'png', 'ok');

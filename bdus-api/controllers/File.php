@@ -31,7 +31,7 @@ class File extends \Bdus\Controller
 	/**
 	 * Returns paginated list of all files in the app.
 	 *
-	 * GET /api/files?page=1&per_page=25&orphans_only=1&search=foo
+	 * GET /api/files?page=1&per_page=25&orphans_only=1&public=1&search=foo&sort_field=filename&sort_dir=asc
 	 *
 	 * `search` matches (case-insensitively, via LIKE) against filename,
 	 * description and keywords; if it's a plain integer it also matches the
@@ -88,9 +88,26 @@ class File extends \Bdus\Controller
 				$params = array_merge($params, $searchVal);
 			}
 
+			// public=1 / public=0: files that public presets may / may not show
+			$publicFilter = $this->get['public'] ?? null;
+			if ($publicFilter === '1' || $publicFilter === '0' || $publicFilter === 1 || $publicFilter === 0) {
+				// A literal (0 or 1, cast): a bound value is text, and text never equals the integer a
+				// COALESCE() yields on SQLite
+				$conditions[] = 'COALESCE(f.public, 0) = ' . ((int) $publicFilter === 1 ? '1' : '0');
+			}
+
 			if ($readSql !== '1=1') {
 				$conditions[] = $readSql;
 				$params       = array_merge($params, $readVals);
+			}
+
+			// Order: a configured column (the same order serves the list and the Previous/Next ids),
+			// else the newest first. The column name ends up in SQL: only configured names pass.
+			$sortField = (string) ($this->get['sort_field'] ?? '');
+			$sortDir   = strtolower((string) ($this->get['sort_dir'] ?? 'desc')) === 'asc' ? 'ASC' : 'DESC';
+			$orderSql  = 'f.id DESC';
+			if ($sortField !== '' && array_key_exists($sortField, \File\Fields::all($this->cfg))) {
+				$orderSql = "f.{$sortField} {$sortDir}, f.id DESC";
 			}
 
 			$whereSql = $conditions ? ('WHERE ' . implode(' AND ', $conditions)) : '';
@@ -101,7 +118,7 @@ class File extends \Bdus\Controller
 			$colsSql  = implode(', ', array_map(fn($c) => "f.{$c}", array_unique(array_merge(['id', 'uuid', 'ext', 'filename'], $cols))));
 			$fetchSql = "SELECT {$colsSql}
 			             FROM bdus_files f {$whereSql}
-			             ORDER BY f.id DESC LIMIT ? OFFSET ?";
+			             ORDER BY {$orderSql} LIMIT ? OFFSET ?";
 
 			$countRow  = $this->db->query($countSql, $params, 'read');
 			$total     = (int)($countRow[0]['cnt'] ?? 0);
@@ -112,7 +129,7 @@ class File extends \Bdus\Controller
 			if (!empty($this->get['ids_only'])) {
 				$cap  = self::IDS_ONLY_CAP;
 				$rows = $this->db->query(
-					"SELECT f.id, f.uuid, f.ext, f.filename FROM bdus_files f {$whereSql} ORDER BY f.id DESC LIMIT ?",
+					"SELECT f.id, f.uuid, f.ext, f.filename FROM bdus_files f {$whereSql} ORDER BY {$orderSql} LIMIT ?",
 					[...$params, $cap],
 					'read'
 				) ?: [];
@@ -144,6 +161,7 @@ class File extends \Bdus\Controller
 					'total'    => $total,
 					'page'     => $page,
 					'per_page' => $perPage,
+					'fields'   => \File\Fields::describe($this->cfg),
 					'files'    => [],
 				]);
 				return;
@@ -192,6 +210,7 @@ class File extends \Bdus\Controller
 				'total'    => $total,
 				'page'     => $page,
 				'per_page' => $perPage,
+				'fields'   => \File\Fields::describe($this->cfg),
 				'files'    => $files,
 			]);
 

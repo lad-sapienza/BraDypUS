@@ -129,6 +129,67 @@ class FileCustomFieldsTest extends BdusTestCase
         $this->assertNull($this->row(801)['credit'], 'nothing was written');
     }
 
+    // ── the list: field description, order and the public filter ──────────────
+
+    public function testTheListDescribesTheFieldsForTheInterface(): void
+    {
+        $this->withLicence();
+
+        $fields = array_column($this->fileCall('getFiles')['fields'], null, 'name');
+
+        $this->assertSame(['name', 'label', 'type', 'editable', 'system'], array_keys($fields['licence']));
+        $this->assertTrue($fields['licence']['editable']);
+        $this->assertFalse($fields['licence']['system'], 'a custom field');
+        $this->assertTrue($fields['description']['system']);
+        foreach (['id', 'uuid', 'ext'] as $k) {
+            $this->assertFalse($fields[$k]['editable'], "$k belongs to the binary");
+        }
+        $this->assertArrayNotHasKey('creator', $fields);
+        $this->assertArrayHasKey('fields', $this->fileCall('getFiles', ['search' => 'matches nothing at all zzz']), 'also when the page is empty');
+    }
+
+    public function testTheListCanBeSortedByAConfiguredColumn(): void
+    {
+        static::$db->exec("UPDATE bdus_files SET filename = 'zeta' WHERE id = 801");
+        static::$db->exec("UPDATE bdus_files SET filename = 'alpha' WHERE id = 802");
+        $ids = fn(array $get) => array_values(array_intersect(array_column($this->fileCall('getFiles', $get)['files'], 'id'), [801, 802]));
+
+        $this->assertSame([802, 801], $ids(['sort_field' => 'filename', 'sort_dir' => 'asc']));
+        $this->assertSame([801, 802], $ids(['sort_field' => 'filename', 'sort_dir' => 'desc']));
+        $this->assertSame([802, 801], $ids([]), 'default: newest first');
+    }
+
+    public function testTheSortColumnMustBeConfiguredAndNeverReachesSqlAsIs(): void
+    {
+        foreach (['nope', 'id; DROP TABLE bdus_files', 'filename DESC, (SELECT 1)', 'creator '] as $bad) {
+            $res = $this->fileCall('getFiles', ['sort_field' => $bad]);
+            $this->assertSame('success', $res['status'], $bad);
+            $this->assertSame([802, 801], array_values(array_intersect(array_column($res['files'], 'id'), [801, 802])), "$bad falls back to the default order");
+        }
+        $this->assertSame(2, (int) static::$db->query('SELECT COUNT(*) AS n FROM bdus_files WHERE id >= 801', [], 'read')[0]['n']);
+    }
+
+    public function testThePreviousNextIdsFollowTheSameOrder(): void
+    {
+        static::$db->exec("UPDATE bdus_files SET filename = 'zeta' WHERE id = 801");
+        static::$db->exec("UPDATE bdus_files SET filename = 'alpha' WHERE id = 802");
+
+        $ids = array_column($this->fileCall('getFiles', ['ids_only' => 1, 'sort_field' => 'filename', 'sort_dir' => 'asc'])['files'], 'id');
+
+        $this->assertSame([802, 801], array_values(array_intersect($ids, [801, 802])));
+    }
+
+    public function testTheListCanBeFilteredOnPublic(): void
+    {
+        static::$db->exec('UPDATE bdus_files SET public = 1 WHERE id = 801');
+        static::$db->exec('UPDATE bdus_files SET public = 0 WHERE id = 802');
+        $ids = fn(array $get) => array_values(array_intersect(array_column($this->fileCall('getFiles', $get)['files'], 'id'), [801, 802]));
+
+        $this->assertSame([801], $ids(['public' => '1']));
+        $this->assertSame([802], $ids(['public' => '0']));
+        $this->assertSame([802, 801], $ids([]), 'no filter: both');
+    }
+
     // ── what a request can never write ────────────────────────────────────────
 
     public function testTheColumnsOfTheBinaryAreNeverWrittenFromARequest(): void

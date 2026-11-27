@@ -2171,7 +2171,12 @@ paths:
     get:
       operationId: getFiles
       tags: [files]
-      summary: List all files in the current app (paginated)
+      summary: List the files the caller may read (paginated)
+      description: >
+        Only the files the caller may read: through a rule on the files table, or because they are attached
+        to a record the caller may read (orphans only through a rule). Each file carries the configured fields
+        of the files table (the system ones and any custom field) and what the caller may do with it
+        (`can_update`, `can_delete`); `fields` describes them for building columns and forms.
       parameters:
         - name: page
           in: query
@@ -2194,7 +2199,24 @@ paths:
           in: query
           schema:
             type: string
-          description: Match on file name, description, keywords, attribution (or exact id when numeric)
+          description: Match on file name, description, keywords, attribution and every other configured text field (or exact id when numeric)
+        - name: public
+          in: query
+          schema:
+            type: string
+            enum: ['0', '1']
+          description: When `1` only the files marked public, when `0` only the others
+        - name: sort_field
+          in: query
+          schema:
+            type: string
+          description: A configured field of the files table to order by (anything else is ignored); default newest first. Ids for Previous/Next follow the same order.
+        - name: sort_dir
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
         - name: ids_only
           in: query
           schema:
@@ -2228,6 +2250,17 @@ paths:
                   truncated:
                     type: boolean
                     description: Only with `ids_only=1`
+                  fields:
+                    type: array
+                    description: The configured fields of the files table, in order (absent with `ids_only=1`)
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string }
+                        label: { type: string }
+                        type: { type: string }
+                        editable: { type: boolean, description: May a request write it (false for id, uuid, ext) }
+                        system: { type: boolean }
                   files:
                     type: array
                     items:

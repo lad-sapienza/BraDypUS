@@ -6,6 +6,11 @@
     <div class="files-toolbar">
       <span class="files-title">{{ t('files_mng_title') }}</span>
 
+      <ARadio.Group v-model:value="viewMode" size="small" button-style="solid" data-test="view-switch" @change="onViewChange">
+        <ARadio.Button value="table" :title="t('files_view_table')"><TableOutlined /></ARadio.Button>
+        <ARadio.Button value="cards" :title="t('files_view_cards')"><AppstoreOutlined /></ARadio.Button>
+      </ARadio.Group>
+
       <AButton
         :type="orphansOnly ? 'primary' : 'default'"
         size="small"
@@ -14,6 +19,8 @@
         <template #icon><FilterOutlined /></template>
         {{ t('files_orphans_only') }}
       </AButton>
+
+      <ASelect v-model:value="publicFilter" size="small" class="files-public-filter" :options="publicOptions" @change="reload" />
 
       <AInput
         v-model:value="searchQuery"
@@ -26,19 +33,45 @@
         <template #prefix><SearchOutlined /></template>
       </AInput>
 
+      <APopover v-if="viewMode === 'table' || viewMode === 'cards'" trigger="click" placement="bottomRight">
+        <template #content>
+          <div class="cols-chooser" data-test="columns-chooser">
+            <ACheckbox
+              v-for="f in chooserFields"
+              :key="f.name"
+              :checked="shownNames.includes(f.name)"
+              @change="toggleColumn(f.name)"
+            >{{ colTitle(f) }}</ACheckbox>
+          </div>
+        </template>
+        <AButton size="small"><template #icon><SettingOutlined /></template>{{ t('files_columns') }}</AButton>
+      </APopover>
+
       <AButton size="small" :loading="loading" @click="reload">
         <template #icon><ReloadOutlined /></template>
         {{ t('log_refresh') }}
       </AButton>
     </div>
 
-    <!-- ── Table ─────────────────────────────────────────────── -->
-    <div ref="tableWrap" class="files-table">
+    <!-- ── Bulk actions: only when something is selected ──────── -->
+    <div v-if="selected.length" class="files-bulk" data-test="bulk-bar">
+      <span class="bulk-count">{{ t('files_selected', { n: selected.length }) }}</span>
+      <AButton size="small" :disabled="!selectedUpdatable.length" @click="bulkPublic(true)">{{ t('files_bulk_public') }}</AButton>
+      <AButton size="small" :disabled="!selectedUpdatable.length" @click="bulkPublic(false)">{{ t('files_bulk_private') }}</AButton>
+      <AButton size="small" danger :disabled="!selectedDeletable.length" @click="confirmBulkDelete">
+        <template #icon><DeleteOutlined /></template>{{ t('files_bulk_delete', { n: selectedDeletable.length }) }}
+      </AButton>
+      <AButton size="small" type="text" @click="selected = []">{{ t('files_clear_selection') }}</AButton>
+    </div>
+
+    <!-- ── Table view ─────────────────────────────────────────── -->
+    <div v-show="viewMode === 'table'" ref="tableWrap" class="files-table">
       <ATable
         :columns="columns"
         :dataSource="files"
         :loading="loading"
         :pagination="pagination"
+        :row-selection="rowSelection"
         :scroll="{ y: tableScrollY }"
         :locale="{ emptyText: t('files_empty') }"
         size="small"
@@ -53,6 +86,7 @@
                 :src="thumbUrl(record, fileUrl(record))"
                 :alt="record.filename"
                 class="file-thumb"
+                loading="lazy"
               />
               <component v-else :is="fileIcon(record.ext)" class="file-icon-lg" />
             </span>
@@ -63,6 +97,7 @@
                 :value="record.filename"
                 size="small"
                 class="meta-input filename-input"
+                :disabled="!record.can_update"
                 @update:value="v => record.filename = v"
                 @blur="saveMeta(record)"
                 @keyup.enter="saveMeta(record)"
@@ -70,36 +105,6 @@
               <span class="filename-ext">.{{ record.ext }}</span>
             </div>
             <div v-if="!record.links.length" class="orphan-badge">{{ t('files_orphan_badge') }}</div>
-          </template>
-          <template v-else-if="column.key === 'description'">
-            <AInput
-              :value="record.description ?? ''"
-              size="small"
-              class="meta-input"
-              @update:value="v => record.description = v || null"
-              @blur="saveMeta(record)"
-              @keyup.enter="saveMeta(record)"
-            />
-          </template>
-          <template v-else-if="column.key === 'keywords'">
-            <AInput
-              :value="record.keywords ?? ''"
-              size="small"
-              class="meta-input"
-              @update:value="v => record.keywords = v || null"
-              @blur="saveMeta(record)"
-              @keyup.enter="saveMeta(record)"
-            />
-          </template>
-          <template v-else-if="column.key === 'attribution'">
-            <AInput
-              :value="record.attribution ?? ''"
-              size="small"
-              class="meta-input"
-              @update:value="v => record.attribution = v || null"
-              @blur="saveMeta(record)"
-              @keyup.enter="saveMeta(record)"
-            />
           </template>
           <template v-else-if="column.key === 'links'">
             <div v-if="record.links.length" class="links-list">
@@ -116,16 +121,69 @@
           </template>
           <template v-else-if="column.key === 'actions'">
             <div class="row-actions">
-              <button class="action-btn" :title="t('replace_file')" @click="startReplace(record)">
+              <button class="action-btn" :title="t('files_details')" @click="openDetails(record)">
+                <EditOutlined />
+              </button>
+              <button class="action-btn" :disabled="!record.can_update" :title="t('replace_file')" @click="startReplace(record)">
                 <SyncOutlined />
               </button>
-              <button class="action-btn action-btn-danger" :title="t('delete_file')" @click="confirmDelete(record)">
+              <button class="action-btn action-btn-danger" :disabled="!record.can_delete" :title="t('delete_file')" @click="confirmDelete(record)">
                 <DeleteOutlined />
               </button>
             </div>
           </template>
+          <!-- Any other configured field (system or custom) -->
+          <template v-else-if="fieldType(column.key) === 'boolean'">
+            <ASwitch
+              size="small"
+              :checked="!!record[column.key]"
+              :disabled="!record.can_update || !isEditable(column.key)"
+              @update:checked="v => { record[column.key] = v; saveMeta(record) }"
+            />
+          </template>
+          <template v-else-if="isTextual(fieldType(column.key)) && isEditable(column.key)">
+            <AInput
+              :value="record[column.key] ?? ''"
+              size="small"
+              class="meta-input"
+              :disabled="!record.can_update"
+              @update:value="v => record[column.key] = v || null"
+              @blur="saveMeta(record)"
+              @keyup.enter="saveMeta(record)"
+            />
+          </template>
+          <template v-else>
+            <span class="plain-cell">{{ record[column.key] ?? '' }}</span>
+          </template>
         </template>
       </ATable>
+    </div>
+
+    <!-- ── Cards view ─────────────────────────────────────────── -->
+    <div v-if="viewMode === 'cards'" class="files-cards-wrap">
+      <FilesCards
+        :files="files"
+        :fields="fieldsMeta"
+        :visible="visible"
+        :selected="selected"
+        :loading="loading"
+        @toggle="toggleSelected"
+        @open="openPreview"
+        @edit="openDetails"
+        @replace="startReplace"
+        @delete="confirmDelete"
+      />
+      <div class="cards-pagination">
+        <APagination
+          :current="currentPage"
+          :page-size="perPage"
+          :total="total"
+          :page-size-options="['25', '50', '100']"
+          show-size-changer
+          size="small"
+          @change="onCardsPage"
+        />
+      </div>
     </div>
 
     <!-- Hidden file input for replace -->
@@ -134,6 +192,15 @@
       type="file"
       style="display: none"
       @change="onReplaceFileSelected"
+    />
+
+    <FileDetailsDrawer
+      v-model:open="detailsOpen"
+      :file="detailsFile"
+      :fields="fieldsMeta"
+      :app-name="appName"
+      :saving="detailsSaving"
+      @save="onDetailsSave"
     />
 
     <!-- File preview Dialog -->
@@ -177,15 +244,27 @@
 </template>
 
 <script setup>
-import { DeleteOutlined, EditOutlined, FileExcelOutlined, FileOutlined, FilePdfOutlined, FilterOutlined, FileWordOutlined, FileZipOutlined, LeftOutlined, ReloadOutlined, RightOutlined, SearchOutlined, SoundOutlined, SyncOutlined, VideoCameraOutlined } from '@ant-design/icons-vue'
+import { AppstoreOutlined, DeleteOutlined, EditOutlined, FilterOutlined, LeftOutlined, ReloadOutlined, RightOutlined, SearchOutlined, SettingOutlined, SyncOutlined, TableOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { RouterLink, useRoute }     from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout    from '@/components/AppLayout.vue'
-import { Table as ATable, Button as AButton, Input as AInput, Modal as AModal } from 'ant-design-vue'
+import FilesCards   from '@/components/files/FilesCards.vue'
+import FileDetailsDrawer from '@/components/files/FileDetailsDrawer.vue'
+import { fileIcon } from '@/components/files/fileIcon'
+import {
+  Table as ATable, Button as AButton, Input as AInput, Modal as AModal, Radio as ARadio, Select as ASelect,
+  Popover as APopover, Checkbox as ACheckbox, Switch as ASwitch, Pagination as APagination
+} from 'ant-design-vue'
 import { api, apiUrl } from '@/api'
 import { useI18n }       from '@/i18n'
 import { useAuthStore }  from '@/stores/auth'
+import { thumbUrl } from '@/utils/thumbUrl'
+import { originalPath } from '@/utils/filePaths'
+import {
+  columnFields, visibleColumns, defaultVisible, snapshotOf, changedFields, stripExt, isTextual,
+  deletable, updatable, loadPrefs, savePrefs, editableNames,
+} from '@/utils/filesList'
 
 const { t }   = useI18n()
 const toast   = useToast()
@@ -195,25 +274,63 @@ const auth    = useAuthStore()
 
 const appName = computed(() => auth.user?.app ?? route.params.app)
 
-const columns = computed(() => [
-  { title: t('files_col_preview'),     key: 'preview',     width: 80 },
-  { title: t('files_col_filename'),    key: 'filename',    width: 160 },
-  { title: t('files_col_description'), key: 'description' },
-  { title: t('files_col_keywords'),    key: 'keywords',    width: 200 },
-  { title: t('files_col_attribution'), key: 'attribution', width: 200 },
-  { title: t('files_col_links'),       key: 'links',       width: 200 },
-  { title: '',                         key: 'actions',     width: 80 },
-])
+// ── What the page shows: the fields the server describes (system and custom) ──
+const fieldsMeta = ref([])
+const visible    = ref([])        // the columns the user chose ([] = the default)
+const viewMode   = ref('table')
+
+const fieldType  = name => fieldsMeta.value.find(f => f.name === name)?.type
+const isEditable = name => editableNames(fieldsMeta.value).includes(name)
+
+/** The label of a column: the application's own translation for a system field, else its configured label. */
+function colTitle(f) {
+  const k = `files_col_${f.name}`
+  const tr = t(k)
+  return tr !== k ? tr : f.label
+}
+
+const chooserFields = computed(() => columnFields(fieldsMeta.value))
+const shownNames    = computed(() => visibleColumns(fieldsMeta.value, visible.value).map(f => f.name))
+
+function toggleColumn(name) {
+  const now = new Set(shownNames.value)
+  now.has(name) ? now.delete(name) : now.add(name)
+  visible.value = columnFields(fieldsMeta.value).map(f => f.name).filter(n => now.has(n))
+}
 
 // ── State ──────────────────────────────────────────────────────────
-const files       = ref([])
-const total       = ref(0)
-const loading     = ref(false)
-const currentPage = ref(1)
-const perPage     = ref(25)
-const orphansOnly = ref(false)
-const searchQuery = ref('')
+const files        = ref([])
+const total        = ref(0)
+const loading      = ref(false)
+const currentPage  = ref(1)
+const perPage      = ref(25)
+const orphansOnly  = ref(false)
+const publicFilter = ref('')
+const searchQuery  = ref('')
+const sortField    = ref(null)
+const sortDir      = ref('desc')
+const selected     = ref([])
 let searchDebounce = null
+
+const publicOptions = computed(() => [
+  { value: '',  label: t('files_public_all') },
+  { value: '1', label: t('files_public_yes') },
+  { value: '0', label: t('files_public_no') },
+])
+
+const columns = computed(() => [
+  { title: t('files_col_preview'), key: 'preview', width: 80 },
+  ...visibleColumns(fieldsMeta.value, visible.value).map(f => ({
+    title: colTitle(f),
+    key: f.name,
+    dataIndex: f.name,
+    sorter: true,
+    sortOrder: sortField.value === f.name ? (sortDir.value === 'asc' ? 'ascend' : 'descend') : null,
+    width: f.name === 'filename' ? 190 : (f.type === 'boolean' ? 90 : 200),
+  })),
+  { title: t('files_col_links'), key: 'links',   width: 190 },
+  { title: '',                   key: 'actions', width: 110 },
+])
 
 const pagination = computed(() => ({
   current: currentPage.value,
@@ -223,6 +340,18 @@ const pagination = computed(() => ({
   pageSizeOptions: ['25', '50', '100'],
   position: ['bottomCenter'],
 }))
+
+const rowSelection = computed(() => ({
+  selectedRowKeys: selected.value,
+  onChange: keys => { selected.value = keys },
+}))
+
+const selectedDeletable = computed(() => deletable(files.value, selected.value))
+const selectedUpdatable = computed(() => updatable(files.value, selected.value))
+
+function toggleSelected(id) {
+  selected.value = selected.value.includes(id) ? selected.value.filter(x => x !== id) : [...selected.value, id]
+}
 
 // ── AntD Table: fill available flex space (no scrollHeight="flex" equivalent) ──
 const tableWrap    = ref(null)
@@ -244,23 +373,40 @@ onMounted(() => {
 onUnmounted(() => resizeObs?.disconnect())
 watch(files, () => { measureTableHeight() })
 
+// ── What the user chose is remembered, per application ─────────────
+onMounted(() => {
+  const p = loadPrefs(window.localStorage, appName.value)
+  viewMode.value = p.view
+  visible.value  = p.visible
+})
+watch([viewMode, visible], () => savePrefs(window.localStorage, appName.value, { view: viewMode.value, visible: visible.value }), { deep: true })
+function onViewChange() { /* the watcher saves it */ }
+
 // ── Fetch ───────────────────────────────────────────────────────────
+/** The filters of the current list: what Previous/Next must follow too. */
+function listParams() {
+  return {
+    orphans_only: orphansOnly.value ? 1 : undefined,
+    public:       publicFilter.value === '' ? undefined : publicFilter.value,
+    search:       searchQuery.value || undefined,
+    sort_field:   sortField.value || undefined,
+    sort_dir:     sortField.value ? sortDir.value : undefined,
+  }
+}
+
 async function fetchFiles() {
   loading.value = true
   try {
-    const params = {
-      page:         currentPage.value,
-      per_page:     perPage.value,
-      orphans_only: orphansOnly.value ? 1 : undefined,
-      search:       searchQuery.value || undefined,
-    }
-    const data = await api.get('/api/files', params)
+    const data = await api.get('/api/files', { page: currentPage.value, per_page: perPage.value, ...listParams() })
     if (data.status === 'error') throw new Error(t(data.code))
+    if (data.fields) fieldsMeta.value = data.fields
     files.value = (data.files ?? []).map(f => {
-      const filename = stripExt(f.filename, f.ext)
-      return { ...f, filename, _meta: { filename, description: f.description, keywords: f.keywords, attribution: f.attribution } }
+      const file = { ...f, filename: stripExt(f.filename, f.ext) }
+      return { ...file, _meta: snapshotOf(file, fieldsMeta.value) }
     })
     total.value = data.total ?? 0
+    // A selection never outlives its page
+    selected.value = selected.value.filter(id => files.value.some(f => f.id === id))
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
   } finally {
@@ -270,6 +416,7 @@ async function fetchFiles() {
 
 function reload() {
   currentPage.value = 1
+  selected.value = []
   fetchFiles()
 }
 
@@ -278,46 +425,70 @@ function onSearchInput() {
   searchDebounce = setTimeout(reload, 350)
 }
 
-function onTableChange(paginationEvt) {
-  currentPage.value = paginationEvt.current
+function onTableChange(paginationEvt, _filters, sorter) {
+  const field = sorter?.order ? sorter.columnKey ?? sorter.field : null
+  const dir   = sorter?.order === 'ascend' ? 'asc' : 'desc'
+  const sortChanged = field !== sortField.value || (field && dir !== sortDir.value)
+  sortField.value = field
+  sortDir.value   = dir
+  currentPage.value = sortChanged ? 1 : paginationEvt.current
   perPage.value     = paginationEvt.pageSize
   fetchFiles()
 }
 
-// ── Metadata save ──────────────────────────────────────────────────
-// The extension is shown separately (see .filename-ext) and must never be
-// part of the editable value — strip it defensively in case it was typed
-// or pasted in, or already baked into legacy data.
-function stripExt(name, ext) {
-  const suffix = '.' + (ext ?? '')
-  return ext && (name ?? '').toLowerCase().endsWith(suffix.toLowerCase())
-    ? name.slice(0, -suffix.length)
-    : (name ?? '')
+function onCardsPage(page, size) {
+  currentPage.value = size !== perPage.value ? 1 : page
+  perPage.value     = size
+  fetchFiles()
 }
 
+// ── Metadata save ──────────────────────────────────────────────────
+// The extension is shown separately (see .filename-ext) and never part of the editable value.
+// blur/enter fire on every focus-out or keypress regardless of whether the value changed:
+// comparing against the last-saved snapshot is what skips the no-op API calls.
 async function saveMeta(file) {
   file.filename = stripExt(file.filename, file.ext)
-
-  const meta = { filename: file.filename, description: file.description, keywords: file.keywords, attribution: file.attribution }
-  // blur/enter fire on every focus-out or keypress regardless of whether the
-  // value actually changed — comparing against the last-saved snapshot (not
-  // switching to a native change event, which wouldn't fire on Enter anyway)
-  // is what actually skips the no-op API calls.
-  if (file._meta && file._meta.filename === meta.filename &&
-      file._meta.description === meta.description && file._meta.keywords === meta.keywords &&
-      file._meta.attribution === meta.attribution) {
-    return
-  }
+  const changes = changedFields(file, file._meta, fieldsMeta.value)
+  if (!Object.keys(changes).length) return
 
   try {
-    const res = await api.patch(`/api/file/${file.id}`, meta)
+    const res = await api.patch(`/api/file/${file.id}`, changes)
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 4000 })
       return
     }
-    file._meta = meta
+    file._meta = snapshotOf(file, fieldsMeta.value)
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 4000 })
+  }
+}
+
+// ── Details drawer: every field, custom ones included ──────────────
+const detailsOpen   = ref(false)
+const detailsFile   = ref(null)
+const detailsSaving = ref(false)
+
+function openDetails(file) {
+  detailsFile.value = file
+  detailsOpen.value = true
+}
+
+async function onDetailsSave({ file, changes }) {
+  detailsSaving.value = true
+  try {
+    const res = await api.patch(`/api/file/${file.id}`, changes)
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 4000 })
+      return
+    }
+    Object.assign(file, changes)
+    file._meta = snapshotOf(file, fieldsMeta.value)
+    toast.add({ severity: 'success', summary: t('files_details'), detail: t('ok_file_updated'), life: 2500 })
+    detailsOpen.value = false
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 4000 })
+  } finally {
+    detailsSaving.value = false
   }
 }
 
@@ -341,10 +512,47 @@ async function doDelete(file) {
     }
     toast.add({ severity: 'success', summary: t('delete_file'), detail: t('ok_file_deleted'), life: 3000 })
     files.value = files.value.filter(f => f.id !== file.id)
+    selected.value = selected.value.filter(id => id !== file.id)
     total.value = Math.max(0, total.value - 1)
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
   }
+}
+
+// ── Bulk actions: only on the files the principal may change ───────
+function confirmBulkDelete() {
+  const n = selectedDeletable.value.length
+  confirm.require({
+    message:  t('confirm_delete_files', { n }),
+    header:   t('delete_file'),
+    icon:     'pi pi-exclamation-triangle',
+    severity: 'danger',
+    accept:   doBulkDelete,
+  })
+}
+
+async function doBulkDelete() {
+  let done = 0
+  for (const f of selectedDeletable.value) {
+    try {
+      const res = await api.delete(`/api/file/${f.id}`)
+      if (res.status !== 'error') done++
+    } catch { /* counted as not deleted */ }
+  }
+  toast.add({ severity: done ? 'success' : 'error', summary: t('delete_file'), detail: t('files_bulk_done', { n: done }), life: 4000 })
+  selected.value = []
+  fetchFiles()
+}
+
+async function bulkPublic(value) {
+  let done = 0
+  for (const f of selectedUpdatable.value) {
+    try {
+      const res = await api.patch(`/api/file/${f.id}`, { public: value })
+      if (res.status !== 'error') { f.public = value; f._meta = snapshotOf(f, fieldsMeta.value); done++ }
+    } catch { /* counted as not changed */ }
+  }
+  toast.add({ severity: done ? 'success' : 'error', summary: t('files_col_public'), detail: t('files_bulk_done', { n: done }), life: 3000 })
 }
 
 // ── Replace file ───────────────────────────────────────────────────
@@ -386,7 +594,7 @@ async function onReplaceFileSelected(evt) {
 const previewDialog = ref(false)
 const previewFile   = ref(null)
 
-// Every file the current list matches (same search / orphans filter), minimal
+// Every file the current list matches (same filters, same order), minimal
 // descriptors in list order — fetched once per opening so Previous/Next can
 // step past the visible page.
 const previewList      = ref([])
@@ -401,11 +609,7 @@ async function openPreview(file) {
 
   const token = ++previewListToken
   try {
-    const data = await api.get('/api/files', {
-      ids_only:     1,
-      orphans_only: orphansOnly.value ? 1 : undefined,
-      search:       searchQuery.value || undefined,
-    })
+    const data = await api.get('/api/files', { ids_only: 1, ...listParams() })
     // Closed, or reopened on another file, while the request was in flight.
     if (token !== previewListToken || data.status !== 'success') return
     previewList.value      = data.files ?? []
@@ -452,25 +656,10 @@ onUnmounted(() => window.removeEventListener('keydown', onPreviewKey))
 
 watch(previewDialog, open => { if (!open) previewListToken++ })
 
-import { thumbUrl } from '@/utils/thumbUrl'
-import { originalPath } from '@/utils/filePaths'
-
 // ── Helpers ─────────────────────────────────────────────────────────
 function fileUrl(f) {
   const path = originalPath(f)
   return path ? apiUrl(path) : ''
-}
-
-function fileIcon(ext) {
-  const e = (ext ?? '').toLowerCase()
-  if (['pdf'].includes(e))                       return FilePdfOutlined
-  if (['doc', 'docx', 'odt', 'rtf'].includes(e)) return FileWordOutlined
-  if (['xls', 'xlsx', 'ods'].includes(e))        return FileExcelOutlined
-  if (['mp3', 'wav', 'ogg', 'wma'].includes(e))  return SoundOutlined
-  if (['mp4', 'mov', 'avi', 'mkv'].includes(e))  return VideoCameraOutlined
-  if (['zip', 'rar', 'tar', 'gz'].includes(e))   return FileZipOutlined
-  if (['svg', 'ai', 'eps'].includes(e))          return EditOutlined
-  return FileOutlined
 }
 
 onMounted(fetchFiles)
@@ -629,6 +818,23 @@ onMounted(fetchFiles)
   color: var(--p-text-muted-color);
   font-style: italic;
 }
+
+/* ── Bulk bar, cards, columns ─────────────────────────────────── */
+.files-bulk {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 1rem;
+  background: var(--p-content-hover-background);
+  border-bottom: 1px solid var(--p-content-border-color);
+  flex-shrink: 0;
+}
+.bulk-count { font-weight: 600; font-size: 0.82rem; margin-right: 0.4rem; }
+.files-public-filter { width: 130px; }
+.files-cards-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.files-cards-wrap :deep(.files-cards) { flex: 1; min-height: 0; }
+.cards-pagination { display: flex; justify-content: center; padding: 0.5rem; flex-shrink: 0; }
+.cols-chooser { display: flex; flex-direction: column; gap: 0.35rem; min-width: 180px; max-height: 320px; overflow: auto; }
+.plain-cell { font-size: 0.8rem; }
+.action-btn:disabled { opacity: .35; cursor: not-allowed; }
 </style>
 
 <!-- Not scoped: the modal is teleported to <body>, outside this component. -->

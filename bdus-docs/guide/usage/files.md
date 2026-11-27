@@ -83,6 +83,21 @@ and kept in the file's history like any record change), travel in the API (`GET 
 binary (`uuid`, `ext`, `creator`, `id`) are never written from a request. A file cannot be created or
 deleted as a record of the table: it is created by uploading it and deleted with the file actions.
 
+## Table and cards views <Badge type="tip" text="files rework" />
+
+The files page has two views, switched with the buttons at the top left and remembered for you:
+
+- **Table**: one row per file with a **preview** column (the `thumb` version, an icon for other types), the
+  fields as columns (**Columns** chooses which; by default the descriptive fields and your custom ones), sortable
+  by clicking a header, with the cells editable in place when you may change the file.
+- **Cards**: a grid with the preview large, the name, a few lines of description, and badges (*orphan*,
+  *public*, how many records use it): the best way to browse photographs.
+
+In both, tick files to **select** them: a bar offers **Make public** / **Make not public** and **Delete** for the
+selected files you may change or delete (the others are left alone). The **Details** button opens every field,
+custom ones included, in a side panel. The filters are the search box, **Orphans only** and **Public** /
+**Not public**; Previous/Next in the preview follows the same filter and order.
+
 ## Filtering and searching
 
 Toggle **Orphans only** in the toolbar to show only files that are not linked

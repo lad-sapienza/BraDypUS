@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Files page: table and cards views** (files rework, step 7). A **table** view with a preview column, the configured fields (custom ones included) as columns (a column chooser, sortable headers, in-place editing where you may), and a **cards** view for browsing photographs; the choice and the columns are remembered. **Selection** with bulk *Make public / not public* and *Delete* (only on the files you may change or delete), a **Details** panel with every field, filters *Orphans only* and *Public / Not public*, and per-file `can_update` / `can_delete` so the interface offers only what works. `GET /api/files` gains `fields` (the configured fields, for building columns and forms), `sort_field` / `sort_dir` (a configured column; Previous/Next follows the same order) and `public=0|1`, and searches every configured text field.
+
 ### Changed
 
 - **Deleting a record no longer deletes its files by surprise.** Until now the files attached **only** to a deleted record were removed with it, silently. Now the delete dialog asks, **for each such file**, whether to *keep* it (it becomes an orphan) or *delete* it (with *Keep all* / *Delete all*), and the **default is keep**. `DELETE /api/record/{tb}/{id}` takes `files` (`"keep"`, `"delete"`, or a map `{fileId: "delete"|"keep"}`) and answers with `orphaned_files` and `deleted_files`; the new `GET /api/record/{tb}/files-before-delete` lists the files the question is about; the MCP tool `records_delete` takes `files` (default `keep`). A file shared with a record that stays is never deleted. **Behaviour change for API clients** that relied on the automatic purge: send `files: "delete"`.

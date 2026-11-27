@@ -174,6 +174,12 @@ Key behaviours:
   `originalPath()` / `thumbPath()` from `utils/filePaths.js`, from the file's `uuid`, never from the
   integer id; asset
   trees already carry the app in the path and are **not** rewritten.
+- **Files page** (`views/FilesView.vue`, `components/files/`): built from the `fields` the server describes in
+  `GET /api/files` (system and custom fields), with a table and a cards view (`FilesCards.vue`), a details drawer
+  for every field (`FileDetailsDrawer.vue`), selection and bulk actions limited by the per-file `can_update` /
+  `can_delete`. The logic that needs no Vue (visible columns, what changed, card lines, the remembered view,
+  who a bulk action touches) lives in `utils/filesList.js` and is unit-tested (`tests/filesList.test.mjs`); file
+  addresses come from `utils/filePaths.js`, the delete-a-record question from `utils/deleteFiles.js`.
 - **`apiUrl(path)`** — absolute, app-scoped URL for browser-native navigations
   (`window.open` CSV export, backup download) where no `fetch` (and no auth
   header) is involved.

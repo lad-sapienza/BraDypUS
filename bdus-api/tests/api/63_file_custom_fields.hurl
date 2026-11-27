@@ -120,6 +120,38 @@ jsonpath "$.files[?(@.id == {{file_63}})].can_update" == true
 jsonpath "$.files[?(@.id == {{file_63}})].uuid" == "{{uuid_63}}"
 
 
+# ── 63d2. The list describes its fields, filters on public and sorts ──
+GET {{base_url}}/{{app_name}}/api/files?public=1
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.fields[?(@.name == 'g63_licence')].label" == "Licence"
+jsonpath "$.fields[?(@.name == 'g63_licence')].system" == false
+jsonpath "$.fields[?(@.name == 'uuid')].editable" == false
+jsonpath "$.fields[?(@.name == 'description')].system" == true
+jsonpath "$.files[?(@.id == {{file_63}})].uuid" == "{{uuid_63}}"
+
+GET {{base_url}}/{{app_name}}/api/files?public=0
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.files[?(@.id == {{file_63}})].uuid" not exists
+
+GET {{base_url}}/{{app_name}}/api/files?sort_field=g63_licence&sort_dir=asc
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+
+# a field that is not configured is ignored, never reaches SQL
+GET {{base_url}}/{{app_name}}/api/files?sort_field=id%3B%20DROP%20TABLE%20bdus_files
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.status" == "success"
+jsonpath "$.files[?(@.id == {{file_63}})].uuid" == "{{uuid_63}}"
+
+
 # ── 63e. What a request can never write ──────────────────────────────
 PATCH {{base_url}}/{{app_name}}/api/file/{{file_63}}
 Authorization: Bearer {{jwt}}

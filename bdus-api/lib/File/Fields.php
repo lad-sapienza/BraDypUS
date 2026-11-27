@@ -48,6 +48,31 @@ final class Fields
         return array_diff_key(self::all($cfg), array_flip(self::PROTECTED));
     }
 
+    /**
+     * The fields as the interface needs them to build its columns and forms: name, label, type, whether
+     * a request may write it, and whether it is a system field. In the configured order; `creator` is left out.
+     *
+     * @return list<array{name: string, label: string, type: string, editable: bool, system: bool}>
+     */
+    public static function describe(Config $cfg): array
+    {
+        $out = [];
+        foreach ((array) ($cfg->get('tables.' . ConfigSeed::TABLE . '.fields') ?: []) as $fld) {
+            $name = $fld['name'] ?? null;
+            if (!is_string($name) || preg_match('/^[A-Za-z0-9_]+$/', $name) !== 1 || $name === 'creator') {
+                continue;
+            }
+            $out[] = [
+                'name'     => $name,
+                'label'    => (string) (($fld['label'] ?? '') !== '' ? $fld['label'] : $name),
+                'type'     => (string) ($fld['type'] ?? 'text'),
+                'editable' => !in_array($name, self::PROTECTED, true),
+                'system'   => self::isSystem($name),
+            ];
+        }
+        return $out;
+    }
+
     /** Names of the system fields (cannot be deleted, renamed or retyped). */
     public static function system(): array
     {

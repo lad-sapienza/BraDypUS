@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.29.4] - 2026-11-27
+
+### Security
+
+- **`projects/` is no longer served as files** (Apache `.htaccess` and the bundled Nginx template). Until now anything under `projects/{app}/` that exists on disk was downloadable **without logging in**: for SQLite applications the whole database (`db/bdus.sqlite`: users, password hashes, API key hashes, all data), also `export/`, `templates/`, `migrations/` and the derived-image `cache/`. Now only `projects/{app}/files/` (uploaded files, for now) and `projects/{app}/geodata/` (map layers) are passed through; everything else, and the root `cache/`, answers `404`. **If you ran a SQLite application before this release, treat its database as exposed**: change the passwords of its users and revoke/recreate its API keys. If you proxy `/projects/` yourself (outer Nginx/Caddy), apply the same rule there.
+
 ## [5.29.3] - 2026-11-27
 
 ### Fixed

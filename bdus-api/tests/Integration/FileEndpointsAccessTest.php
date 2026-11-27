@@ -97,6 +97,31 @@ class FileEndpointsAccessTest extends BdusTestCase
         $this->assertSame([704, 703, 702, 701], $ids);
     }
 
+    // ── the generic record path sees the same files ───────────────────────────
+
+    public function testTheGenericTableListAndRecordFollowTheSameRule(): void
+    {
+        $this->as(39, [['items', 'read']]);
+
+        $res = $this->call('Record', 'getRecords', ['tb' => 'bdus_files', 'per_page' => 100]);
+        $this->assertSame('success', $res['status'], json_encode($res));
+        $ids = array_values(array_filter(array_map(fn($r) => (int) ($r['id'] ?? 0), $res['data'] ?? []), fn($i) => $i >= 700));
+        sort($ids);
+        $this->assertSame([701, 702], $ids, 'only files attached to readable records: not categories-only, not orphans');
+        $this->assertSame(4, $res['total'], 'the count follows the same rule (the two fixture files are on items 1 too)');
+        $this->assertFalse($res['can']['update'], 'reading gives no write ability on the generic table');
+
+        $this->assertSame('success', $this->call('Record', 'getRecord', ['tb' => 'bdus_files', 'id' => 701])['status']);
+        $this->assertSame('not_enough_privilege', $this->call('Record', 'getRecord', ['tb' => 'bdus_files', 'id' => 703])['code'] ?? null);
+        $this->assertSame('not_enough_privilege', $this->call('Record', 'getRecord', ['tb' => 'bdus_files', 'id' => 704])['code'] ?? null);
+    }
+
+    public function testSomeoneWhoCannotReadAnythingGetsNoFileTable(): void
+    {
+        $this->as(39);
+        $this->assertSame('not_enough_privilege', $this->call('Record', 'getRecords', ['tb' => 'bdus_files'])['code']);
+    }
+
     // ── download ──────────────────────────────────────────────────────────────
 
     public function testDownloadSendsReadableFilesOnly(): void
@@ -180,6 +205,18 @@ class FileEndpointsAccessTest extends BdusTestCase
         }
         $this->assertNotSame('not_enough_privilege', $this->call('File', 'replaceFile', ['fileId' => 701])['code'],
             'an allowed file gets past the gate (and then fails for want of an upload)');
+    }
+
+    public function testTheGenericSaveJudgesAFileLikeTheFileEndpoint(): void
+    {
+        $this->as(39, [['items', 'update'], ['items', 'read']]);
+        $save = fn(int $id) => $this->call('Record', 'saveRecord', [], ['tb' => 'bdus_files', 'id' => $id, 'core' => ['keywords' => 'viaSave']]);
+
+        $this->assertSame('success', $save(701)['status'], 'attached to a changeable record only');
+        foreach ([702, 703, 704] as $id) {
+            $this->assertSame('not_enough_privilege', $save($id)['code'], "file $id");
+            $this->assertNotSame('viaSave', static::$db->query('SELECT keywords FROM bdus_files WHERE id = ?', [$id], 'read')[0]['keywords']);
+        }
     }
 
     // ── sort ──────────────────────────────────────────────────────────────────

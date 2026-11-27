@@ -2254,7 +2254,15 @@ paths:
     patch:
       operationId: patchFileByFileId
       tags: [files]
-      summary: Update file metadata (description, keywords, attribution, printable)
+      summary: Update file metadata (description, keywords, attribution, printable, public, and any custom field)
+      description: >
+        Any configured field of the files table may be sent: the system ones (`filename`, `description`,
+        `keywords`, `attribution`, `printable`, `public`) and every custom field an administrator added
+        (see `POST /api/config/table/bdus_files/field`). The columns that belong to the binary (`id`, `uuid`,
+        `ext`, `creator`) are never written from a request. The change is validated like on any table
+        (`validation_failed` with `errors`), written through the record layer and recorded in the file's
+        history. Needs a rule on the files table, or every record the file is attached to must be changeable
+        (a lock on any of them refuses it): otherwise `not_enough_privilege`.
       parameters:
         - name: fileId
           in: path
@@ -2276,6 +2284,10 @@ paths:
                   type: [string, 'null']
                 printable:
                   type: [boolean, 'null']
+                public:
+                  type: [boolean, 'null']
+                  description: Whether public presets may show this file (see the image presets)
+              additionalProperties: true
       responses:
         '200':
           description: Update result
@@ -7904,8 +7916,21 @@ components:
 
     FileItem:
       type: object
-      description: A file record as returned by GET /api/files (includes linked-record list)
+      description: >
+        A file record as returned by GET /api/files: the configured fields of the files table (the
+        system ones and any custom field), the list of records it is attached to that the caller may read,
+        and what the caller may do with it.
+      additionalProperties: true
       properties:
+        public:
+          type: [boolean, 'null']
+          description: Whether public presets may show this file
+        can_update:
+          type: boolean
+          description: May the caller change this file (metadata, binary)
+        can_delete:
+          type: boolean
+          description: May the caller delete this file
         id:
           type: integer
         uuid:

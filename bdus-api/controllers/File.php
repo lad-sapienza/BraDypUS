@@ -70,8 +70,16 @@ class File extends \Bdus\Controller
 			if ($search !== '') {
 				$needle    = '%' . $search . '%';
 				$like      = \SQL\Like::operator($this->db->getEngine());
-				$searchOr  = ["f.filename {$like} ?", "f.description {$like} ?", "f.keywords {$like} ?", "f.attribution {$like} ?"];
-				$searchVal = [$needle, $needle, $needle, $needle];
+				// filename, description, keywords, attribution, and every other configured text field
+				$textFlds  = ['filename', 'description', 'keywords', 'attribution'];
+				foreach (\File\Fields::all($this->cfg) as $name => $type) {
+					if (in_array($type, ['text', 'long_text', 'md'], true) && !in_array($name, $textFlds, true)
+						&& !in_array($name, \File\Fields::PROTECTED, true)) {
+						$textFlds[] = $name;
+					}
+				}
+				$searchOr  = array_map(fn($c) => "f.{$c} {$like} ?", $textFlds);
+				$searchVal = array_fill(0, count($textFlds), $needle);
 				if (ctype_digit($search)) {
 					$searchOr[]  = 'f.id = ?';
 					$searchVal[] = (int) $search;
@@ -88,7 +96,10 @@ class File extends \Bdus\Controller
 			$whereSql = $conditions ? ('WHERE ' . implode(' AND ', $conditions)) : '';
 
 			$countSql = "SELECT COUNT(*) AS cnt FROM bdus_files f {$whereSql}";
-			$fetchSql = "SELECT f.id, f.uuid, f.ext, f.filename, f.description, f.keywords, f.attribution, f.printable
+			// The configured columns (the system ones and any custom field), nothing else
+			$cols     = array_keys(\File\Fields::all($this->cfg));
+			$colsSql  = implode(', ', array_map(fn($c) => "f.{$c}", array_unique(array_merge(['id', 'uuid', 'ext', 'filename'], $cols))));
+			$fetchSql = "SELECT {$colsSql}
 			             FROM bdus_files f {$whereSql}
 			             ORDER BY f.id DESC LIMIT ? OFFSET ?";
 
@@ -154,22 +165,26 @@ class File extends \Bdus\Controller
 				$linkMap[(int)$lr['file_id']][] = ['tb' => $lr['table_name'], 'record_id' => (int)$lr['record_id']];
 			}
 
+			$types = \File\Fields::all($this->cfg);
+			$fa    = $this->fileAccess();
 			$files = [];
 			foreach ($rows as $r) {
-				$id      = (int)$r['id'];
-				$ext     = $r['ext'] ?? '';
-				$files[] = [
-					'id'          => $id,
-					'uuid'        => $r['uuid'],
-					'ext'         => $ext,
-					'filename'    => $r['filename'] ?? '',
-					'description' => $r['description'],
-					'keywords'    => $r['keywords'],
-					'attribution' => $r['attribution'],
-					'printable'   => isset($r['printable']) ? (bool)$r['printable'] : null,
-					'is_image'    => in_array(strtolower($ext), $imageExts, true),
-					'links'       => $linkMap[$id] ?? [],
-				];
+				$id   = (int)$r['id'];
+				$ext  = $r['ext'] ?? '';
+				// The configured fields (system and custom), in the configured order; booleans as booleans
+				$file = ['id' => $id, 'uuid' => $r['uuid'], 'ext' => $ext, 'filename' => $r['filename'] ?? ''];
+				foreach ($types as $name => $type) {
+					if (in_array($name, ['id', 'uuid', 'ext', 'filename'], true) || !array_key_exists($name, $r)) {
+						continue;
+					}
+					$file[$name] = $type === 'boolean' && $r[$name] !== null ? (bool) $r[$name] : $r[$name];
+				}
+				$file['is_image']   = in_array(strtolower($ext), $imageExts, true);
+				$file['links']      = $linkMap[$id] ?? [];
+				// What this principal may do with it, so the interface shows only what works
+				$file['can_update'] = $fa->mayChange('update', $id);
+				$file['can_delete'] = $fa->mayChange('delete', $id);
+				$files[] = $file;
 			}
 
 			$this->returnJson([
@@ -229,39 +244,45 @@ class File extends \Bdus\Controller
 			return;
 		}
 
-		$filename    = isset($this->post['filename']) ? trim((string) $this->post['filename']) : null;
-		$description = $this->post['description'] ?? null;
-		$keywords    = $this->post['keywords']    ?? null;
-		$attribution = $this->post['attribution'] ?? null;
-		$printable   = isset($this->post['printable']) ? (int)(bool)$this->post['printable'] : null;
+		// Every configured field of the files table may be sent (the system ones and any custom
+		// field the administrator added), except the ones that belong to the binary: Record\Save
+		// drops those, validates the rest, writes it and keeps the history.
+		$core = [];
+		foreach (\File\Fields::editable($this->cfg) as $name => $type) {
+			if (!array_key_exists($name, $this->post)) {
+				continue;
+			}
+			$value = $this->post[$name];
+			if ($type === 'boolean') {
+				$value = (int) (bool) $value;
+			} elseif ($name === 'filename') {
+				$value = trim((string) $value);
+			}
+			$core[$name] = $value;
+		}
 
-		$sets  = [];
-		$vals  = [];
-		if (array_key_exists('filename',    $this->post)) { $sets[] = 'filename    = ?'; $vals[] = $filename;    }
-		if (array_key_exists('description', $this->post)) { $sets[] = 'description = ?'; $vals[] = $description; }
-		if (array_key_exists('keywords',    $this->post)) { $sets[] = 'keywords    = ?'; $vals[] = $keywords;    }
-		if (array_key_exists('attribution', $this->post)) { $sets[] = 'attribution = ?'; $vals[] = $attribution; }
-		if (array_key_exists('printable',   $this->post)) { $sets[] = 'printable   = ?'; $vals[] = $printable;   }
-
-		if (empty($sets)) {
+		if (empty($core)) {
 			$this->returnJson(['status' => 'success', 'code' => 'ok_file_updated']);
 			return;
 		}
 
-		$vals[] = $fileId;
-		$ok = $this->db->query(
-			"UPDATE bdus_files SET " . implode(', ', $sets) . " WHERE id = ?",
-			$vals,
-			'boolean'
-		);
+		$res = (new \Record\Save($this->db, $this->cfg, $this->access(), $this->log))
+			->save(\Auth\FileAccess::TABLE, $fileId, $core, []);
 
-		if ($ok) {
+		if (($res['status'] ?? '') === 'success') {
 			// Metadata (e.g. attribution) may feed derived versions: they die with their parent
 			\Image\Derivative::purgeFile(PROJ_DIR, $uuid);
 			$this->returnJson(['status' => 'success', 'code' => 'ok_file_updated']);
-		} else {
-			$this->returnJson(['status' => 'error', 'code' => 'error_file_updated']);
+			return;
 		}
+
+		// A refusal keeps its own code (and the fields that failed validation); a failure to
+		// write keeps the code this endpoint always had.
+		$code = $res['code'] ?? 'error_file_updated';
+		$this->returnJson(array_merge(
+			['status' => 'error', 'code' => $code === 'error_saved' ? 'error_file_updated' : $code],
+			isset($res['errors']) ? ['errors' => $res['errors']] : []
+		));
 	}
 
 	/**

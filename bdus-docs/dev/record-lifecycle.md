@@ -373,3 +373,17 @@ Privilege tiers come from `Router::ROUTE_PRIVILEGE` (see
 
 Further reading: `lib/Record/DataStructure.md` in the API repository describes
 the model fields in detail.
+
+
+## Files in the record layer <Badge type="tip" text="files rework" />
+
+`bdus_files` is a configured table (`File\ConfigSeed`, M061), so the generic read path works on it: `Access` reads
+it through its own rules **or** the records its files are attached to (`Access::fileReadCondition()`), and
+`Record\Read` / the list and record endpoints, search and export follow. The write path is the same
+`Record\Save` as for any table, with three file-specific rules: the gate is `Auth\FileAccess::mayChange()`
+(a rule on the files table, or every attached record changeable, and no lock on any of them); the columns of the
+binary (`uuid`, `ext`, plus `id` and `creator` as everywhere) are dropped from the payload; a row cannot be
+**created** (`files_are_uploaded`: uploading creates it, with its uuid and binary). A file cannot be erased as a
+record either (`files_are_deleted_as_files`): `DELETE /api/file/{id}` removes the row, its links, the binary and
+the derived versions together. `File::updateFile` calls `Save`, so a change to a file is validated, written and
+versioned like any record's.

@@ -57,50 +57,7 @@ final class FileAccess
      */
     public function readCondition(string $alias = 'f'): array
     {
-        if ($this->access->isAdmin()) {
-            return ['1=1', []];
-        }
-
-        $parts  = [];
-        $values = [];
-
-        // Directly: a rule on bdus_files itself
-        [$sql, $vals] = $this->access->rowCondition('read', self::TABLE);
-        if ($sql === '1=1') {
-            return ['1=1', []];
-        }
-        if ($sql !== '1=0') {
-            $parts[] = "{$alias}.id IN (SELECT " . self::TABLE . '.id FROM ' . self::TABLE . " WHERE {$sql})";
-            $values  = array_merge($values, $vals);
-        }
-
-        // Through the data: attached to a record that may be read
-        $links  = [];
-        $lvalues = [];
-        foreach ((array) ($this->cfg->get('tables.*.name') ?: []) as $tb) {
-            if (!is_string($tb) || $tb === self::TABLE || !$this->access->can('read', $tb)) {
-                continue;
-            }
-            [$rowSql, $rowVals] = $this->access->rowCondition('read', $tb);
-            if ($rowSql === '1=0') {
-                continue;
-            }
-            if ($rowSql === '1=1') {
-                $links[]   = '(fl.table_name = ?)';
-                $lvalues[] = $tb;
-            } else {
-                // $tb reaches SQL only here, after rowCondition() accepted it as a configured table
-                $links[]  = "(fl.table_name = ? AND fl.record_id IN (SELECT {$tb}.id FROM {$tb} WHERE {$rowSql}))";
-                $lvalues  = array_merge($lvalues, [$tb], $rowVals);
-            }
-        }
-        if ($links) {
-            $parts[] = "EXISTS (SELECT 1 FROM bdus_file_links fl WHERE fl.file_id = {$alias}.id AND ("
-                . implode(' OR ', $links) . '))';
-            $values  = array_merge($values, $lvalues);
-        }
-
-        return $parts ? ['(' . implode(' OR ', $parts) . ')', $values] : ['1=0', []];
+        return $this->access->fileReadCondition($alias);
     }
 
     /** May the principal read file $id? */

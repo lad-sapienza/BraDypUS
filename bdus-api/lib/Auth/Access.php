@@ -59,6 +59,9 @@ class Access
      */
     public const ALL_TABLES = '*';
 
+    /** The files table: read through its own rules or through the records its files are attached to. */
+    public const FILES_TABLE = 'bdus_files';
+
     /** Variable replaced by the list of the principal's group ids. */
     public const VAR_CURRENT_GROUPS = '$CURRENT_GROUPS';
 
@@ -158,6 +161,12 @@ class Access
             return true;
         }
 
+        // A file is also readable through the records it is attached to: whoever may read
+        // something may reach files, the rows decide which (see fileReadCondition()).
+        if ($table === self::FILES_TABLE && $action === 'read' && $this->canAnyTable('read')) {
+            return true;
+        }
+
         return $this->isUsable($table) && !empty($this->rulesFor($table, $action));
     }
 
@@ -170,6 +179,71 @@ class Access
      * @return array{0: string, 1: array}  [sql, bound values]; '1=1' = every row, '1=0' = none
      */
     public function rowCondition(string $action, string $table): array
+    {
+        if ($action === 'read' && $table === self::FILES_TABLE) {
+            return $this->fileReadCondition(self::FILES_TABLE);
+        }
+        return $this->directRowCondition($action, $table);
+    }
+
+    /**
+     * The files the principal may read, to AND into a query over `bdus_files` (aliased as `$alias`;
+     * the table's own name when the query does not alias it): files granted **directly** (a rule or
+     * tier on the files table, with its row filter) OR attached to a record the principal may read.
+     * A file attached to nothing (an orphan) is reachable only directly. See Auth\FileAccess.
+     *
+     * @return array{0: string, 1: array}  [sql, values]; '1=1' = every file, '1=0' = none
+     */
+    public function fileReadCondition(string $alias): array
+    {
+        if ($this->isAdmin()) {
+            return ['1=1', []];
+        }
+
+        $parts  = [];
+        $values = [];
+
+        // Directly
+        [$sql, $vals] = $this->directRowCondition('read', self::FILES_TABLE);
+        if ($sql === '1=1') {
+            return ['1=1', []];
+        }
+        if ($sql !== '1=0') {
+            $parts[] = "{$alias}.id IN (SELECT " . self::FILES_TABLE . '.id FROM ' . self::FILES_TABLE . " WHERE {$sql})";
+            $values  = array_merge($values, $vals);
+        }
+
+        // Through the data
+        $links   = [];
+        $lvalues = [];
+        foreach ((array) ($this->cfg->get('tables.*.name') ?: []) as $tb) {
+            if (!is_string($tb) || $tb === self::FILES_TABLE || !$this->can('read', $tb)) {
+                continue;
+            }
+            [$rowSql, $rowVals] = $this->directRowCondition('read', $tb);
+            if ($rowSql === '1=0') {
+                continue;
+            }
+            if ($rowSql === '1=1') {
+                $links[]   = '(fl.table_name = ?)';
+                $lvalues[] = $tb;
+            } else {
+                // $tb reaches SQL only here, after directRowCondition() accepted it as a configured table
+                $links[]  = "(fl.table_name = ? AND fl.record_id IN (SELECT {$tb}.id FROM {$tb} WHERE {$rowSql}))";
+                $lvalues  = array_merge($lvalues, [$tb], $rowVals);
+            }
+        }
+        if ($links) {
+            $parts[] = "EXISTS (SELECT 1 FROM bdus_file_links fl WHERE fl.file_id = {$alias}.id AND ("
+                . implode(' OR ', $links) . '))';
+            $values  = array_merge($values, $lvalues);
+        }
+
+        return $parts ? ['(' . implode(' OR ', $parts) . ')', $values] : ['1=0', []];
+    }
+
+    /** rowCondition() for the tables that are only judged by their own tier and rules. */
+    private function directRowCondition(string $action, string $table): array
     {
         if (!in_array($action, self::ACTIONS, true)) {
             return ['1=0', []];

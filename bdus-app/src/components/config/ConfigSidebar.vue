@@ -128,6 +128,7 @@
           <span class="cfg-table-label-text">{{ tbl.label }}</span>
           <small v-if="tbl.is_plugin === '1'" class="cfg-plugin-badge">plugin</small>
           <small v-if="tbl.is_view" class="cfg-plugin-badge">{{ t('db_kind_view') }}</small>
+          <small v-if="tbl.system" class="cfg-plugin-badge">{{ t('system_table_badge') }}</small>
         </span>
         <div class="cfg-table-btns">
           <button

@@ -32,6 +32,16 @@ class Config extends \Bdus\Controller
    * Guards the method against non-super_admin callers.
    * Returns false and emits a JSON error if access is denied.
    */
+  /**
+   * The files table is the only system table whose configuration is open (its custom fields,
+   * labels and options are edited like any table's); its structure is not: the table itself and
+   * its system fields cannot be removed, renamed or retyped.
+   */
+  private function isFilesTable(?string $tb): bool
+  {
+    return $tb === \File\ConfigSeed::TABLE;
+  }
+
   private function requireSuperAdmin(): bool
   {
     if (!\Auth\Authorization::can('super_admin')) {
@@ -579,6 +589,18 @@ class Config extends \Bdus\Controller
       }
       if ($this->rejectSourceConflict($post)) return;
 
+      // A system field of the files table keeps its name, type and database type (labels,
+      // hints and checks may change): the code relies on them.
+      if ($this->isFilesTable($tb) && \File\Fields::isSystem((string) $fld)) {
+        $current = $this->cfg->get("tables.{$tb}.fields.{$fld}") ?: [];
+        foreach (['name', 'type', 'db_type'] as $keep) {
+          if (isset($current[$keep])) {
+            $post[$keep] = $current[$keep];
+          }
+        }
+        $post['name'] = $fld;
+      }
+
       $this->cfg->setFld($tb, $fld, $post);
 
       $this->returnJson(['status' => 'success', 'code' => 'ok_cfg_data_updated']);
@@ -626,6 +648,11 @@ class Config extends \Bdus\Controller
       $available_flds = array_values($this->cfg->get("tables.$tb.fields.*.name"));
       if (in_array($fld, $available_flds)) {
         $this->returnJson(['status' => 'error', 'code' => 'fld_already_available']);
+        return;
+      }
+      // The list of files answers with a few keys of its own
+      if ($this->isFilesTable($tb) && in_array($fld, \File\Fields::RESERVED, true)) {
+        $this->returnJson(['status' => 'error', 'code' => 'invalid_db_name']);
         return;
       }
 
@@ -772,7 +799,8 @@ class Config extends \Bdus\Controller
     // System columns every table relies on (primary key, record owner, plugin
     // attachment): removing one from the config *and* the database would break
     // reads, writes and every relation pointing at it.
-    if (in_array($fld, ['id', 'creator', 'id_link'], true)) {
+    if (in_array($fld, ['id', 'creator', 'id_link'], true)
+        || ($this->isFilesTable($tb) && \File\Fields::isSystem((string) $fld))) {
       $this->returnJson(['status' => 'error', 'code' => 'system_field_not_deletable']);
       return;
     }
@@ -794,6 +822,10 @@ class Config extends \Bdus\Controller
     if (!$this->requireSuperAdmin()) return;
     $old_name = $this->get['tb'];
     $new_name = $this->post['new_name'] ?? null;
+    if (str_starts_with((string) $old_name, 'bdus_')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_found']);
+      return;
+    }
     if ($this->rejectIfView($old_name)) return;
     if (!\Config\Identifier::isValid($new_name)) {
       $this->returnJson(['status' => 'error', 'code' => 'invalid_db_name']);
@@ -826,7 +858,13 @@ class Config extends \Bdus\Controller
 
     if ($this->rejectIfView($tb)) return;
 
-    if (!\Config\Identifier::isValid($new_name)) {
+    if ($this->isFilesTable($tb) && \File\Fields::isSystem((string) $old_name)) {
+      $this->returnJson(['status' => 'error', 'code' => 'system_field_not_renamable']);
+      return;
+    }
+
+    if (!\Config\Identifier::isValid($new_name)
+        || ($this->isFilesTable($tb) && in_array($new_name, \File\Fields::RESERVED, true))) {
       $this->returnJson(['status' => 'error', 'code' => 'invalid_db_name']);
       return;
     }
@@ -1510,9 +1548,11 @@ class Config extends \Bdus\Controller
       // Skip built-in system tables (bdus_files, bdus_geodata, …) — they live
       // in bdus_cfg_tables for validation purposes but must not appear in the
       // user-facing config UI.
-      if (str_starts_with($name, 'bdus_')) continue;
+      // The files table is the exception: its custom fields are configured here.
+      if (str_starts_with($name, 'bdus_') && !$this->isFilesTable($name)) continue;
 
       $tables[] = [
+        'system'    => str_starts_with($name, 'bdus_'),
         'name'      => $name,
         'label'     => $this->cfg->get("tables.$name.label") ?? $name,
         // Always return a string so the frontend === '1' comparison is reliable
@@ -1662,8 +1702,8 @@ class Config extends \Bdus\Controller
 
     $tb    = $this->get['tb'] ?? '';
 
-    // Refuse to expose system tables through the config UI.
-    if ($tb && str_starts_with($tb, 'bdus_')) {
+    // Refuse to expose system tables through the config UI (the files table excepted).
+    if ($tb && str_starts_with($tb, 'bdus_') && !$this->isFilesTable($tb)) {
       $this->returnJson(['status' => 'error', 'code' => 'not_found']);
       return;
     }
@@ -1683,6 +1723,13 @@ class Config extends \Bdus\Controller
 
     // For a registered view: the live definition, read-only, for the UI.
     $table['is_view'] = (bool) ($table['is_view'] ?? false);
+    $table['system']  = $tb !== '' && str_starts_with((string) $tb, 'bdus_');
+    if ($this->isFilesTable($tb) && !empty($table['fields']) && is_array($table['fields'])) {
+      // The interface locks the structure of the system fields (name, type, removal)
+      foreach ($table['fields'] as $k => $f) {
+        $table['fields'][$k]['system'] = isset($f['name']) && \File\Fields::isSystem((string) $f['name']);
+      }
+    }
     if ($table['is_view']) {
       foreach ((new \DB\Inspect($this->db))->listObjects() as $o) {
         if ($o['name'] === $tb) {

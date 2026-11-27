@@ -544,6 +544,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "63"; then
+    header "Phase 63 — Files table: custom fields"
+    run_phase "File custom fields" "63_file_custom_fields.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

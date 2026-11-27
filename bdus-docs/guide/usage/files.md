@@ -68,6 +68,21 @@ which is accepted for this and nothing else. Images, PDF, plain text, audio and 
 browser; any other type (HTML, scripts, archives, office documents…) is sent as a download, never
 interpreted as a page of the application.
 
+## Custom fields <Badge type="tip" text="files rework" />
+
+The table **Files** is configured like any other: in *System configuration → Tables* it appears as a
+**system** table. Its structure is fixed (the table itself, and its system fields `filename`, `description`,
+`keywords`, `attribution`, `printable`, `public` and the technical ones cannot be removed, renamed or
+retyped; their labels and checks can change), but you can **add your own fields** from its *Fields* list: a
+licence, an author, a campaign, a vocabulary term, a link to another table, with the same field types,
+checks and vocabularies as anywhere else.
+
+Custom fields appear in the file list and the file details, are saved with the other metadata (validated,
+and kept in the file's history like any record change), travel in the API (`GET /api/files`,
+`PATCH /api/file/{id}`) and are included in the search box (text fields). The columns that belong to the
+binary (`uuid`, `ext`, `creator`, `id`) are never written from a request. A file cannot be created or
+deleted as a record of the table: it is created by uploading it and deleted with the file actions.
+
 ## Filtering and searching
 
 Toggle **Orphans only** in the toolbar to show only files that are not linked

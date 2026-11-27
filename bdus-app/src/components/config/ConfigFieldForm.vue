@@ -79,7 +79,7 @@
             <AInput
               v-model:value="form[key]"
               size="small"
-              :disabled="meta.readonly && !!origName"
+              :disabled="(meta.readonly && !!origName) || isLockedKey(key)"
               :placeholder="meta.pattern ?? ''"
               :status="errors[key] ? 'error' : undefined"
               @blur="validate(key, meta)"
@@ -112,6 +112,7 @@
               v-model:value="form[key]"
               :options="selectOptions(meta)"
               :allow-clear="!meta.required"
+              :disabled="isLockedKey(key)"
               size="small"
               :status="errors[key] ? 'error' : undefined"
               @change="validate(key, meta); onSourceChange(key)"
@@ -183,6 +184,11 @@ const props = defineProps({
 })
 const formId = 'cfg-fld-form'
 const emit = defineEmits(['saved', 'cancelled'])
+
+// A system field of the files table keeps its name and types (the server relies on them and refuses
+// the change anyway); its label, hint, checks and the rest stay editable.
+const LOCKED_KEYS = ['name', 'type', 'db_type']
+const isLockedKey = (key) => !!props.field?.system && LOCKED_KEYS.includes(key)
 
 const { t }  = useI18n()
 const toast  = useToast()

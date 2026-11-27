@@ -1794,5 +1794,10 @@
   "user_not_found": "User not found",
   "key_not_found": "API key not found",
   "fld_source_conflict_msg": "Vocabulary, Values from table and FK table are alternatives, and this field has more than one (%s). Keep only one and save: FK table is the one that keeps the data consistent (the id is stored).",
-  "field_source_conflict": "A field takes only one source of values: Vocabulary, Values from table or FK table"
+  "field_source_conflict": "A field takes only one source of values: Vocabulary, Values from table or FK table",
+  "system_table_badge": "system",
+  "files_table_cfg_note": "This is the table of uploaded files. Its structure is fixed (the files, their addresses and types are managed by the application), but you can add your own fields to describe files (a licence, an author, a campaign…) from the Fields list: they appear on the files page and can be searched like any other field.",
+  "files_are_uploaded": "A file is created by uploading it.",
+  "files_are_deleted_as_files": "Files are deleted from the files page or from a record, not as records of a table.",
+  "system_field_not_renamable": "A system field cannot be renamed."
 }

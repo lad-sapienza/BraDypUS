@@ -1817,6 +1817,13 @@ class Record extends \Bdus\Controller
       return;
     }
 
+    // A file is more than a row: its binary and its links go with it, and who may delete it is
+    // decided per file (Auth\FileAccess). Files are deleted with DELETE /api/file/{id}.
+    if ($tb === \Auth\FileAccess::TABLE) {
+      $this->returnJson(['status' => 'error', 'code' => 'files_are_deleted_as_files']);
+      return;
+    }
+
     // Fast path (writer and up): no per-record ownership check needed.
     // self_writer fails this and falls through to the per-id check below,
     // where each record's own creator decides. If even the best case —

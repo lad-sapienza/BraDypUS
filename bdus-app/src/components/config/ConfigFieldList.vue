@@ -35,7 +35,7 @@
               <span class="cfg-fld-label" :title="fld.label">{{ fld.label }}</span>
             </span>
           </div>
-          <div v-if="!isView" class="cfg-fld-item-actions">
+          <div v-if="!isView && !fld.system" class="cfg-fld-item-actions">
             <button
               class="cfg-icon-btn"
               :title="t('rename_column')"

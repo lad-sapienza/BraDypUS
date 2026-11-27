@@ -317,6 +317,14 @@ Notes on step 1 (deviations from §3, to finish later):
 - Frontend: unit tests and the build of the pure helpers pass; the gallery and Files page were
   **not exercised in a browser** yet.
 
+## 9b. Final rehearsal on real applications (added 2026-11-27)
+
+Before the merge, on **local copies** (never on the production VM): **PAThs** (a real v4→v5 data set with
+many files: the M060 rename, M061, the verifier report, access by role, the table/cards views) and **Atlas**
+(the public application: public presets, `public` flag, the website embedding derived images, the direct
+address closed). The copies come from a backup restored with `bdus-ops`; the user provides them. Each run
+starts from a fresh restore and a backup, and ends with the verifier clean and a manual pass in the UI.
+
 ## 9a. Definition of done (every line verified, none assumed)
 
 - [ ] Every test in the §6 inventory reviewed; each change to an existing test justified in its
@@ -327,6 +335,7 @@ Notes on step 1 (deviations from §3, to finish later):
 - [ ] Migration rehearsed on a copy of each real app (PAThs, CAJ) and on the demo, with a backup,
       including interruption and re-run; verifier clean.
 - [ ] Every page of §7 updated; `OpenApiParityTest` and OpenAPI lint clean.
+- [ ] Rehearsal on local copies of PAThs and Atlas (§9b).
 - [ ] Manual pass in the real UI: permissions per role, table and cards views, delete dialog,
       presets admin, cookie in a clean browser, cross-origin setup, direct URL now refused.
 - [ ] Release notes written; version and CHANGELOG per the bump-version flow.

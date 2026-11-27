@@ -238,6 +238,12 @@ class Save
     // current user's id). The reader built here for the ownership check is
     // reused below in the UPDATE path so the record is only loaded once.
     $reader = null;
+    $isFile = $tb === \Auth\FileAccess::TABLE;
+    if ($isFile && !$id) {
+      // A file exists because a binary was uploaded (it gets its uuid and its place on disk
+      // there): a row cannot be created on its own.
+      return ['status' => 'error', 'code' => 'files_are_uploaded'];
+    }
     if ($id) {
       $reader  = new \Record\Read($id, null, $tb, $this->db, $this->cfg);
       $creator = $this->gate->ownerCreator($tb, $reader, $isPlugin);
@@ -245,7 +251,12 @@ class Save
       // The one gate for changing an existing record: tier or group rule, row
       // scope and locks. The record's plugin rows, links, RS and geodata are
       // written by this same call, so they follow the verdict.
-      if (!$this->gate->mayChange('update', $tb, $id, $creator)) {
+      // A file is judged by Auth\FileAccess: a rule on the files table, or every record it is
+      // attached to being changeable.
+      $mayChange = $isFile
+        ? \Auth\FileAccess::make($this->db, $this->cfg, $this->access)->mayChange('update', $id)
+        : $this->gate->mayChange('update', $tb, $id, $creator);
+      if (!$mayChange) {
         return ['status' => 'error', 'code' => 'not_enough_privilege'];
       }
 
@@ -279,6 +290,10 @@ class Save
     // user, or forge its author.
     if ($id && is_array($core)) {
       unset($core['id'], $core['creator']);
+      // A file's address and type belong to its binary: only an upload or a replacement sets them.
+      if ($isFile) {
+        unset($core['uuid'], $core['ext']);
+      }
     }
 
     // Group rules may pin the value of some fields (`enforce`, #51): refuse a value

@@ -49,6 +49,11 @@
         </details>
       </section>
 
+      <!-- ── System table (files): its structure is fixed, its fields are yours to add ── -->
+      <section v-if="isSystem" class="cfg-section" data-test="system-info">
+        <AAlert type="info" show-icon :closable="false" :message="t('files_table_cfg_note')" />
+      </section>
+
       <!-- ── General ──────────────────────────────────────────────── -->
       <section class="cfg-section">
         <div class="cfg-section-title">{{ t('general') }}</div>
@@ -59,7 +64,7 @@
           <div class="cfg-input-action">
             <AInput v-model:value="form.name" size="small" :disabled="!!tb" style="flex:1; min-width:0" />
             <AButton
-              v-if="tb && !isView"
+              v-if="tb && !isView && !isSystem"
               size="small"
               :title="t('rename_table')"
               @click="renameVisible = true"
@@ -77,7 +82,7 @@
           </div>
 
           <!-- Is Plugin (#20: ToggleSwitch) -->
-          <div class="cfg-form-field">
+          <div v-if="!isSystem" class="cfg-form-field">
             <label>{{ t('is_plugin') }}</label>
             <ASwitch class="cfg-switch" v-model:checked="isPluginBool" :disabled="!!tb" />
             <small class="cfg-hint">{{ t('help_table_is_plugin') }}</small>
@@ -162,7 +167,7 @@
       </section>
 
       <!-- ── System plugins ──────────────────────────────────────── -->
-      <section v-if="tb && !isPlugin && !isView" class="cfg-section">
+      <section v-if="tb && !isPlugin && !isView && !isSystem" class="cfg-section">
         <div class="cfg-section-title">{{ t('system_plugins') }}</div>
         <small class="cfg-hint cfg-hint-section">{{ t('help_table_system_plugins') }}</small>
         <div class="cfg-form-row">
@@ -253,7 +258,7 @@
       </section>
 
       <!-- ── Danger zone ──────────────────────────────────────────── -->
-      <section v-if="tb" class="cfg-section cfg-danger-section">
+      <section v-if="tb && !isSystem" class="cfg-section cfg-danger-section">
         <div class="cfg-section-title cfg-danger-title">{{ t('danger_zone') }}</div>
         <div class="cfg-danger-row">
           <p class="cfg-danger-warn">{{ t('deactivate_table_hint') }}</p>
@@ -352,6 +357,8 @@ const isPlugin = computed(() => form.value?.is_plugin === '1')
 
 // A registered SQL view: configurable, but its structure belongs to the database.
 const isView = computed(() => !!table.value?.is_view)
+// The files table (the only system table that is configured here): fixed structure, custom fields allowed
+const isSystem = computed(() => !!table.value?.system)
 
 // Plugin tables, and tables that have plugins, cannot be switched off on their own.
 const viewWrite = computed(() => viewWriteState(table.value))

@@ -6030,6 +6030,15 @@ paths:
         is `warning` with code `relation_saved_orphans_found` and an `orphans`
         count.  Use `POST /api/config/apply-constraints` after cleaning the
         data to apply the constraint.
+
+        **Column types must match** (since 5.29.2): a relation between a numeric
+        column (`INTEGER`, `REAL`, …) and a text column is refused with
+        `status: error`, `code: relation_type_mismatch`, and nothing is saved
+        (the linked-records query would compare an id with text: no rows on
+        SQLite/MySQL, an error on PostgreSQL). Columns of other kinds (dates,
+        booleans, …) are not judged. Other error codes: `parameter_missing`,
+        `invalid_on_delete`, `invalid_on_update`, `plugin_relation_not_allowed`,
+        `relation_already_exists`.
       requestBody:
         required: true
         content:
@@ -6066,6 +6075,8 @@ paths:
         Only `to_tb`, `to_col`, `on_delete`, and `on_update` may be updated.
         The old FK constraint is dropped and re-applied with the new parameters.
         Orphan detection applies as with POST.
+        The same column-type check applies: a numeric/text pair answers
+        `relation_type_mismatch` and the stored relation is left unchanged.
       requestBody:
         required: true
         content:

@@ -151,6 +151,9 @@ Table finds {
 - Plugin tables cannot take part in a relation other than their attachment to the parent
   (`bdus:is_plugin`); a table that refers to a plugin table, or the other way round, gets
   `ref_plugin_not_allowed`.
+- A ref between a numeric and a text column is not turned into a relation: the table is
+  created and the preview reports `relation_skipped:<table.column>:relation_type_mismatch`
+  <Badge type="tip" text="v5.29.2" />.
 
 A ref that cannot become a relation never blocks the import: the table is created, the
 warning appears in the preview (and, if the database refuses the constraint, as

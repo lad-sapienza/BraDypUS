@@ -37,6 +37,19 @@ The order of A and B does not matter: the system stores the relation in a
 canonical form (alphabetically-first table) and automatically inverts the
 field mapping when building the panel for the other side.
 
+### Columns must be of the same kind <Badge type="tip" text="v5.29.2" />
+
+A relation cannot join a **numeric** column (`INTEGER`, `REAL`) and a **text**
+column. The two values would be compared as an id against a string: on SQLite and
+MySQL the panel would silently stay empty, on PostgreSQL the record would not even
+open. The panel therefore refuses it with *"A relation cannot join a numeric column
+and a text column…"* (`relation_type_mismatch`) and saves nothing.
+
+The typical mistake is pointing the foreign-key column (which holds an id) at the
+*label* column of the other table instead of at its `id`. Choose `id` as the target.
+Columns of other kinds (dates, booleans…) are not checked. Relations created before
+this check are not modified.
+
 ## Example
 
 Table `contexts` has an `id` field. Table `finds` has a `context_id` field that

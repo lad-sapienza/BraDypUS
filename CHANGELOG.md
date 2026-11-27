@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Relations: a relation between a numeric and a text column is refused** (`relation_type_mismatch`, on create and update, API and DBML import). Such a relation made the "linked records" query compare an id with text: no rows on SQLite/MySQL, an error that stopped the record from opening on PostgreSQL (typical case: a foreign key pointing at the label column instead of `id`). Columns of other kinds (dates, booleans…) are not judged. Existing relations are not touched. Closes #88.
+- **Relations: a relation between a numeric and a text column is refused** (`relation_type_mismatch`, on create and update, API and DBML import). Such a relation made the "linked records" query compare an id with text: no rows on SQLite/MySQL, an error that stopped the record from opening on PostgreSQL (typical case: a foreign key pointing at the label column instead of `id`). Columns of other kinds (dates, booleans…) are not judged. Existing relations are not touched. Documented in the Relations guide, the DBML guide and `openapi.yaml`. Closes #88.
 
 ## [5.29.1] - 2026-11-27
 

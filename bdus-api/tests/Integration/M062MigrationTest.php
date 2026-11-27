@@ -41,8 +41,26 @@ class M062MigrationTest extends TestCase
         return array_column($this->stored(), null, 'name');
     }
 
-    public function testNothingStoredBecomesAnExplicitPublicThumb(): void
+    /** An application that already has uploaded files (so something may be published through thumb). */
+    private function withFiles(): void
     {
+        $this->manage->createTable('bdus_files');
+        $this->db->query("INSERT INTO bdus_files (creator, ext, filename) VALUES ('x', 'jpg', 'a')", [], 'boolean');
+    }
+
+    public function testABrandNewApplicationKeepsTheDefaults(): void
+    {
+        $this->manage->createTable('bdus_files');   // exists, but empty: nothing is published
+
+        M062_AddAccessToImagePresets::run($this->manage);
+
+        $this->assertSame([], $this->stored(), 'nothing stored: the built-in thumb stays what the code says (it follows the original)');
+        $this->assertSame('inherit', Presets::resolve($this->stored())['thumb']['access']);
+    }
+
+    public function testNothingStoredButFilesBecomesAnExplicitPublicThumb(): void
+    {
+        $this->withFiles();
         M062_AddAccessToImagePresets::run($this->manage);
 
         $this->assertSame(['thumb'], array_keys($this->byName()));
@@ -54,6 +72,7 @@ class M062MigrationTest extends TestCase
 
     public function testExistingPresetsBecomePublicAndEnabledAndThumbIsAdded(): void
     {
+        $this->withFiles();
         AppSettings::saveImagePresets($this->db, [['name' => 'medium', 'width' => 800, 'height' => null, 'fit' => 'inside', 'format' => 'webp', 'quality' => 80]]);
 
         M062_AddAccessToImagePresets::run($this->manage);
@@ -83,6 +102,7 @@ class M062MigrationTest extends TestCase
 
     public function testIsIdempotent(): void
     {
+        $this->withFiles();
         AppSettings::saveImagePresets($this->db, [['name' => 'medium', 'width' => 800]]);
         M062_AddAccessToImagePresets::run($this->manage);
         $first = $this->stored();
@@ -94,6 +114,7 @@ class M062MigrationTest extends TestCase
 
     public function testTheStoredListStillPassesValidation(): void
     {
+        $this->withFiles();
         AppSettings::saveImagePresets($this->db, [['name' => 'medium', 'width' => 800, 'height' => null, 'fit' => 'inside', 'format' => 'webp', 'quality' => 80]]);
         M062_AddAccessToImagePresets::run($this->manage);
 

@@ -20,7 +20,9 @@ use Image\Presets;
  * built-in `thumb` (never stored before, so public by default) is written out explicitly as a public
  * preset: it then also shows in the administration screen. M060 already marked the existing files public.
  *
- * Idempotent: a preset that already has the keys is left alone, and so is an explicit `thumb`.
+ * A new application (no stored presets, no files) has nothing published: it keeps the defaults (the
+ * built-in thumb follows the original). Idempotent: a preset that already has the keys is left alone, and
+ * so is an explicit `thumb`.
  */
 class M062_AddAccessToImagePresets
 {
@@ -36,6 +38,15 @@ class M062_AddAccessToImagePresets
         $stored  = AppSettings::getImagePresets($db);
         $changed = false;
         $hasThumb = false;
+
+        // Only an application that HAS something to keep published needs this: one with stored presets
+        // or with uploaded files. A brand new application (nothing stored, no files) keeps the
+        // defaults: the built-in thumb follows the original.
+        $hasFiles = $manage->tableExists('bdus_files')
+            && (int) ($db->query('SELECT COUNT(*) AS n FROM bdus_files', [], 'read')[0]['n'] ?? 0) > 0;
+        if (!$stored && !$hasFiles) {
+            return;
+        }
 
         foreach ($stored as $i => $preset) {
             if (!is_array($preset)) {
@@ -54,7 +65,7 @@ class M062_AddAccessToImagePresets
             }
         }
 
-        if (!$hasThumb) {
+        if (!$hasThumb && ($hasFiles || $stored)) {
             $thumb           = Presets::defaultThumb();
             $thumb['access'] = 'public';   // it was public: published sites keep working
             array_unshift($stored, $thumb);

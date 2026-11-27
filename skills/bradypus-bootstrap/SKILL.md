@@ -74,7 +74,9 @@ Tables and vocabularies are created from one DBML text
   make the column a select that lists the other table's records. Only `>` refs are
   imported (a `<` ref is reported and skipped); policies with
   `bdus:on_delete` / `bdus:on_update` (`CASCADE`, `RESTRICT` default, `SET NULL`,
-  `NO ACTION`). Needs BraDypUS ≥ 5.16.1; on older versions a plain `ref:` is ignored
+  `NO ACTION`). The two columns must be of the same kind: a ref between a numeric and a
+  text column (typically a FK pointing at a label instead of `id`) is skipped with
+  `relation_type_mismatch` (BraDypUS ≥ 5.29.2); always target `id`. Needs BraDypUS ≥ 5.16.1; on older versions a plain `ref:` is ignored
   and the panel is added by hand in Config → Relations.
 
 ```dbml

@@ -73,6 +73,14 @@ abstract class Controller
         return $cond === '1=1' ? ['', []] : [' AND (' . $cond . ')', $values];
     }
 
+    /** Who may read or change a file (see \Auth\FileAccess), built on first use. */
+    private ?\Auth\FileAccess $fileAccess = null;
+
+    protected function fileAccess(): \Auth\FileAccess
+    {
+        return $this->fileAccess ??= new \Auth\FileAccess($this->db, $this->cfg, $this->access(), $this->gate());
+    }
+
     /** The write rules shared by every entry point (see \Auth\WriteGate), built on first use. */
     private ?\Auth\WriteGate $gate = null;
 

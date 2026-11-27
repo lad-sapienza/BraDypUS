@@ -2305,6 +2305,48 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/file/{uuid}:
+    get:
+      operationId: getFileByUuid
+      tags: [files]
+      summary: Download the original binary of a file
+      description: >
+        Sends the file stored as `projects/{app}/files/{uuid}.{ext}`. The principal (Bearer
+        token, API key, or the session cookie set at login, which is accepted **only** on this
+        kind of read-only file request) must be allowed to read the file: through a rule on
+        the files themselves, or because the file is attached to a record it may read. Every
+        refusal is a plain-text `404`, so an address that cannot be read looks like one that does
+        not exist. Only images, PDF, plain text, audio and video are shown inline; everything
+        else is sent as a download, never sniffed into another type, with a restrictive
+        `Content-Security-Policy`. Supports `ETag` / `If-None-Match` revalidation; the response is
+        `private, no-cache`.
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          description: The file's `uuid` (lower-case, 8-4-4-4-12 hex digits)
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The file
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '304':
+          description: Not modified (matching `If-None-Match`)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Unknown address, or a file the principal may not read
+          content:
+            text/plain:
+              schema:
+                type: string
+
   /api/file/{preset}/{uuid}.{ext}:
     get:
       operationId: getFileByPresetAndUuidAndExt

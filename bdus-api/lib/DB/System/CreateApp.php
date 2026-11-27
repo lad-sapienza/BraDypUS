@@ -141,27 +141,7 @@ class CreateApp
 
         // ── 2. Seed bdus_cfg_tables + bdus_cfg_fields with the two built-in system tables ──
         // bdus_files (main table — visible in file manager)
-        ToDB::upsertTable($this->db, [
-            'name'     => 'bdus_files',
-            'label'    => 'Files',
-            'order'    => 'id',
-            'id_field' => 'id',
-            'preview'  => ['id', 'filename', 'ext', 'keywords'],
-        ]);
-        foreach ([
-            ['name' => 'id',          'label' => 'ID',                      'type' => 'text',     'db_type' => 'INTEGER', 'readonly' => true],
-            ['name' => 'uuid',        'label' => 'UUID',                     'type' => 'text',     'db_type' => 'TEXT',    'readonly' => true],
-            ['name' => 'creator',     'label' => 'Creator',                  'type' => 'text',     'db_type' => 'INTEGER', 'readonly' => true],
-            ['name' => 'filename',    'label' => 'Filename',                 'type' => 'text',     'db_type' => 'TEXT',    'readonly' => true, 'check' => ['not_empty']],
-            ['name' => 'ext',         'label' => 'Extension',                'type' => 'text',     'db_type' => 'TEXT',    'readonly' => true, 'check' => ['not_empty']],
-            ['name' => 'keywords',    'label' => 'Keywords',                 'type' => 'text',     'db_type' => 'TEXT'],
-            ['name' => 'description', 'label' => 'Description',              'type' => 'long_text','db_type' => 'TEXT'],
-            ['name' => 'printable',   'label' => 'Printable',                'type' => 'boolean',  'db_type' => 'INTEGER'],
-            ['name' => 'attribution', 'label' => 'Attribution',              'type' => 'text',     'db_type' => 'TEXT'],
-            ['name' => 'public',      'label' => 'Public',                   'type' => 'boolean',  'db_type' => 'INTEGER'],
-        ] as $fld) {
-            ToDB::upsertField($this->db, 'bdus_files', $fld);
-        }
+        \File\ConfigSeed::ensure($this->db);
         array_push($this->log, "bdus_files config seeded in DB");
 
         // bdus_geodata (plugin table — linked to user tables)

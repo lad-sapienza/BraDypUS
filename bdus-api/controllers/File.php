@@ -43,10 +43,10 @@ class File extends \Bdus\Controller
 	 */
 	public function getFiles(): void
 	{
-		// A principal whose tier does not read everything (a group-scoped API key,
-		// a user limited by group rules) sees only the files linked to records it may read.
-		$restricted = !\Auth\Authorization::can('read');
-		if ($restricted && !\Auth\Authorization::canOnSomeTable('read')) {
+		// What the principal may see is decided by Auth\FileAccess: files it is granted directly
+		// (a rule on bdus_files) plus files attached to records it may read.
+		[$readSql, $readVals] = $this->fileAccess()->readCondition('f');
+		if ($readSql === '1=0') {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
@@ -80,30 +80,9 @@ class File extends \Bdus\Controller
 				$params = array_merge($params, $searchVal);
 			}
 
-			if ($restricted) {
-				$access = $this->access();
-				$parts  = [];
-				$vals   = [];
-				foreach ((array)$this->cfg->get('tables.*.name') as $tb) {
-					if (!$access->can('read', $tb)) {
-						continue;
-					}
-					[$rowSql, $rowVals] = $access->rowCondition('read', $tb);
-					if ($rowSql === '1=0') {
-						continue;
-					}
-					if ($rowSql === '1=1') {
-						$parts[] = '(fl.table_name = ?)';
-						$vals[]  = $tb;
-					} else {
-						$parts[] = "(fl.table_name = ? AND fl.record_id IN (SELECT {$tb}.id FROM {$tb} WHERE {$rowSql}))";
-						$vals    = array_merge($vals, [$tb], $rowVals);
-					}
-				}
-				$conditions[] = $parts
-					? 'EXISTS (SELECT 1 FROM bdus_file_links fl WHERE fl.file_id = f.id AND (' . implode(' OR ', $parts) . '))'
-					: '1=0';
-				$params = array_merge($params, $vals);
+			if ($readSql !== '1=1') {
+				$conditions[] = $readSql;
+				$params       = array_merge($params, $readVals);
 			}
 
 			$whereSql = $conditions ? ('WHERE ' . implode(' AND ', $conditions)) : '';
@@ -167,21 +146,8 @@ class File extends \Bdus\Controller
 				'read'
 			) ?: [];
 
-			if ($restricted) {
-				// Show only the links to records the principal may read.
-				$byTable = [];
-				foreach ($linkRows as $lr) {
-					$byTable[$lr['table_name']][] = (int)$lr['record_id'];
-				}
-				$ok = [];
-				foreach ($byTable as $tb => $rids) {
-					$ok[$tb] = array_flip($this->access()->readableIds($tb, $rids));
-				}
-				$linkRows = array_values(array_filter(
-					$linkRows,
-					fn($lr) => isset($ok[$lr['table_name']][(int)$lr['record_id']])
-				));
-			}
+			// Show only the links to records the principal may read.
+			$linkRows = $this->fileAccess()->readableLinks($linkRows);
 
 			$linkMap   = [];
 			foreach ($linkRows as $lr) {
@@ -235,6 +201,7 @@ class File extends \Bdus\Controller
 	 */
 	public function updateFile(): void
 	{
+		// Cheap pre-gate: nothing at all to change anywhere. The per-file rules follow.
 		if (!\Auth\Authorization::canOnSomeTable('edit')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
@@ -249,6 +216,10 @@ class File extends \Bdus\Controller
 		$rows = $this->db->query("SELECT id, uuid FROM bdus_files WHERE id = ?", [$fileId], 'read');
 		if (empty($rows)) {
 			$this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
+			return;
+		}
+		if (!$this->fileAccess()->mayChange('update', $fileId)) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
 		$uuid = (string) $rows[0]['uuid'];
@@ -303,6 +274,7 @@ class File extends \Bdus\Controller
 	 */
 	public function replaceFile(): void
 	{
+		// Cheap pre-gate: nothing at all to change anywhere. The per-file rules follow.
 		if (!\Auth\Authorization::canOnSomeTable('edit')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
@@ -311,6 +283,10 @@ class File extends \Bdus\Controller
 		$fileId = (int)($this->get['fileId'] ?? 0);
 		if (!$fileId) {
 			$this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+			return;
+		}
+		if (!$this->fileAccess()->mayChange('update', $fileId)) {
+			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
 		}
 
@@ -380,6 +356,67 @@ class File extends \Bdus\Controller
 		} catch (\Throwable $e) {
 			$this->log->error($e);
 			$this->returnJson(['status' => 'error', 'code' => 'error_uploading_file', 'detail' => $e->getMessage()]);
+		}
+	}
+
+	/**
+	 * Sends the original binary of a file.
+	 *
+	 * GET /{app}/api/file/{uuid}
+	 *
+	 * Needs a signed-in principal (Bearer token, API key, or, for people in a browser, the
+	 * session cookie) who may read the file (Auth\FileAccess). Every refusal is a plain 404:
+	 * an address that cannot be read looks exactly like one that does not exist.
+	 * Supports ETag revalidation; sends only safe-to-display kinds inline (File\Delivery).
+	 */
+	public function download(): void
+	{
+		$notFound = static function (): void {
+			http_response_code(404);
+			header('Content-Type: text/plain; charset=utf-8');
+			echo 'Not found';
+		};
+
+		try {
+			$uuid = strtolower((string) ($this->get['uuid'] ?? ''));
+			if (!\File\Store::isUuid($uuid)) {
+				$notFound();
+				return;
+			}
+
+			$rows = $this->db->query('SELECT id, ext, filename FROM bdus_files WHERE uuid = ?', [$uuid], 'read');
+			if (!$rows || !$this->fileAccess()->mayRead((int) $rows[0]['id'])) {
+				$notFound();
+				return;
+			}
+
+			$ext  = (string) $rows[0]['ext'];
+			$path = \File\Store::path(PROJ_DIR, $uuid, $ext);
+			if (!is_file($path)) {
+				$notFound();
+				return;
+			}
+
+			$mtime = (int) filemtime($path);
+			$size  = (int) filesize($path);
+			$etag  = '"' . dechex($mtime) . '-' . dechex($size) . '"';
+
+			foreach (\File\Delivery::headers((string) $rows[0]['filename'], $ext) as $name => $value) {
+				header($name . ': ' . $value);
+			}
+			header('ETag: ' . $etag);
+			header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $mtime) . ' GMT');
+
+			if (($_SERVER['HTTP_IF_NONE_MATCH'] ?? '') === $etag) {
+				http_response_code(304);
+				return;
+			}
+
+			header('Content-Length: ' . $size);
+			readfile($path);
+		} catch (\Throwable $e) {
+			$this->log->error($e);
+			$notFound();
 		}
 	}
 
@@ -484,6 +521,7 @@ class File extends \Bdus\Controller
 	 */
 	public function sortFiles(): void
 	{
+		// Cheap pre-gate: nothing at all to change anywhere. The per-file rules follow.
 		if (!\Auth\Authorization::canOnSomeTable('edit')) {
 			$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
 			return;
@@ -493,6 +531,26 @@ class File extends \Bdus\Controller
 		if (!is_array($order) || empty($order)) {
 			$this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
 			return;
+		}
+
+		// Reordering a gallery changes the record it belongs to: every link must be on a
+		// record the principal may change (a link that does not exist is refused too).
+		$linkIds = array_values(array_unique(array_map('intval', $order)));
+		$marks   = implode(',', array_fill(0, count($linkIds), '?'));
+		$links   = $this->db->query(
+			"SELECT id, table_name, record_id FROM bdus_file_links WHERE id IN ({$marks})",
+			$linkIds,
+			'read'
+		) ?: [];
+		if (count($links) !== count($linkIds)) {
+			$this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
+			return;
+		}
+		foreach ($links as $l) {
+			if (!$this->mayChange('update', (string) $l['table_name'], (int) $l['record_id'])) {
+				$this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+				return;
+			}
 		}
 
 		$error  = false;

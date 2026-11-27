@@ -69,6 +69,7 @@ use DB\System\Migrations\M057_AddLabelToVocabularies;
 use DB\System\Migrations\M058_AddLegacyLevelColumns;
 use DB\System\Migrations\M059_RealignPostgresSequences;
 use DB\System\Migrations\M060_AddUuidToFiles;
+use DB\System\Migrations\M061_RegisterFilesTableConfig;
 use Monolog\Logger;
 
 /**
@@ -175,6 +176,7 @@ class Migrate
         M058_AddLegacyLevelColumns::class,
         M059_RealignPostgresSequences::class,
         M060_AddUuidToFiles::class,
+        M061_RegisterFilesTableConfig::class,
     ];
 
     /**

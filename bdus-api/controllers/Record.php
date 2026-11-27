@@ -1063,14 +1063,16 @@ class Record extends \Bdus\Controller
       return;
     }
 
-    // Deleting a file removes it from every record it is attached to: all of them must be changeable.
-    foreach ($this->db->query(
-      "SELECT table_name, record_id FROM bdus_file_links WHERE file_id = ?", [$fileId], 'read'
-    ) ?: [] as $link) {
-      if (!$this->mayChange('update', (string) $link['table_name'], (int) $link['record_id'])) {
-        $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
-        return;
-      }
+    if (empty($this->db->query("SELECT id FROM bdus_files WHERE id = ?", [$fileId], 'read'))) {
+      $this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
+      return;
+    }
+
+    // Deleting a file removes it from every record it is attached to: it needs a rule on the
+    // file itself, or every one of those records must be changeable (an orphan: the rule only).
+    if (!$this->fileAccess()->mayChange('delete', $fileId)) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
     }
 
     $appName = $this->cfg->get('main.name') ?? '';
@@ -1140,6 +1142,11 @@ class Record extends \Bdus\Controller
       $rows = $this->db->query("SELECT * FROM bdus_files WHERE id = ?", [$fileId]);
       if (empty($rows)) {
         $this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
+        return;
+      }
+      // The file must be readable: attaching a file one cannot see would hand it over.
+      if (!$this->fileAccess()->mayRead($fileId)) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
         return;
       }
       $f   = $rows[0];

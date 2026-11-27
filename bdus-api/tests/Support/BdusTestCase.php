@@ -74,6 +74,7 @@ abstract class BdusTestCase extends TestCase
         // tests/fixtures/cfg/ are only the seed imported here (like migration M011 does) and are
         // never written. static::$cfg is rebuilt on top of the freshly filled bdus_cfg_* tables.
         M011_ConfigToDb::run(new Manage(static::$db), __DIR__ . '/../fixtures/');
+        \File\ConfigSeed::ensure(static::$db);   // files are a configured table, as in a real app
         static::$cfg = new Config(new Dot(), __DIR__ . '/../fixtures/cfg/', static::$db);
 
         static::seedData();

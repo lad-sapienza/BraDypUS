@@ -118,6 +118,7 @@ class Router
         'Bdus\\Controllers\\Record::deleteFile'                    => 'edit',
         'Bdus\\Controllers\\Record::unlinkFile'                    => 'edit',
         'Bdus\\Controllers\\File::getFiles'                        => 'read',
+        'Bdus\\Controllers\\File::download'                        => 'read',
         'Bdus\\Controllers\\File::updateFile'                      => 'edit',
         'Bdus\\Controllers\\File::replaceFile'                     => 'edit',
         'Bdus\\Controllers\\File::sortFiles'                       => 'edit',
@@ -309,6 +310,7 @@ class Router
         'Bdus\\Controllers\\Search::getAdvancedConfig',
         'Bdus\\Controllers\\Search::getUsedValues',
         'Bdus\\Controllers\\File::getFiles',
+        'Bdus\\Controllers\\File::download',
         'Bdus\\Controllers\\Chart::getData',
         'Bdus\\Controllers\\AssemblageAnalysis::getSources',
         'Bdus\\Controllers\\AssemblageAnalysis::getTableMeta',
@@ -516,6 +518,7 @@ class Router
             $r->addRoute('DELETE', '/api/file/{fileId:\d+}',              ['Bdus\\Controllers\\Record', 'deleteFile']);
             $r->addRoute('DELETE', '/api/file-link/{linkId:\d+}',         ['Bdus\\Controllers\\Record', 'unlinkFile']);
             $r->addRoute('GET',    '/api/files',                           ['Bdus\\Controllers\\File',   'getFiles']);
+            $r->addRoute('GET',    '/api/file/{uuid:[0-9a-f-]+}',          ['Bdus\\Controllers\\File',   'download']);
             $r->addRoute('PATCH',  '/api/file/{fileId:\d+}',              ['Bdus\\Controllers\\File',   'updateFile']);
             $r->addRoute('POST',   '/api/file/{fileId:\d+}/replace',      ['Bdus\\Controllers\\File',   'replaceFile']);
             $r->addRoute('POST',   '/api/files/sort',                     ['Bdus\\Controllers\\File',   'sortFiles']);

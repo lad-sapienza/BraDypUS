@@ -55,28 +55,9 @@ class M060_AddUuidToFiles
             $addedPublic = true;
         }
 
-        // 2. uuid for every row that has none, then the unique index
-        $missing = $db->query(
-            "SELECT id FROM bdus_files WHERE uuid IS NULL OR uuid = ''",
-            [],
-            'read'
-        ) ?: [];
-        if ($missing) {
-            $db->beginTransaction();
-            try {
-                foreach ($missing as $row) {
-                    $db->query(
-                        'UPDATE bdus_files SET uuid = ? WHERE id = ?',
-                        [Store::newUuid(), (int) $row['id']],
-                        'boolean'
-                    );
-                }
-                $db->commit();
-            } catch (\Throwable $e) {
-                $db->rollBack();
-                throw $e;
-            }
-        }
+        // 2. uuid for every row that has none (File\UuidBackfill, also behind bin/files-backfill-uuid.php),
+        //    then the unique index. The binaries are renamed below, once the columns are settled.
+        \File\UuidBackfill::run($db, null);
         $manage->createIndex('bdus_files', 'bdus_files_uuid_uq', ['uuid'], true);
 
         // 3. Existing files keep today's behaviour (derived images are public)
@@ -107,54 +88,13 @@ class M060_AddUuidToFiles
             return;
         }
 
-        $failed = self::renameBinaries($db, $root);
-        self::purgeCache($root);
+        $done = \File\UuidBackfill::run($db, $root);
 
-        if ($failed > 0) {
+        if ($done['failed'] > 0) {
             throw new \RuntimeException(
-                "M060: {$failed} file(s) could not be renamed to their uuid (check permissions on files/); "
+                "M060: {$done['failed']} file(s) could not be renamed to their uuid (check permissions on files/); "
                 . 'the migration stays pending, fix the cause and run it again'
             );
-        }
-    }
-
-    /** @return int Number of renames that failed (a missing source is not a failure). */
-    private static function renameBinaries(\DB\DBInterface $db, string $root): int
-    {
-        $dir = Store::dir($root);
-        if (!is_dir($dir)) {
-            return 0;
-        }
-
-        $failed = 0;
-        foreach ($db->query('SELECT id, uuid, ext FROM bdus_files', [], 'read') ?: [] as $row) {
-            $ext = strtolower((string) $row['ext']);
-            if ($ext !== '' && preg_match('/^[a-z0-9]+$/D', $ext) !== 1) {
-                continue; // an extension we cannot name safely: left as it is, the verifier reports it
-            }
-            $suffix = $ext === '' ? '' : '.' . $ext;
-            $old    = $dir . (int) $row['id'] . $suffix;
-            $new    = $dir . $row['uuid'] . $suffix;
-
-            if (is_file($new) || !is_file($old)) {
-                continue; // already done (resume) or the binary is missing
-            }
-            if (!@rename($old, $new)) {
-                $failed++;
-            }
-        }
-
-        return $failed;
-    }
-
-    /** Derived versions were named after the id: drop them, they are rebuilt on demand. */
-    private static function purgeCache(string $root): void
-    {
-        foreach (glob(rtrim($root, '/') . '/cache/*/[0-9]*') ?: [] as $f) {
-            // `5.webp`, `5.webp.fail`: digits then a dot. A uuid has a dash after its first group.
-            if (is_file($f) && preg_match('/^\d+\./', basename($f)) === 1) {
-                @unlink($f);
-            }
         }
     }
 }

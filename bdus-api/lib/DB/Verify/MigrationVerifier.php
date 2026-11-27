@@ -552,7 +552,8 @@ final class MigrationVerifier
         $noUuid = (int) $this->scalar($this->db,
             "SELECT COUNT(*) FROM bdus_files WHERE uuid IS NULL OR uuid = ''");
         if ($noUuid > 0) {
-            $this->add('fail', 'file_uuids', "{$noUuid} file(s) have no uuid: they cannot be served");
+            $this->add('fail', 'file_uuids', "{$noUuid} file(s) have no uuid: they cannot be served",
+                'Run: php bin/files-backfill-uuid.php --app <slug> (it assigns the uuids and renames the binaries; take a backup first)');
             return;
         }
 

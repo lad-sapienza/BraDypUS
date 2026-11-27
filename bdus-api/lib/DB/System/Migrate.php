@@ -68,6 +68,7 @@ use DB\System\Migrations\M056_AddCharMapsToCfgApp;
 use DB\System\Migrations\M057_AddLabelToVocabularies;
 use DB\System\Migrations\M058_AddLegacyLevelColumns;
 use DB\System\Migrations\M059_RealignPostgresSequences;
+use DB\System\Migrations\M060_AddUuidToFiles;
 use Monolog\Logger;
 
 /**
@@ -106,6 +107,7 @@ class Migrate
         'M016_rename_app_data_json',
         'M017_cleanup_cfg_dir',
         'M018_move_config_to_root',
+        'M060_add_uuid_to_files',
     ];
 
     /**
@@ -172,6 +174,7 @@ class Migrate
         M057_AddLabelToVocabularies::class,
         M058_AddLegacyLevelColumns::class,
         M059_RealignPostgresSequences::class,
+        M060_AddUuidToFiles::class,
     ];
 
     /**

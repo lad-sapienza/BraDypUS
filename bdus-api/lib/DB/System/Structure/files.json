@@ -1,14 +1,18 @@
 {
     "columns": [
         { "name": "id",          "type": "INTEGER", "pk": true, "notnull": false },
+        { "name": "uuid",        "type": "TEXT",               "notnull": false },
         { "name": "creator",     "type": "TEXT",               "notnull": true  },
         { "name": "ext",         "type": "TEXT",               "notnull": true  },
         { "name": "keywords",    "type": "TEXT",               "notnull": false },
         { "name": "description", "type": "TEXT",               "notnull": false },
         { "name": "printable",   "type": "INTEGER",            "notnull": false },
         { "name": "filename",    "type": "TEXT",               "notnull": true  },
-        { "name": "attribution", "type": "TEXT",               "notnull": false }
+        { "name": "attribution", "type": "TEXT",               "notnull": false },
+        { "name": "public",      "type": "INTEGER",            "notnull": false, "default": 0 }
     ],
-    "indexes": [],
+    "indexes": [
+        { "name": "bdus_files_uuid_uq", "unique": true, "columns": ["uuid"] }
+    ],
     "relations": []
 }

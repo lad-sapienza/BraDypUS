@@ -108,6 +108,7 @@ final class MigrationVerifier
         $this->checkPrefixResidue();
         $this->checkRsIntegrity();
         $this->checkFileLinks();
+        $this->checkFileUuids();
         $this->checkGeodata();
         $this->checkLegacyViews();
         $this->checkConfigDbAlignment();
@@ -530,6 +531,62 @@ final class MigrationVerifier
                 $warn);
         } else {
             $this->add('pass', 'file_links_integrity', 'File attachments are consistent');
+        }
+    }
+
+    /**
+     * Every file has a uuid, and its binary lives under that name (M060). Without a project
+     * directory only the database side is judged.
+     */
+    private function checkFileUuids(): void
+    {
+        if (!$this->tableExists($this->db, 'bdus_files')) {
+            return;
+        }
+        $cols = array_column($this->rows($this->db, 'PRAGMA table_info(bdus_files)'), 'name');
+        if (!in_array('uuid', $cols, true)) {
+            $this->add('fail', 'file_uuids', 'bdus_files.uuid is missing (M060 did not run)');
+            return;
+        }
+
+        $noUuid = (int) $this->scalar($this->db,
+            "SELECT COUNT(*) FROM bdus_files WHERE uuid IS NULL OR uuid = ''");
+        if ($noUuid > 0) {
+            $this->add('fail', 'file_uuids', "{$noUuid} file(s) have no uuid: they cannot be served");
+            return;
+        }
+
+        if ($this->projDir === null || !is_dir($this->projDir . 'files/')) {
+            $this->add('pass', 'file_uuids', 'Every file has a uuid (binaries not checked: no files/ directory supplied)');
+            return;
+        }
+
+        $dir      = $this->projDir . 'files/';
+        $missing  = [];
+        $unrenamed = [];
+        foreach ($this->rows($this->db, 'SELECT id, uuid, ext FROM bdus_files') as $f) {
+            $suffix = $f['ext'] === '' || $f['ext'] === null ? '' : '.' . $f['ext'];
+            $new    = $f['uuid'] . $suffix;
+            $old    = $f['id'] . $suffix;
+            if (!is_file($dir . $new)) {
+                if (is_file($dir . $old)) {
+                    $unrenamed[] = "{$old} → {$new}";
+                } else {
+                    $missing[] = $new;
+                }
+            }
+        }
+
+        if ($unrenamed) {
+            $this->add('warn', 'file_uuids',
+                count($unrenamed) . ' binary(ies) still carry their old id-based name: re-run the upgrade',
+                'The upgrade renames files/{id}.{ext} to files/{uuid}.{ext}', array_slice($unrenamed, 0, 20));
+        } elseif ($missing) {
+            $this->add('warn', 'file_uuids',
+                count($missing) . ' binary(ies) listed in bdus_files are missing on disk',
+                '', array_slice($missing, 0, 20));
+        } else {
+            $this->add('pass', 'file_uuids', 'Every file has a uuid and its binary is stored under it');
         }
     }
 

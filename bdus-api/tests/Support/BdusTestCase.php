@@ -204,9 +204,9 @@ abstract class BdusTestCase extends TestCase
 
         // A file (image) and a document linked to item 1 via bdus_file_links
         static::$db->execInTransaction(
-            "INSERT INTO bdus_files (id, creator, ext, keywords, description, printable, filename)
-             VALUES (1, 'admin', 'jpg', 'photo', 'A photo', 1, 'photo'),
-                    (2, 'admin', 'pdf', 'doc',   'A document', 0, 'document')"
+            "INSERT INTO bdus_files (id, uuid, creator, ext, keywords, description, printable, filename)
+             VALUES (1, '" . static::fileUuid(1) . "', 'admin', 'jpg', 'photo', 'A photo', 1, 'photo'),
+                    (2, '" . static::fileUuid(2) . "', 'admin', 'pdf', 'doc',   'A document', 0, 'document')"
         );
         static::$db->execInTransaction(
             "INSERT INTO bdus_file_links (file_id, table_name, record_id, sort)
@@ -275,6 +275,27 @@ abstract class BdusTestCase extends TestCase
      * @param array  $get    Simulated $_GET params (obj/method not needed)
      * @param array  $post   Simulated $_POST params
      */
+    /**
+     * Deterministic uuid for the test file with integer id $id (so a fixture row and
+     * the on-disk name a test expects can be written without a lookup).
+     */
+    public static function fileUuid(int $id): string
+    {
+        return sprintf('00000000-0000-4000-8000-%012d', $id);
+    }
+
+    /** Inserts a `bdus_files` row with a deterministic uuid and returns that uuid. */
+    protected static function insertFile(int $id, string $ext, string $filename = 'f', string $creator = 'test'): string
+    {
+        $uuid = static::fileUuid($id);
+        static::$db->query(
+            'INSERT INTO bdus_files (id, uuid, creator, ext, filename) VALUES (?, ?, ?, ?, ?)',
+            [$id, $uuid, $creator, $ext, $filename],
+            'boolean'
+        );
+        return $uuid;
+    }
+
     protected function makeController(string $class, array $get = [], array $post = []): \Bdus\Controller
     {
         $ctrl = new $class($get, $post, array_merge($get, $post));

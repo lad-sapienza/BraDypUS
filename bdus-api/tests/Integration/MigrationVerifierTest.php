@@ -204,6 +204,75 @@ class MigrationVerifierTest extends TestCase
         $this->assertSame('fail', $this->check($report, 'prefix_residue')['status']);
     }
 
+    private function filesProj(): string
+    {
+        $d = sys_get_temp_dir() . '/bdus_verify_' . uniqid() . '/';
+        mkdir($d . 'files', 0755, true);
+        return $d;
+    }
+
+    private function rmProj(string $d): void
+    {
+        foreach (glob($d . 'files/*') ?: [] as $f) {
+            @unlink($f);
+        }
+        @rmdir($d . 'files');
+        @rmdir($d);
+    }
+
+    public function testFileWithoutUuidFails(): void
+    {
+        $this->seedHealthy();
+        $this->db->exec("INSERT INTO bdus_files (id, creator, ext, filename) VALUES (1, 'x', 'jpg', 'a')");
+
+        $report = (new MigrationVerifier($this->db))->run();
+
+        $this->assertSame('fail', $this->check($report, 'file_uuids')['status']);
+    }
+
+    public function testFilesStoredUnderTheirUuidPass(): void
+    {
+        $this->seedHealthy();
+        $u = '00000000-0000-4000-8000-000000000001';
+        $this->db->exec("INSERT INTO bdus_files (id, uuid, creator, ext, filename) VALUES (1, '{$u}', 'x', 'jpg', 'a')");
+        $proj = $this->filesProj();
+        file_put_contents($proj . "files/{$u}.jpg", 'x');
+
+        $report = (new MigrationVerifier($this->db, ['projDir' => $proj]))->run();
+        $this->rmProj($proj);
+
+        $this->assertSame('pass', $this->check($report, 'file_uuids')['status']);
+    }
+
+    public function testBinaryStillNamedByIdIsReported(): void
+    {
+        $this->seedHealthy();
+        $u = '00000000-0000-4000-8000-000000000002';
+        $this->db->exec("INSERT INTO bdus_files (id, uuid, creator, ext, filename) VALUES (7, '{$u}', 'x', 'jpg', 'a')");
+        $proj = $this->filesProj();
+        file_put_contents($proj . 'files/7.jpg', 'x');
+
+        $report = (new MigrationVerifier($this->db, ['projDir' => $proj]))->run();
+        $this->rmProj($proj);
+
+        $c = $this->check($report, 'file_uuids');
+        $this->assertSame('warn', $c['status']);
+        $this->assertSame(["7.jpg → {$u}.jpg"], $c['items']);
+    }
+
+    public function testMissingBinaryIsReported(): void
+    {
+        $this->seedHealthy();
+        $u = '00000000-0000-4000-8000-000000000003';
+        $this->db->exec("INSERT INTO bdus_files (id, uuid, creator, ext, filename) VALUES (8, '{$u}', 'x', 'jpg', 'a')");
+        $proj = $this->filesProj();
+
+        $report = (new MigrationVerifier($this->db, ['projDir' => $proj]))->run();
+        $this->rmProj($proj);
+
+        $this->assertSame('warn', $this->check($report, 'file_uuids')['status']);
+    }
+
     public function testFileLinkStuckInUserlinksFails(): void
     {
         $this->seedHealthy();

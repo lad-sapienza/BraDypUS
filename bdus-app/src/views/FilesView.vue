@@ -453,10 +453,12 @@ onUnmounted(() => window.removeEventListener('keydown', onPreviewKey))
 watch(previewDialog, open => { if (!open) previewListToken++ })
 
 import { thumbUrl } from '@/utils/thumbUrl'
+import { originalPath } from '@/utils/filePaths'
 
 // ── Helpers ─────────────────────────────────────────────────────────
 function fileUrl(f) {
-  return assetUrl(`projects/${appName.value}/files/${f.id}.${f.ext}`)
+  const path = originalPath(appName.value, f)
+  return path ? assetUrl(path) : ''
 }
 
 function fileIcon(ext) {

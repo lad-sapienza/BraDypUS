@@ -198,10 +198,12 @@ const confirm = useConfirm()
 const auth    = useAuthStore()
 
 import { thumbUrl } from '@/utils/thumbUrl'
+import { originalPath } from '@/utils/filePaths'
 
 /** Resolve a file object to its full URL. */
 function fileUrl(f) {
-  return assetUrl(`projects/${auth.user?.app}/files/${f.id}.${f.ext}`)
+  const path = originalPath(auth.user?.app, f)
+  return path ? assetUrl(path) : ''
 }
 
 const props = defineProps({

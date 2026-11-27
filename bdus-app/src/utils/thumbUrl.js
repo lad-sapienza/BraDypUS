@@ -1,7 +1,5 @@
 import { apiUrl } from '@/api'
-
-// Extensions the server can derive thumbnails from (Image\Derivative::SOURCE_EXTENSIONS).
-const DERIVABLE = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+import { thumbPath } from '@/utils/filePaths'
 
 /**
  * URL of the system `thumb` version of an image file (generated on first
@@ -9,7 +7,6 @@ const DERIVABLE = ['jpg', 'jpeg', 'png', 'gif', 'webp']
  * derived: for those the caller keeps using the original.
  */
 export function thumbUrl(f, fallback) {
-  const ext = String(f.ext ?? '').toLowerCase()
-  if (!DERIVABLE.includes(ext)) return fallback
-  return apiUrl(`/api/file/thumb/${f.id}.webp`)
+  const path = thumbPath(f)
+  return path ? apiUrl(path) : fallback
 }

@@ -214,6 +214,7 @@ function devSidebar() {
         { text: 'Config & access control',         link: '/dev/config' },
         { text: 'Groups & permissions',            link: '/dev/groups-permissions' },
         { text: 'Removing the data levels (plan)', link: '/dev/levels-removal-plan' },
+        { text: 'Files as a first-class table (plan)', link: '/dev/files-as-table-plan' },
       ],
     },
     {

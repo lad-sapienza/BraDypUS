@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.29.1] - 2026-11-27
+
 ### Fixed
 
 - **Validation report: false errors on columns BraDypUS adds itself.** `bdus_cfg_app.image_presets`, `char_maps` and the four `mcp_*` columns (added by migrations M048, M052, M056) were missing from the `cfg_app` model, so each was reported as "Database column … is not available in the model"; they are now in the model. "Missing db_type" is no longer reported for the system `bdus_*` tables (e.g. `bdus_geodata.geometry`) nor for the `chrono_*` fuzzy-date columns (new apps and new activations now also store their `db_type`).

@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.30.0] - 2026-11-27
+
 **Files become a first-class table** (plan in `bdus-docs/dev/files-as-table-plan.md`). Read this before upgrading:
 
 - **Back up first.** Migration M060 gives every file a random `uuid` and **renames the binaries on disk** from `{id}.{ext}` to `{uuid}.{ext}` (repeatable and safe); the derived-image cache is emptied and rebuilt on demand. Then `bdus update` (or `bin/upgrade-app.php --app <slug>`) and check with `bin/verify-migration.php`.

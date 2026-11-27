@@ -85,7 +85,7 @@ deleted as a record of the table: it is created by uploading it and deleted with
 
 ## Table and cards views <Badge type="tip" text="files rework" />
 
-The files page has two views, switched with the buttons at the top left and remembered for you:
+The files page has two views, switched with the buttons at the top left and remembered for you (the first time you see **cards**):
 
 - **Table**: one row per file with a **preview** column (the `thumb` version, an icon for other types), the
   fields as columns (**Columns** chooses which; by default the descriptive fields and your custom ones), sortable

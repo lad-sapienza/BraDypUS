@@ -277,7 +277,7 @@ const appName = computed(() => auth.user?.app ?? route.params.app)
 // ── What the page shows: the fields the server describes (system and custom) ──
 const fieldsMeta = ref([])
 const visible    = ref([])        // the columns the user chose ([] = the default)
-const viewMode   = ref('table')
+const viewMode   = ref('cards')
 
 const fieldType  = name => fieldsMeta.value.find(f => f.name === name)?.type
 const isEditable = name => editableNames(fieldsMeta.value).includes(name)

@@ -90,21 +90,21 @@ test('bulk actions touch only what the principal may', () => {
 test('the view and the columns are remembered per application, and junk is ignored', () => {
   const mem = new Map()
   const storage = { getItem: k => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) }
-  assert.deepEqual(loadPrefs(storage, 'demo'), { view: 'table', visible: [] })
+  assert.deepEqual(loadPrefs(storage, 'demo'), { view: 'cards', visible: [] })
   savePrefs(storage, 'demo', { view: 'cards', visible: ['filename', 'licence'] })
   assert.deepEqual(loadPrefs(storage, 'demo'), { view: 'cards', visible: ['filename', 'licence'] })
-  assert.deepEqual(loadPrefs(storage, 'other'), { view: 'table', visible: [] }, 'another application')
+  assert.deepEqual(loadPrefs(storage, 'other'), { view: 'cards', visible: [] }, 'another application')
 
   mem.set('bdus_files_page:demo', '{not json')
-  assert.deepEqual(loadPrefs(storage, 'demo'), { view: 'table', visible: [] })
+  assert.deepEqual(loadPrefs(storage, 'demo'), { view: 'cards', visible: [] })
   mem.set('bdus_files_page:demo', JSON.stringify({ view: 'gallery', visible: ['a', 1, null] }))
-  assert.deepEqual(loadPrefs(storage, 'demo'), { view: 'table', visible: ['a'] })
-  assert.deepEqual(loadPrefs(undefined, 'demo'), { view: 'table', visible: [] }, 'no storage at all')
+  assert.deepEqual(loadPrefs(storage, 'demo'), { view: 'cards', visible: ['a'] })
+  assert.deepEqual(loadPrefs(undefined, 'demo'), { view: 'cards', visible: [] }, 'no storage at all')
   assert.doesNotThrow(() => savePrefs(undefined, 'demo', { view: 'cards' }))
 })
 
 test('views and types', () => {
   assert.equal(normalizeView('cards'), 'cards')
-  assert.equal(normalizeView('x'), 'table')
+  assert.equal(normalizeView('x'), 'cards')
   assert.ok(isTextual('long_text') && isTextual('md') && !isTextual('boolean') && !isTextual('select'))
 })

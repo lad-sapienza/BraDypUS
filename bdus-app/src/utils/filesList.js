@@ -5,6 +5,8 @@
 // any custom field an administrator added. The page is built from that description.
 
 export const VIEWS = ['table', 'cards']
+/** The view a person sees until they choose another one (then it is remembered per application). */
+export const DEFAULT_VIEW = 'cards'
 
 /** Field types shown and edited as plain text. */
 const TEXT_TYPES = ['text', 'long_text', 'md']
@@ -17,7 +19,7 @@ export function isTextual(type) {
 }
 
 export function normalizeView(v) {
-  return VIEWS.includes(v) ? v : 'table'
+  return VIEWS.includes(v) ? v : DEFAULT_VIEW
 }
 
 /** The fields that can be a column, in the configured order. */
@@ -115,7 +117,7 @@ export function loadPrefs(storage, app) {
       visible: Array.isArray(raw?.visible) ? raw.visible.filter(n => typeof n === 'string') : [],
     }
   } catch {
-    return { view: 'table', visible: [] }
+    return { view: DEFAULT_VIEW, visible: [] }
   }
 }
 

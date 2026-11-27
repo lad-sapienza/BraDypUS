@@ -1,8 +1,9 @@
 # ════════════════════════════════════════════════════════════════════
 # Phase 49 — Derived files: GET /{app}/api/file/{preset}/{uuid}.{ext}
 #
-# Public route (no Authorization header), like the originals served from
-# files/. The address is the file's random uuid, never its integer id.
+# The route answers without credentials only for a PUBLIC preset and a file marked public (phase 65);
+# the built-in `thumb` follows the original, so here it is requested as a signed-in person. The address
+# is the file's random uuid, never its integer id.
 # A version is created on first request and only for a defined
 # preset; every failure is a plain 404 with no fallback to the original.
 # Generation, purge and edge cases are covered by ImageDerivativeTest.
@@ -35,8 +36,9 @@ file_49: jsonpath "$.file.id"
 file_49_uuid: jsonpath "$.file.uuid"
 
 
-# ── 49b. System preset `thumb`, anonymous: WebP created on demand ────
+# ── 49b. System preset `thumb`, signed in: WebP created on demand ────
 GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.webp
+Authorization: Bearer {{jwt}}
 HTTP 200
 Content-Type: image/webp
 [Captures]
@@ -48,30 +50,36 @@ bytes startsWith hex,52494646;
 
 # ── 49c. Revalidation: same ETag → 304 ───────────────────────────────
 GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.webp
+Authorization: Bearer {{jwt}}
 If-None-Match: {{etag_49}}
 HTTP 304
 
 
 # ── 49d. Unknown preset → 404, nothing created ───────────────────────
 GET {{base_url}}/{{app_name}}/api/file/nopreset/{{file_49_uuid}}.webp
+Authorization: Bearer {{jwt}}
 HTTP 404
 
 
 # ── 49e. Extension not matching the preset format → 404 ──────────────
 GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.jpg
+Authorization: Bearer {{jwt}}
 HTTP 404
 
 
 # ── 49f. Unknown file → 404 ───────────────────────────────────────────
 GET {{base_url}}/{{app_name}}/api/file/thumb/00000000-0000-4000-8000-000000000000.webp
+Authorization: Bearer {{jwt}}
 HTTP 404
 
 
 # ── 49f1. The integer id is not an address (derived versions never by id) ─
 GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49}}.webp
+Authorization: Bearer {{jwt}}
 HTTP 404
 
 GET {{base_url}}/{{app_name}}/api/file/thumb/99999999.webp
+Authorization: Bearer {{jwt}}
 HTTP 404
 
 
@@ -86,6 +94,7 @@ jsonpath "$.status" == "success"
 
 
 GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.webp
+Authorization: Bearer {{jwt}}
 HTTP 200
 Content-Type: image/webp
 
@@ -101,6 +110,7 @@ jsonpath "$.status" == "success"
 
 
 GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.webp
+Authorization: Bearer {{jwt}}
 HTTP 200
 [Asserts]
 header "ETag" != "{{etag_49}}"
@@ -120,6 +130,7 @@ file_49_csv_uuid: jsonpath "$.file.uuid"
 
 
 GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_csv_uuid}}.webp
+Authorization: Bearer {{jwt}}
 HTTP 404
 
 
@@ -138,6 +149,7 @@ file_49_bad_uuid: jsonpath "$.file.uuid"
 
 
 GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_bad_uuid}}.webp
+Authorization: Bearer {{jwt}}
 HTTP 404
 
 
@@ -172,6 +184,7 @@ jsonpath "$.removed" == 0
 
 # the version is rebuilt on the next request
 GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.webp
+Authorization: Bearer {{jwt}}
 HTTP 200
 Content-Type: image/webp
 

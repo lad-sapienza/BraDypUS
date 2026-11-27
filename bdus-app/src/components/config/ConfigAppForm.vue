@@ -97,7 +97,7 @@
           <div class="cfg-form-row" style="align-items:flex-end">
             <div class="cfg-form-field">
               <label>{{ t('preset_name') }}</label>
-              <AInput v-model:value="p.name" size="small" placeholder="thumb-large" :maxlength="32" />
+              <AInput v-model:value="p.name" size="small" placeholder="thumb-large" :maxlength="32" :disabled="isSystemPreset(p)" />
             </div>
             <div class="cfg-form-field">
               <label>{{ t('preset_width') }}</label>
@@ -123,6 +123,15 @@
               <label>{{ t('preset_watermark') }}</label>
               <ASwitch class="cfg-switch" :checked="!!p.watermark" @change="on => toggleWatermark(p, on)" />
             </div>
+            <div class="cfg-form-field">
+              <label>{{ t('preset_access') }}</label>
+              <ASelect v-model:value="p.access" :options="presetAccessOptions" size="small" style="min-width:11rem" data-test="preset-access" />
+            </div>
+            <div class="cfg-form-field">
+              <label>{{ t('preset_enabled') }}</label>
+              <ASwitch class="cfg-switch" :checked="p.enabled !== false" :disabled="isSystemPreset(p)" data-test="preset-enabled"
+                @change="on => p.enabled = on" />
+            </div>
             <APopconfirm
               v-if="isSavedPreset(p)"
               :title="t('preset_clear_cache_confirm', p.name)"
@@ -133,6 +142,7 @@
               <AButton size="small" :loading="clearing === p.name">{{ t('preset_clear_cache') }}</AButton>
             </APopconfirm>
             <APopconfirm
+              v-if="!isSystemPreset(p)"
               :title="p.name ? t('preset_delete_confirm', p.name) : t('preset_delete_confirm_unnamed')"
               :ok-text="t('delete')"
               :cancel-text="t('cancel')"
@@ -141,6 +151,12 @@
             >
               <AButton size="small" danger>{{ t('delete') }}</AButton>
             </APopconfirm>
+          </div>
+          <!-- What this preset does: published to anyone, switched off, or the built-in one -->
+          <div class="cfg-preset-notes">
+            <ATag v-if="p.access === 'public' && p.enabled !== false" color="orange" data-test="preset-public-tag">{{ t('preset_public_warning') }}</ATag>
+            <ATag v-if="p.enabled === false" data-test="preset-disabled-tag">{{ t('preset_disabled_tag') }}</ATag>
+            <ATag v-if="isSystemPreset(p)" color="blue">{{ t('preset_builtin_tag') }}</ATag>
           </div>
           <div v-if="p.watermark" class="cfg-form-row" style="align-items:flex-end; margin-left:1rem">
             <div class="cfg-form-field" style="flex:2; min-width:14rem">
@@ -305,7 +321,7 @@
 import { LoadingOutlined, SaveOutlined, SettingOutlined } from '@ant-design/icons-vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Button as AButton, Input, Select as ASelect, Alert as AAlert, Popconfirm as APopconfirm, Switch as ASwitch, InputNumber as AInputNumber } from 'ant-design-vue'
+import { Button as AButton, Input, Select as ASelect, Alert as AAlert, Popconfirm as APopconfirm, Switch as ASwitch, InputNumber as AInputNumber, Tag as ATag } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import { useI18n, availableLocales } from '@/i18n'
 import { api, assetUrl } from '@/api'
@@ -433,8 +449,16 @@ async function clearCache(name) {
 }
 
 function addPreset() {
-  form.value.imagePresets.push({ name: '', width: 800, height: 600, fit: 'cover', format: 'webp', quality: 80 })
+  // New presets follow the original: nothing is published unless you choose to
+  form.value.imagePresets.push({ name: '', width: 800, height: 600, fit: 'cover', format: 'webp', quality: 80, access: 'inherit', enabled: true })
 }
+
+// The built-in `thumb` feeds the table and card views: it can be redefined but never removed or switched off.
+const isSystemPreset = p => p?.name === 'thumb'
+const presetAccessOptions = computed(() => [
+  { value: 'inherit', label: t('preset_access_inherit') },
+  { value: 'public',  label: t('preset_access_public') },
+])
 
 async function load() {
   loading.value = true

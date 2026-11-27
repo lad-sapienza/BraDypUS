@@ -66,8 +66,10 @@ versions of every record, files, maps and print templates on top of them.
   person or API key allowed to read them (through the records they are attached to, or a group rule on
   the files table: [files](/guide/usage/files#who-can-see-and-change-a-file)); until the direct
   `projects/{app}/files/` address is closed (last step of the files rework), the old address still
-  serves them without authentication to anyone who knows the random uuid, and the **derived sizes** are
-  public by design: material that must stay private does not belong there yet.
+  serves them without authentication to anyone who knows the random uuid. The **derived sizes** go to
+  anyone only when the preset is *public* **and** the file is marked *public* (otherwise they need someone
+  who may read the original): material that must stay private must not be marked public, and until the direct
+  address is closed it does not belong there yet.
   A public form can **write** through an API key restricted to creating rows in one table
   (the key sees nothing back, the server can stamp the date and the key used, and the API limits
   requests per key and per address); personal data collected that way can be deleted or anonymised

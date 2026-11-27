@@ -282,6 +282,14 @@ lower-case uuid, an extension of letters and digits) because the result is a fil
 `Store::create()` inserts the `bdus_files` row and returns `{id, uuid}`; `Store::remove()` deletes
 the binary and its derived versions (best effort). Nothing else builds a file path.
 
+**Presets (`Image\Presets`)** carry `access` (`public` | `inherit`, default `inherit`) and `enabled`
+(default true; the system `thumb` is always enabled). `File::serveDerived` serves anonymously only when the
+preset is public **and** `bdus_files.public = 1`; otherwise it needs a principal who may read the file
+(`FileAccess::mayRead`); a disabled preset is a 404 for everyone. `Dispatcher` identifies the caller on this
+public route without ever requiring it (`Router::OPTIONAL_AUTH_ROUTES`: token, key or cookie when sent; a
+revoked or stale session is just anonymous). `Presets::renderKey()` is what a cache invalidation compares: a
+change of `access` or `enabled` keeps the cache. Migration M062 gives existing presets `public` + `enabled`.
+
 **Who may do what: `Auth\FileAccess`** (see [groups & permissions](./groups-permissions#files-auth-fileaccess)),
 **how a file is sent: `File\Delivery`** (content type, `inline` only for plain media, `nosniff`, sandbox
 CSP, safe `Content-Disposition`; HTML and anything that could run is only ever downloaded) and

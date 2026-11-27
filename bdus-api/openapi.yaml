@@ -2487,7 +2487,10 @@ paths:
       tags: [files]
       summary: Derived (resized) version of an image, created on first request
       description: >
-        Public, like the original files. The file is addressed by its random `uuid`
+        Sent **without credentials only** when the preset is `public` AND the file is marked public
+        (`bdus_files.public`); otherwise it needs a principal who may read the original (Bearer token, API
+        key, or the session cookie). A preset that is switched off (`enabled: false`) is served to nobody.
+        Every refusal is a plain-text `404`. The file is addressed by its random `uuid`
         (`bdus_files.uuid`), never by its integer id: the integer id is not an
         address and always answers `404`. `preset` must match a preset defined in
         the app settings (the system preset `thumb` always exists) and `ext` must be
@@ -2500,7 +2503,10 @@ paths:
         `{{attribution}}`) is drawn on the derived version only; editing the attribution
         or the watermark regenerates it.
         Supports `ETag` / `If-None-Match` revalidation.
-      security: []
+      security:
+        - {}
+        - bearerAuth: []
+        - cookieAuth: []
       parameters:
         - name: preset
           in: path

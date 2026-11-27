@@ -463,7 +463,7 @@ class File extends \Bdus\Controller
 	/**
 	 * Serves a derived (resized) version of an image, creating it on first request.
 	 *
-	 * GET /{app}/api/file/{preset}/{uuid}.{ext}   — public, like the originals.
+	 * GET /{app}/api/file/{preset}/{uuid}.{ext}   — public only for a public preset and a public file.
 	 *
 	 * Only names that match a defined preset are ever generated, so the set of
 	 * possible versions is finite. Every failure (unknown preset, missing file,
@@ -487,15 +487,27 @@ class File extends \Bdus\Controller
 				\Image\Presets::resolve((array) ($this->cfg->get('main.imagePresets') ?? [])),
 				$name
 			);
-			if (!$preset || !\File\Store::isUuid($uuid) || $ext !== \Image\Presets::extension($preset)) {
+			// A disabled preset is not served at all (its definition and cache stay)
+			if (!$preset || !\Image\Presets::isEnabled($preset) || !\File\Store::isUuid($uuid)
+				|| $ext !== \Image\Presets::extension($preset)) {
 				$notFound();
 				return;
 			}
 
-			$rows = $this->db->query('SELECT ext, attribution FROM bdus_files WHERE uuid = ?', [$uuid], 'read');
+			$rows = $this->db->query('SELECT id, ext, attribution, public FROM bdus_files WHERE uuid = ?', [$uuid], 'read');
 			$src  = $rows ? strtolower((string) $rows[0]['ext']) : '';
 			$attribution = $rows ? ($rows[0]['attribution'] ?? null) : null;
 			if ($src === '' || !\Image\Derivative::isSupportedSource($src)) {
+				$notFound();
+				return;
+			}
+
+			// Who may be sent it: anyone, when the preset is public AND the file is marked public (the
+			// only way an image leaves the system anonymously); otherwise whoever may read the original.
+			// Every other case looks exactly like an address that does not exist.
+			$anonymousOk = \Image\Presets::isPublic($preset) && (int) ($rows[0]['public'] ?? 0) === 1;
+			if (!$anonymousOk
+				&& !(\Auth\CurrentUser::isAuthenticated() && $this->fileAccess()->mayRead((int) $rows[0]['id']))) {
 				$notFound();
 				return;
 			}
@@ -535,7 +547,9 @@ class File extends \Bdus\Controller
 
 			header('ETag: ' . $etag);
 			header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $mtime) . ' GMT');
-			header('Cache-Control: public, no-cache');
+			// A shared cache may keep what anyone may be sent; anything else stays with the one who asked
+			header('Cache-Control: ' . ($anonymousOk ? 'public' : 'private') . ', no-cache');
+			header('Vary: Authorization, Cookie');
 
 			if (($_SERVER['HTTP_IF_NONE_MATCH'] ?? '') === $etag) {
 				http_response_code(304);

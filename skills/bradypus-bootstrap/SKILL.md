@@ -186,7 +186,7 @@ POST {base}/{app}/api/import/data
   `thumb`, 200×200 inside WebP, always exists) in the app settings (super-admin: `GET`/`PUT /api/config/app`, send the
   whole `imagePresets` array; a preset may add `watermark` `{text, position, color, background, opacity, margin, size}` — text ≤ 200 chars, only `{{attribution}}` as placeholder, drawn on derived versions only, no protection for the public original). Each image is then served, generated on first request and
   cached, at the public URL `GET /{app}/api/file/{preset}/{file_uuid}.{webp|jpg}` (`uuid` is returned with every file; the integer id is not an address); unknown preset,
-  wrong extension or non-image is a plain 404. Derived files are public. Originals are read with
+  wrong extension or non-image is a plain 404. Derived versions are sent without login only when the preset is `access: "public"` AND the file is marked `public` (new files start private; presets default to `inherit`, i.e. whoever may read the original; a preset can be `enabled: false`, and the built-in `thumb` is always on); otherwise they need a principal who may read the file. Originals are read with
   `GET /{app}/api/file/{file_uuid}` (Bearer token or key) by principals who may read the file
   (a readable attached record, or a group rule on `bdus_files`; changing or deleting needs a rule on
   `bdus_files` or every attached record changeable; orphans only via a rule on `bdus_files`), but until

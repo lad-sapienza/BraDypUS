@@ -170,4 +170,50 @@ class ConfigImagePresetsTest extends BdusTestCase
         $this->assertSame('invalid_image_presets', $res['code']);
         $this->assertArrayHasKey('detail', $res);
     }
+
+    // ── the administration screen lists every preset, with its access and state ──
+
+    private function listed(): array
+    {
+        $res = $this->callController($this->makeController('Bdus\\Controllers\\Config'), 'getAppProperties');
+        $this->assertSame('success', $res['status'], json_encode($res));
+        return array_column($res['main']['imagePresets'], null, 'name');
+    }
+
+    public function testTheBuiltInThumbIsAlwaysListedWithItsAccessAndState(): void
+    {
+        $this->callController($this->makeController('Bdus\\Controllers\\Config', [], ['imagePresets' => []]), 'save_app_properties');
+
+        $thumb = $this->listed()['thumb'];
+
+        $this->assertSame('inherit', $thumb['access'], 'the built-in thumb follows the original');
+        $this->assertTrue($thumb['enabled']);
+    }
+
+    public function testEveryPresetIsListedWithWhetherItIsPublicAndEnabled(): void
+    {
+        $save = $this->callController($this->makeController('Bdus\\Controllers\\Config', [], ['imagePresets' => [
+            ['name' => 'site', 'width' => 600, 'access' => 'public'],
+            ['name' => 'hidden', 'width' => 300, 'access' => 'inherit', 'enabled' => false],
+        ]]), 'save_app_properties');
+        $this->assertSame('success', $save['status'], json_encode($save));
+
+        $listed = $this->listed();
+
+        $this->assertSame(['thumb', 'site', 'hidden'], array_keys($listed));
+        $this->assertSame('public', $listed['site']['access']);
+        $this->assertTrue($listed['site']['enabled']);
+        $this->assertFalse($listed['hidden']['enabled']);
+
+        $this->callController($this->makeController('Bdus\\Controllers\\Config', [], ['imagePresets' => []]), 'save_app_properties');
+    }
+
+    public function testAnInvalidAccessIsRefusedWhenSaving(): void
+    {
+        $res = $this->callController($this->makeController('Bdus\\Controllers\\Config', [], ['imagePresets' => [
+            ['name' => 'x', 'width' => 100, 'access' => 'everyone'],
+        ]]), 'save_app_properties');
+
+        $this->assertSame('invalid_image_presets', $res['code']);
+    }
 }

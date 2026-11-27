@@ -710,7 +710,9 @@ class Config extends \Bdus\Controller
         // A changed or removed preset invalidates every version generated from it
         $after = \Image\Presets::resolve($data['imagePresets']);
         foreach ($before as $name => $def) {
-          if (!isset($after[$name]) || $after[$name] != $def) {
+          // Only a change of how the images look invalidates them: switching a preset on/off or
+          // changing who may see it keeps the cache.
+          if (!isset($after[$name]) || \Image\Presets::renderKey($after[$name]) != \Image\Presets::renderKey($def)) {
             \Image\Derivative::purgePreset(PROJ_DIR, (string) $name);
           }
         }
@@ -1677,6 +1679,12 @@ class Config extends \Bdus\Controller
           'allow_self_registration' => (bool) ($appSettings['allow_self_registration'] ?? false),
           'mail_configured'         => \Mail\Mailer::isConfigured(),
           'mcp'                     => \Config\AppSettings::getMcp($this->db),
+          // Every preset the application serves, the built-in `thumb` included even when nothing is
+          // stored for it, each with who may be sent it and whether it is served
+          'imagePresets'            => array_values(array_map(
+            fn(array $p) => $p + ['access' => 'inherit', 'enabled' => true],
+            \Image\Presets::resolve((array) ($this->cfg->get('main.imagePresets') ?? []))
+          )),
         ]
       ),
       'users'          => $users,

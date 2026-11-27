@@ -22,6 +22,7 @@ class ImagePresetsTest extends TestCase
 
         $this->assertSame([[
             'name' => 'small', 'width' => 300, 'height' => null, 'fit' => 'inside', 'format' => 'webp', 'quality' => 80,
+            'access' => 'inherit', 'enabled' => true,
         ]], $out);
     }
 
@@ -139,5 +140,79 @@ class ImagePresetsTest extends TestCase
     {
         $this->assertSame('webp', Presets::extension(['format' => 'webp']));
         $this->assertSame('jpg', Presets::extension(['format' => 'jpg']));
+    }
+
+    // ── who may be sent a preset, and whether it is served ────────────────────
+
+    public function testANewPresetFollowsTheOriginalAndIsEnabled(): void
+    {
+        $p = Presets::normalize([$this->p()])[0];
+        $this->assertSame('inherit', $p['access'], 'the safe default: nothing leaves the system anonymously unless asked');
+        $this->assertTrue($p['enabled']);
+        $this->assertFalse(Presets::isPublic($p));
+        $this->assertTrue(Presets::isEnabled($p));
+    }
+
+    public function testAPresetCanBePublicAndCanBeDisabled(): void
+    {
+        $p = Presets::normalize([$this->p(['access' => 'public', 'enabled' => false])])[0];
+        $this->assertTrue(Presets::isPublic($p));
+        $this->assertFalse(Presets::isEnabled($p));
+        $this->assertTrue(Presets::normalize([$this->p(['enabled' => '0'])])[0]['enabled'] === false, 'as sent by a form');
+        $this->assertTrue(Presets::normalize([$this->p(['enabled' => 1])])[0]['enabled'] === true);
+    }
+
+    #[DataProvider('invalidAccess')]
+    public function testRejectsAnUnknownAccessOrEnabled(array $over): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Presets::normalize([$this->p($over)]);
+    }
+
+    public static function invalidAccess(): array
+    {
+        return [
+            'anonymous' => [['access' => 'anonymous']],
+            'everyone'  => [['access' => 'everyone']],
+            'upper'     => [['access' => 'PUBLIC']],
+            'empty'     => [['access' => '']],
+            'enabled text' => [['enabled' => 'maybe']],
+            'enabled array' => [['enabled' => []]],
+        ];
+    }
+
+    public function testANullOrMissingAccessMeansTheSafeDefault(): void
+    {
+        $this->assertSame('inherit', Presets::normalize([$this->p(['access' => null])])[0]['access']);
+        $this->assertSame('inherit', Presets::normalize([$this->p()])[0]['access']);
+    }
+
+    public function testTheSystemThumbCannotBeDisabled(): void
+    {
+        $thumb = Presets::normalize([$this->p(['name' => 'thumb', 'width' => 100, 'height' => 100, 'enabled' => false])])[0];
+        $this->assertTrue($thumb['enabled'], 'the table and card views depend on it');
+    }
+
+    public function testTheBuiltInThumbIsListedEnabledAndFollowsTheOriginal(): void
+    {
+        $thumb = Presets::resolve([])['thumb'];
+        $this->assertSame('inherit', $thumb['access']);
+        $this->assertTrue(Presets::isEnabled($thumb));
+    }
+
+    public function testAnEntryWithoutTheKeysIsEnabledAndFollowsTheOriginal(): void
+    {
+        $this->assertTrue(Presets::isEnabled(['name' => 'x']));
+        $this->assertFalse(Presets::isPublic(['name' => 'x']));
+        $this->assertFalse(Presets::isPublic(['name' => 'x', 'access' => 'nonsense']), 'only the exact word opens a preset');
+    }
+
+    public function testRenderKeyIgnoresWhatDoesNotChangeTheImages(): void
+    {
+        $a = Presets::normalize([$this->p()])[0];
+        $b = Presets::normalize([$this->p(['access' => 'public', 'enabled' => false])])[0];
+        $this->assertSame(Presets::renderKey($a), Presets::renderKey($b), 'switching a preset on/off keeps its cache');
+        $c = Presets::normalize([$this->p(['width' => 801])])[0];
+        $this->assertNotSame(Presets::renderKey($a), Presets::renderKey($c));
     }
 }

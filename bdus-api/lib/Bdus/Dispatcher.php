@@ -67,14 +67,21 @@ class Dispatcher
 
             // ── Auth gate ─────────────────────────────────────────────────────
 
-            if ($required !== 'none') {
+            // A public route may still want to know who is asking (never requiring it): it identifies
+            // the caller when credentials are sent and lets anonymous requests through.
+            $optionalAuth = $required === 'none' && Router::authIsOptional($obj, $method);
+
+            if ($required !== 'none' || $optionalAuth) {
                 // A browser tag cannot send the header: for the read-only file routes the
                 // session cookie identifies the user (checked below like a header token).
                 if (!\Auth\CurrentUser::isAuthenticated() && defined('APP') && Router::acceptsCookie($obj, $method)) {
                     \Auth\SessionCookie::authenticate(APP);
                 }
 
-                if (!\Auth\CurrentUser::isAuthenticated() && $this->db) {
+                // (A public route that merely wants to know who is asking skips this for an anonymous
+                // request: no credential, nothing to check or count.)
+                if (!\Auth\CurrentUser::isAuthenticated() && $this->db
+                    && (!$optionalAuth || \Auth\ApiKeyAuth::hasCredential())) {
                     $ip = \Auth\ClientIp::get();
                     // An address that keeps presenting bad credentials is refused
                     // before any key lookup.
@@ -103,7 +110,7 @@ class Dispatcher
                     }
                 }
 
-                if (!\Auth\CurrentUser::isAuthenticated()) {
+                if (!\Auth\CurrentUser::isAuthenticated() && !$optionalAuth) {
                     http_response_code(401);
                     header('Content-Type: application/json');
                     echo json_encode(['status' => 'error', 'code' => 'unauthenticated'], JSON_UNESCAPED_UNICODE);
@@ -113,7 +120,7 @@ class Dispatcher
                 // For human users: verify token_version and refresh privilege from DB.
                 // This ensures privilege changes and explicit revocations take effect
                 // immediately, without waiting for the token to expire.
-                if (!\Auth\CurrentUser::isApiKey() && $this->db) {
+                if (\Auth\CurrentUser::isAuthenticated() && !\Auth\CurrentUser::isApiKey() && $this->db) {
                     $row = $this->db->query(
                         'SELECT privilege, token_version FROM bdus_users WHERE id = ?',
                         [\Auth\CurrentUser::id()],
@@ -121,20 +128,24 @@ class Dispatcher
                     )[0] ?? null;
 
                     if (!$row || (int) $row['token_version'] !== \Auth\CurrentUser::get('tkv')) {
-                        http_response_code(401);
-                        header('Content-Type: application/json');
-                        echo json_encode(['status' => 'error', 'code' => 'token_invalidated'], JSON_UNESCAPED_UNICODE);
-                        return;
+                        if (!$optionalAuth) {
+                            http_response_code(401);
+                            header('Content-Type: application/json');
+                            echo json_encode(['status' => 'error', 'code' => 'token_invalidated'], JSON_UNESCAPED_UNICODE);
+                            return;
+                        }
+                        // A revoked or stale session on a public route: the caller is just anonymous
+                        \Auth\CurrentUser::set([]);
+                    } else {
+                        // Privilege is always read from the DB — the JWT value is ignored.
+                        \Auth\CurrentUser::set(array_merge(
+                            \Auth\CurrentUser::get(),
+                            ['privilege' => (int) $row['privilege']]
+                        ));
                     }
-
-                    // Privilege is always read from the DB — the JWT value is ignored.
-                    \Auth\CurrentUser::set(array_merge(
-                        \Auth\CurrentUser::get(),
-                        ['privilege' => (int) $row['privilege']]
-                    ));
                 }
 
-                if (\Auth\CurrentUser::isApiKey() && !Router::apiKeyMayReach(
+                if (\Auth\CurrentUser::isApiKey() && !$optionalAuth && !Router::apiKeyMayReach(
                     $obj, $method, $required,
                     \Auth\CurrentUser::privilege(),
                     \Auth\CurrentUser::get('group_id') ? (int) \Auth\CurrentUser::get('group_id') : null

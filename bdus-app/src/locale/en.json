@@ -1701,7 +1701,7 @@
   "unknown_table": "Unknown table",
   "grp_counts": "%s member(s) · %s rule(s)",
   "image_presets": "Derived images (presets)",
-  "image_presets_hint": "Smaller versions of images, created the first time they are requested and then cached. Give a width, a height or both. \"Cover\" crops (centred) to exactly width × height and enlarges small images; it needs both sides. \"Inside\" keeps the whole image within the sides, never enlarges, and a missing side is free. The preset \"thumb\" (200 × 200 inside, WebP) always exists and is used by the gallery; define it here to change it. Changing or removing a preset deletes its cached versions.",
+  "image_presets_hint": "Smaller versions of images, created the first time they are requested and then cached. Give a width, a height or both. \"Cover\" crops (centred) to exactly width × height and enlarges small images; it needs both sides. \"Inside\" keeps the whole image within the sides, never enlarges, and a missing side is free. The preset \"thumb\" (200 × 200 inside, WebP) always exists, is used by the gallery and the table and card views, and cannot be removed or switched off; redefine it here to change it. Switching another preset off stops serving it without deleting it. Changing or removing a preset deletes its cached versions.",
   "preset_name": "Name (a-z, 0-9, _ -)",
   "preset_width": "Width (px)",
   "preset_height": "Height (px)",
@@ -1709,7 +1709,7 @@
   "preset_fit_cover": "Cover: crop to exact size",
   "preset_fit_inside": "Inside: keep whole image",
   "add_preset": "Add preset",
-  "preset_url_hint": "Public URL: /{app}/api/file/{name}/{file id}.{webp|jpg}",
+  "preset_url_hint": "Address: /{app}/api/file/{name}/{file uuid}.{webp|jpg}. A public preset sends this size of the files marked public to anyone (no login); every other case needs someone who may read the original.",
   "cfg_discard_confirm": "Discard all unsaved changes?",
   "preset_clear_cache": "Clear cache",
   "preset_clear_cache_confirm": "Delete the cached versions of preset \"%s\"? They are rebuilt when requested again.",
@@ -1824,5 +1824,12 @@
   "files_details": "Details",
   "files_read_only_note": "You can read this file but not change it.",
   "confirm_delete_files": "Delete {n} file(s)? This cannot be undone. Files you may not delete are left alone.",
-  "files_bulk_done": "{n} file(s) done"
+  "files_bulk_done": "{n} file(s) done",
+  "preset_access": "Who may be sent it",
+  "preset_access_inherit": "Whoever may read the original",
+  "preset_access_public": "Anyone, for files marked public",
+  "preset_enabled": "Served",
+  "preset_public_warning": "Publishes this size of every file marked public, to anyone",
+  "preset_disabled_tag": "switched off: not served (definition and cache are kept)",
+  "preset_builtin_tag": "built-in: used by the table and card views, cannot be removed or switched off"
 }

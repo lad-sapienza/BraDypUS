@@ -155,11 +155,19 @@ created the first time it is requested and then kept in a cache, so the applicat
 light until a version is actually needed:
 
 ```
-GET /{app}/api/file/{preset}/{file id}.{webp|jpg}
-e.g. /myapp/api/file/thumb/42.webp
+GET /{app}/api/file/{preset}/{file uuid}.{webp|jpg}
+e.g. /myapp/api/file/thumb/3f2b8c1e-5d4a-4b7e-9a10-6c2d8e4f1a77.webp
 ```
 
-- The URL works like the one of the original file: **no login is needed**.
+- **Who is sent it** is decided by the preset and the file, never by the address alone:
+  - a **public** preset sends the version to **anyone, with no login**, but only for files marked
+    **public** (the *Public* field of the file; new files start *not public*);
+  - in every other case it goes only to someone who may read the original (a signed-in person, an API
+    key, or the browser session);
+  - a preset that is **switched off** is served to nobody.
+
+  Everything else is a plain **404**, so an address you may not read looks like one that does not exist.
+  The original file is never sent anonymously, public or not.
 - The extension must match the preset's format. Only names defined as presets are ever
   generated; an unknown preset, a missing file, a wrong extension or a file that is not a
   JPG, PNG, GIF or WebP image gives a plain **404** — there is no fallback to the original.
@@ -177,6 +185,12 @@ e.g. /myapp/api/file/thumb/42.webp
   retried (nor logged again) until the file changes.
 
 The gallery and this page show the `thumb` version; clicking an image opens the original.
+
+::: tip Publishing images to a website
+Mark the files you want to publish **public** (one by one, or select several on the files page and use
+*Make public*), and give the preset your website uses *Who may be sent it: anyone, for files marked public*.
+Nothing else is reachable without a login.
+:::
 
 ::: warning Old direct addresses are still open (for now)
 Until the files folder is closed to direct web access (the last step of the files rework), the

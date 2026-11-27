@@ -556,6 +556,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "65"; then
+    header "Phase 65 — Derived images: preset access and the public flag"
+    run_phase "Derived access" "65_derived_access.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

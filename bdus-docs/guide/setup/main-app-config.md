@@ -69,12 +69,26 @@ Up to 20 presets can be defined.
 | **Cover** (default when width and height are both given) | Cropped, centred, to **exactly** width × height. Small images are enlarged to fill it. Needs both sides. |
 | **Inside** | The whole image, proportions kept, within the given sides; never enlarged. With only a width (or only a height) the other side is free. |
 
+Every preset also says **who may be sent it** and whether it is **served**:
+
+| Setting | Meaning |
+|---|---|
+| **Who may be sent it: whoever may read the original** (default) | The version goes only to someone signed in (token, API key, or the browser session) who may read the file. |
+| **Who may be sent it: anyone, for files marked public** | The version goes to **anyone, without login**, but only for the files you have marked **public**. This is the only way anything leaves the application anonymously: an original is never anonymous, and a *public* preset sends nothing for a file that is not marked public. Such a preset carries a warning tag in this screen. |
+| **Served** | Switch a preset off to stop serving it (it answers 404 to everyone) **without deleting** it: its definition and its cache are kept. |
+
+Switching a preset on or off, or changing who may be sent it, keeps its cached versions (the images
+are the same); changing its size, fit, format, quality or watermark deletes them.
+
 Use *Cover* for a grid of identical tiles (a `200x200` square thumbnail), *Inside* when
 the image must not be cut. See [File management](../usage/files.md#derived-images) for how they are served.
 
-The preset `thumb` (200 × 200 *Inside*, WebP) always exists, even if you define nothing: the
-file gallery and the file manager use it for their thumbnails. Define a preset named
-`thumb` to change its size or fit. Saving a changed or removed preset deletes the cached versions
+The preset `thumb` (200 × 200 *Inside*, WebP) always exists, even if you define nothing, and is always
+listed here: the file gallery, the files page (table and cards) and the record view use it for their
+thumbnails, so it **cannot be removed or switched off**. It follows the original by default; define it here
+to change its size, fit or who may be sent it (a public `thumb` is what a website embedding your
+thumbnails needs). Applications upgraded to this version keep what they had: their presets, `thumb`
+included, are made *public* and their files *public*, so nothing published disappears; review them here. Saving a changed or removed preset deletes the cached versions
 generated from it; they are rebuilt on the next request.
 
 Each saved preset has a **Clear cache** button: it deletes all the cached versions of that

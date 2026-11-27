@@ -347,7 +347,22 @@ class Router
      */
     public const COOKIE_ROUTES = [
         'Bdus\\Controllers\\File::download',
+        'Bdus\\Controllers\\File::serveDerived',
     ];
+
+    /**
+     * Public routes that still identify the caller when credentials are sent, without ever requiring
+     * them: they answer anonymous callers too, and decide per request what they may see (a derived image
+     * of a file marked public goes to anyone; any other goes to who may read the original).
+     */
+    public const OPTIONAL_AUTH_ROUTES = [
+        'Bdus\\Controllers\\File::serveDerived',
+    ];
+
+    public static function authIsOptional(string $ctrl, string $method): bool
+    {
+        return in_array($ctrl . '::' . $method, self::OPTIONAL_AUTH_ROUTES, true);
+    }
 
     public static function acceptsCookie(string $ctrl, string $method): bool
     {

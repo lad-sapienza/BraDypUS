@@ -160,17 +160,26 @@ class SessionCookieTest extends TestCase
     {
         // A tripwire: adding a route here must be a conscious change of this test, because a
         // route that accepts the cookie must never change anything (see Router::COOKIE_ROUTES).
-        $this->assertSame(['Bdus\\Controllers\\File::download'], Router::COOKIE_ROUTES);
+        $this->assertSame(
+            ['Bdus\\Controllers\\File::download', 'Bdus\\Controllers\\File::serveDerived'],
+            Router::COOKIE_ROUTES
+        );
         $this->assertTrue(Router::acceptsCookie('Bdus\\Controllers\\File', 'download'));
         foreach ([['File', 'updateFile'], ['File', 'getFiles'], ['Record', 'saveRecord'], ['Record', 'deleteFile'], ['Login', 'refresh']] as [$c, $m]) {
             $this->assertFalse(Router::acceptsCookie("Bdus\\Controllers\\{$c}", $m), "$c::$m");
         }
     }
 
-    public function testEveryCookieRouteIsAReadRoute(): void
+    public function testEveryCookieRouteOnlyReads(): void
     {
+        // A read route, or a public one that merely wants to know who is asking: never a route that changes anything
         foreach (Router::COOKIE_ROUTES as $route) {
-            $this->assertSame('read', Router::ROUTE_PRIVILEGE[$route] ?? null, $route);
+            [$ctrl, $method] = explode('::', $route);
+            $level = Router::ROUTE_PRIVILEGE[$route] ?? null;
+            $this->assertTrue(
+                $level === 'read' || ($level === 'none' && Router::authIsOptional($ctrl, $method)),
+                "$route is '$level'"
+            );
         }
     }
 }

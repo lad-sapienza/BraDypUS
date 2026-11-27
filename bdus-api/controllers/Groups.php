@@ -585,7 +585,7 @@ class Groups extends \Bdus\Controller
         $filter = $rule['filter'] ?? null;
 
         $allTables = $table === Access::ALL_TABLES;
-        if (!$allTables && !$this->isDataTable($table)) {
+        if (!$allTables && !$this->isDataTable($table, true)) {
             return ['code' => 'unknown_table', 'detail' => $table];
         }
         if (!in_array($action, Access::ACTIONS, true)) {
@@ -647,11 +647,15 @@ class Groups extends \Bdus\Controller
         ));
     }
 
-    private function isDataTable(string $table): bool
+    /**
+     * A configured data table. `$withFiles` also accepts the files table (`bdus_files`), which a
+     * rule may target (e.g. `public = 1` for the public site) but a lock may not.
+     */
+    private function isDataTable(string $table, bool $withFiles = false): bool
     {
         return $table !== ''
             && preg_match('/^[A-Za-z0-9_]+$/', $table) === 1
-            && !str_starts_with($table, 'bdus_')
+            && ($withFiles && $table === Access::FILES_TABLE || !str_starts_with($table, 'bdus_'))
             && !empty($this->cfg->get("tables.{$table}"));
     }
 

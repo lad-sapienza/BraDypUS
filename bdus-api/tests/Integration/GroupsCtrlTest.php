@@ -156,6 +156,23 @@ class GroupsCtrlTest extends BdusTestCase
         $this->assertCount(1, $this->call('getGroup', ['id' => $g])['group']['rules']);
     }
 
+    public function testARuleMayTargetTheFilesTableButALockMayNot(): void
+    {
+        $g = $this->group();
+        $r = $this->call('setRules', ['id' => $g], ['rules' => [
+            ['table' => 'bdus_files', 'action' => 'read', 'filter' => ['public' => ['_eq' => 1]]],
+        ]]);
+        $this->assertSame('success', $r['status'], json_encode($r));
+        $this->assertSame('bdus_files', $this->call('getGroup', ['id' => $g])['group']['rules'][0]['table']);
+
+        // a field the files table does not have is still refused
+        $this->assertSame('invalid_filter', $this->call('setRules', ['id' => $g], ['rules' => [
+            ['table' => 'bdus_files', 'action' => 'read', 'filter' => ['nofield' => ['_eq' => 1]]],
+        ]])['code']);
+
+        $this->assertSame('unknown_table', $this->call('createLock', [], ['table' => 'bdus_files', 'filter' => ['id' => ['_eq' => 1]]])['code']);
+    }
+
     public function testAnInvalidRuleSavesNothing(): void
     {
         $g = $this->group();

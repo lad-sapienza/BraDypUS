@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Group rules on the files table.** `PUT /api/group/{id}/rules` answered `unknown_table` for `bdus_files`, although the guide and `Auth\FileAccess` provide a rule on the files table (e.g. `public = 1` for a public site). The rule is now accepted and its filter validated against the configured fields of the files table; locks on it are still refused.
+
 ## [5.30.0] - 2026-11-27
 
 **Files become a first-class table** (plan in `bdus-docs/dev/files-as-table-plan.md`). Read this before upgrading:

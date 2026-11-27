@@ -109,6 +109,7 @@ final class MigrationVerifier
         $this->checkRsIntegrity();
         $this->checkFileLinks();
         $this->checkFileUuids();
+        $this->checkStrayBinaries();
         $this->checkGeodata();
         $this->checkLegacyViews();
         $this->checkConfigDbAlignment();
@@ -589,6 +590,23 @@ final class MigrationVerifier
                 '', array_slice($missing, 0, 20));
         } else {
             $this->add('pass', 'file_uuids', 'Every file has a uuid and its binary is stored under it');
+        }
+    }
+
+    /** Binaries in files/ that no bdus_files row accounts for (never deleted by the tools: only reported). */
+    private function checkStrayBinaries(): void
+    {
+        if ($this->projDir === null || !is_dir($this->projDir . 'files/') || !$this->tableExists($this->db, 'bdus_files')) {
+            return;
+        }
+        $stray = \File\UuidBackfill::strayBinaries($this->db, $this->projDir);
+        if ($stray) {
+            $this->add('warn', 'file_strays',
+                count($stray) . ' binary(ies) in files/ have no row in bdus_files',
+                'Nothing refers to them: look at them before deleting (php bin/files-backfill-uuid.php --app <slug> --strays)',
+                array_slice($stray, 0, 20));
+        } else {
+            $this->add('pass', 'file_strays', 'Every binary in files/ has a row in bdus_files');
         }
     }
 

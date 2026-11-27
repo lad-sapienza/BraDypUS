@@ -48,6 +48,39 @@ final class UuidBackfill
     }
 
     /**
+     * Binaries directly under files/ that no bdus_files row accounts for (neither by its uuid name nor by
+     * its old id name): left over from a deleted row, a copy, an import that stopped halfway. Read-only,
+     * dot-files and sub-directories are ignored. Sorted.
+     *
+     * @return list<string> file names
+     */
+    public static function strayBinaries(DBInterface $db, ?string $projDir): array
+    {
+        if ($projDir === null || !is_dir(Store::dir($projDir))) {
+            return [];
+        }
+        $known = [];
+        foreach ($db->query('SELECT id, uuid, ext FROM bdus_files', [], 'read') ?: [] as $r) {
+            $ext = (string) $r['ext'];
+            $known[$r['id'] . ($ext === '' ? '' : '.' . $ext)] = true;
+            if ($r['uuid'] !== null && $r['uuid'] !== '') {
+                $known[$r['uuid'] . ($ext === '' ? '' : '.' . strtolower($ext))] = true;
+            }
+        }
+        $stray = [];
+        foreach (scandir(Store::dir($projDir)) ?: [] as $name) {
+            if ($name[0] === '.' || !is_file(Store::dir($projDir) . $name)) {
+                continue;
+            }
+            if (!isset($known[$name])) {
+                $stray[] = $name;
+            }
+        }
+        sort($stray);
+        return $stray;
+    }
+
+    /**
      * Assigns the missing uuids, renames the binaries named by id, and (with a project dir) empties the
      * derived cache that was keyed by id.
      *

@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Binaries in `files/` without a row in `bdus_files`** are now reported: the migration verifier (`bin/verify-migration.php`) gets a `file_strays` check (warning, first 20 names), and `bin/files-backfill-uuid.php` gets `--strays` (full read-only list) and counts them in `--dry-run`. Nothing is ever deleted by these tools.
+
 ### Security
 
 - **BREAKING: `projects/{app}/files/` is no longer served by the web server** (Apache `.htaccess`, bundled Nginx template; only `geodata/` is still passed through). Uploaded files are read only through `GET /{app}/api/file/{uuid}` (checked access) and the derived-image address (public only for files marked public with a public preset): an original is never anonymous. Links to `projects/{app}/files/…` placed on other sites stop working; an outer proxy of your own must stop forwarding `files/` as well. Hurl phase 70 asserts the 404.

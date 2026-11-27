@@ -97,6 +97,9 @@ Two read/repair commands help around it (run them as the web user, one applicati
 # what is missing, without changing anything
 docker compose exec -u www-data api php bin/files-backfill-uuid.php --app paths --dry-run
 
+# binaries in files/ that no database row accounts for (read-only; nothing is deleted)
+docker compose exec -u www-data api php bin/files-backfill-uuid.php --app paths --strays
+
 # links of the OLD kind typed into your data (projects/{app}/files/42.jpg, /api/file/thumb/42.webp):
 # they no longer work; this lists where they are (read-only) so you can replace them
 docker compose exec -u www-data api php bin/files-backfill-uuid.php --app paths --scan-urls

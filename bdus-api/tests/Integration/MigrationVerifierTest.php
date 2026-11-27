@@ -275,6 +275,42 @@ class MigrationVerifierTest extends TestCase
         $this->assertSame(["10.JPG → {$u}.jpg"], $c['items']);
     }
 
+    public function testABinaryWithNoRowIsReportedAsStray(): void
+    {
+        $this->seedHealthy();
+        $u = '00000000-0000-4000-8000-000000000006';
+        $this->db->exec("INSERT INTO bdus_files (id, uuid, creator, ext, filename) VALUES (11, '{$u}', 'x', 'jpg', 'a')");
+        $proj = $this->filesProj();
+        file_put_contents($proj . "files/{$u}.jpg", 'x');
+        file_put_contents($proj . 'files/99.jpg', 'x');   // nothing refers to it
+        file_put_contents($proj . 'files/.gitkeep', '');   // never a stray
+        mkdir($proj . 'files/sub');                        // sub-directories are not looked at
+
+        $report = (new MigrationVerifier($this->db, ['projDir' => $proj]))->run();
+        @rmdir($proj . 'files/sub');
+        @unlink($proj . 'files/.gitkeep');
+        $this->rmProj($proj);
+
+        $c = $this->check($report, 'file_strays');
+        $this->assertSame('warn', $c['status']);
+        $this->assertSame(['99.jpg'], $c['items']);
+        $this->assertSame('pass', $this->check($report, 'file_uuids')['status']);
+    }
+
+    public function testNoStrayWhenEveryBinaryHasARow(): void
+    {
+        $this->seedHealthy();
+        $u = '00000000-0000-4000-8000-000000000007';
+        $this->db->exec("INSERT INTO bdus_files (id, uuid, creator, ext, filename) VALUES (12, '{$u}', 'x', 'JPG', 'a')");
+        $proj = $this->filesProj();
+        file_put_contents($proj . "files/{$u}.jpg", 'x');
+
+        $report = (new MigrationVerifier($this->db, ['projDir' => $proj]))->run();
+        $this->rmProj($proj);
+
+        $this->assertSame('pass', $this->check($report, 'file_strays')['status']);
+    }
+
     public function testBinaryStillNamedByIdIsReported(): void
     {
         $this->seedHealthy();

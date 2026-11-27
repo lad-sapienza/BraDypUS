@@ -20,6 +20,7 @@
  *   --dry-run      say what would be done, change nothing
  *   --scan-urls    only look for old-style file addresses (projects/{app}/files/{id}.ext,
  *                  /api/file/{preset}/{id}.webp) in the text fields, templates and welcome text; read-only
+ *   --strays       list the binaries in files/ that no bdus_files row accounts for (read-only; nothing is deleted)
  *
  * Exit code: 0 ok, 1 something could not be done (a rename failed), 2 bad invocation.
  *
@@ -43,9 +44,9 @@ require $root . '/vendor/autoload.php';
 error_reporting(E_ALL & ~E_DEPRECATED);
 ini_set('display_errors', 'stderr');
 
-$opts = getopt('h', ['help', 'app:', 'dry-run', 'scan-urls']);
+$opts = getopt('h', ['help', 'app:', 'dry-run', 'scan-urls', 'strays']);
 if (isset($opts['h']) || isset($opts['help'])) {
-    echo "Usage: php bin/files-backfill-uuid.php --app <slug> [--dry-run | --scan-urls]\n";
+    echo "Usage: php bin/files-backfill-uuid.php --app <slug> [--dry-run | --scan-urls | --strays]\n";
     exit(0);
 }
 
@@ -76,6 +77,15 @@ if (!(new \DB\System\Manage($db))->columnExists('bdus_files', 'uuid')) {
     exit(1);
 }
 
+if (isset($opts['strays'])) {
+    $stray = \File\UuidBackfill::strayBinaries($db, $projDir);
+    echo "{$app}: " . count($stray) . " binary(ies) in files/ without a row in bdus_files\n";
+    foreach ($stray as $n) {
+        echo "  {$n}\n";
+    }
+    exit(0);
+}
+
 if (isset($opts['scan-urls'])) {
     $cfg   = new \Config\Config(new \Adbar\Dot(), $projDir, $db);
     $found = \File\LegacyUrls::scan($db, $cfg);
@@ -93,7 +103,8 @@ if (isset($opts['scan-urls'])) {
 if (isset($opts['dry-run'])) {
     $plan = \File\UuidBackfill::plan($db, $projDir);
     echo "{$app}: {$plan['without_uuid']} file(s) without a uuid, {$plan['to_rename']} binary(ies) to rename, "
-       . "{$plan['missing']} binary(ies) missing on disk (dry run, nothing changed)\n";
+       . "{$plan['missing']} binary(ies) missing on disk, "
+       . count(\File\UuidBackfill::strayBinaries($db, $projDir)) . " binary(ies) without a row (--strays lists them) (dry run, nothing changed)\n";
     exit(0);
 }
 

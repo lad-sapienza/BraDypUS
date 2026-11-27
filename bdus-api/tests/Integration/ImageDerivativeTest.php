@@ -11,6 +11,12 @@ use Image\Derivative;
  */
 class ImageDerivativeTest extends TestCase
 {
+    /** Uuid of the test file with integer key $n (cache files are named by uuid). */
+    private static function u(int $n): string
+    {
+        return \Tests\Support\BdusTestCase::fileUuid($n);
+    }
+
     private string $proj;
 
     protected function setUp(): void
@@ -50,7 +56,7 @@ class ImageDerivativeTest extends TestCase
     {
         $src  = $this->makeJpeg(7, 400, 200);
         $before = md5_file($src);
-        $dest = Derivative::cachePath($this->proj, 'thumb', 7, 'webp');
+        $dest = Derivative::cachePath($this->proj, 'thumb', self::u(7), 'webp');
 
         Derivative::generate($src, $dest, $this->preset());
 
@@ -66,7 +72,7 @@ class ImageDerivativeTest extends TestCase
     public function testGeneratesJpegWhenPresetSaysJpg(): void
     {
         $src  = $this->makeJpeg(8, 300, 300);
-        $dest = Derivative::cachePath($this->proj, 'thumb', 8, 'jpg');
+        $dest = Derivative::cachePath($this->proj, 'thumb', self::u(8), 'jpg');
 
         Derivative::generate($src, $dest, $this->preset(['format' => 'jpg']));
 
@@ -76,7 +82,7 @@ class ImageDerivativeTest extends TestCase
     public function testDoesNotEnlargeASmallerOriginal(): void
     {
         $src  = $this->makeJpeg(9, 40, 30);
-        $dest = Derivative::cachePath($this->proj, 'thumb', 9, 'webp');
+        $dest = Derivative::cachePath($this->proj, 'thumb', self::u(9), 'webp');
 
         Derivative::generate($src, $dest, $this->preset());
 
@@ -90,7 +96,7 @@ class ImageDerivativeTest extends TestCase
         $small = $this->makeJpeg(21, 40, 30);
 
         foreach ([$big, $small] as $i => $src) {
-            $dest = Derivative::cachePath($this->proj, 'sq', 20 + $i, 'webp');
+            $dest = Derivative::cachePath($this->proj, 'sq', self::u(20 + $i), 'webp');
             Derivative::generate($src, $dest, $this->preset(['fit' => 'cover', 'width' => 120, 'height' => 90]));
             $this->assertSame([120, 90], array_slice(getimagesize($dest), 0, 2));
         }
@@ -99,18 +105,18 @@ class ImageDerivativeTest extends TestCase
     public function testInsideWithOneSideOnlyScalesToThatSide(): void
     {
         $src  = $this->makeJpeg(22, 400, 200);
-        $dest = Derivative::cachePath($this->proj, 'w', 22, 'webp');
+        $dest = Derivative::cachePath($this->proj, 'w', self::u(22), 'webp');
         Derivative::generate($src, $dest, $this->preset(['width' => 50, 'height' => null]));
         $this->assertSame([50, 25], array_slice(getimagesize($dest), 0, 2));
 
-        $dest = Derivative::cachePath($this->proj, 'h', 22, 'webp');
+        $dest = Derivative::cachePath($this->proj, 'h', self::u(22), 'webp');
         Derivative::generate($src, $dest, $this->preset(['width' => null, 'height' => 40]));
         $this->assertSame([80, 40], array_slice(getimagesize($dest), 0, 2));
     }
 
     public function testRejectsMissingNonImageAndUnsupportedSources(): void
     {
-        $dest = Derivative::cachePath($this->proj, 'thumb', 1, 'webp');
+        $dest = Derivative::cachePath($this->proj, 'thumb', self::u(1), 'webp');
 
         $cases = [
             'missing'     => $this->proj . 'files/none.jpg',
@@ -131,37 +137,37 @@ class ImageDerivativeTest extends TestCase
     {
         foreach ([[1, 'thumb'], [1, 'medium'], [2, 'thumb']] as [$id, $preset]) {
             $src = $this->makeJpeg($id, 200, 200);
-            Derivative::generate($src, Derivative::cachePath($this->proj, $preset, $id, 'webp'), $this->preset());
+            Derivative::generate($src, Derivative::cachePath($this->proj, $preset, self::u($id), 'webp'), $this->preset());
         }
 
-        $this->assertSame(2, Derivative::purgeFile($this->proj, 1));
+        $this->assertSame(2, Derivative::purgeFile($this->proj, self::u(1)));
 
-        $this->assertFileDoesNotExist(Derivative::cachePath($this->proj, 'thumb', 1, 'webp'));
-        $this->assertFileDoesNotExist(Derivative::cachePath($this->proj, 'medium', 1, 'webp'));
-        $this->assertFileExists(Derivative::cachePath($this->proj, 'thumb', 2, 'webp'));
-        $this->assertSame(0, Derivative::purgeFile($this->proj, 99), 'nothing to purge is fine');
+        $this->assertFileDoesNotExist(Derivative::cachePath($this->proj, 'thumb', self::u(1), 'webp'));
+        $this->assertFileDoesNotExist(Derivative::cachePath($this->proj, 'medium', self::u(1), 'webp'));
+        $this->assertFileExists(Derivative::cachePath($this->proj, 'thumb', self::u(2), 'webp'));
+        $this->assertSame(0, Derivative::purgeFile($this->proj, self::u(99)), 'nothing to purge is fine');
     }
 
     public function testPurgeFileDoesNotMatchIdsSharingAPrefix(): void
     {
         $src = $this->makeJpeg(1, 100, 100);
-        Derivative::generate($src, Derivative::cachePath($this->proj, 'thumb', 12, 'webp'), $this->preset());
+        Derivative::generate($src, Derivative::cachePath($this->proj, 'thumb', self::u(12), 'webp'), $this->preset());
 
-        $this->assertSame(0, Derivative::purgeFile($this->proj, 1));
-        $this->assertFileExists(Derivative::cachePath($this->proj, 'thumb', 12, 'webp'));
+        $this->assertSame(0, Derivative::purgeFile($this->proj, self::u(1)));
+        $this->assertFileExists(Derivative::cachePath($this->proj, 'thumb', self::u(12), 'webp'));
     }
 
     public function testPurgePresetRemovesFolderAndRefusesBadNames(): void
     {
         $src = $this->makeJpeg(5, 100, 100);
-        Derivative::generate($src, Derivative::cachePath($this->proj, 'thumb', 5, 'webp'), $this->preset());
-        Derivative::generate($src, Derivative::cachePath($this->proj, 'big', 5, 'webp'), $this->preset());
+        Derivative::generate($src, Derivative::cachePath($this->proj, 'thumb', self::u(5), 'webp'), $this->preset());
+        Derivative::generate($src, Derivative::cachePath($this->proj, 'big', self::u(5), 'webp'), $this->preset());
 
         $this->assertSame(0, Derivative::purgePreset($this->proj, '../files'), 'path traversal refused');
         $this->assertFileExists($src);
 
         $this->assertSame(1, Derivative::purgePreset($this->proj, 'thumb'));
         $this->assertDirectoryDoesNotExist($this->proj . 'cache/thumb');
-        $this->assertFileExists(Derivative::cachePath($this->proj, 'big', 5, 'webp'));
+        $this->assertFileExists(Derivative::cachePath($this->proj, 'big', self::u(5), 'webp'));
     }
 }

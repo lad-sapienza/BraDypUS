@@ -591,17 +591,19 @@ class ImportCtrlTest extends BdusTestCase
         $this->assertSame(0, $res['not_found']);
 
         $fileRows = static::$db->query(
-            "SELECT id, ext, filename FROM bdus_files WHERE creator = 'import'", [], 'read'
+            "SELECT id, uuid, ext, filename FROM bdus_files WHERE creator = 'import'", [], 'read'
         );
         $this->assertNotEmpty($fileRows);
         $file = $fileRows[0];
 
-        // Regression: the physical file must be named {id}.{ext} — every
+        // Regression: the physical file must be named {uuid}.{ext} — every
         // consumer (FileGallery.vue, FilesView.vue) builds the URL that way.
         // A prior bug wrote it under "{basename}_{random suffix}.{ext}" instead,
-        // so the {id}.{ext} URL 404'd for every bulk-imported photo.
-        $expectedPath = constant('PROJ_DIR') . 'files/' . $file['id'] . '.' . $file['ext'];
-        $this->assertFileExists($expectedPath, 'Physical file must be saved as {id}.{ext}');
+        // so the URL 404'd for every bulk-imported photo.
+        $this->assertTrue(\File\Store::isUuid($file['uuid']), 'an imported file gets a canonical uuid');
+        $expectedPath = constant('PROJ_DIR') . 'files/' . $file['uuid'] . '.' . $file['ext'];
+        $this->assertFileExists($expectedPath, 'Physical file must be saved as {uuid}.{ext}');
+        $this->assertFileDoesNotExist(constant('PROJ_DIR') . 'files/' . $file['id'] . '.' . $file['ext'], 'never under the integer id');
 
         // `filename` is metadata only and must stay the clean original
         // basename — the same prior bug also stored the random-suffixed name here.

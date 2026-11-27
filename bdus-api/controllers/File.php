@@ -37,7 +37,7 @@ class File extends \Bdus\Controller
 	 * description and keywords; if it's a plain integer it also matches the
 	 * file id exactly.
 	 *
-	 * Response: { status, total, page, per_page, files: [{ id, ext, filename,
+	 * Response: { status, total, page, per_page, files: [{ id, uuid, ext, filename,
 	 *   description, keywords, printable, is_image,
 	 *   links: [{ tb, record_id }] }] }
 	 */
@@ -109,7 +109,7 @@ class File extends \Bdus\Controller
 			$whereSql = $conditions ? ('WHERE ' . implode(' AND ', $conditions)) : '';
 
 			$countSql = "SELECT COUNT(*) AS cnt FROM bdus_files f {$whereSql}";
-			$fetchSql = "SELECT f.id, f.ext, f.filename, f.description, f.keywords, f.attribution, f.printable
+			$fetchSql = "SELECT f.id, f.uuid, f.ext, f.filename, f.description, f.keywords, f.attribution, f.printable
 			             FROM bdus_files f {$whereSql}
 			             ORDER BY f.id DESC LIMIT ? OFFSET ?";
 
@@ -122,7 +122,7 @@ class File extends \Bdus\Controller
 			if (!empty($this->get['ids_only'])) {
 				$cap  = self::IDS_ONLY_CAP;
 				$rows = $this->db->query(
-					"SELECT f.id, f.ext, f.filename FROM bdus_files f {$whereSql} ORDER BY f.id DESC LIMIT ?",
+					"SELECT f.id, f.uuid, f.ext, f.filename FROM bdus_files f {$whereSql} ORDER BY f.id DESC LIMIT ?",
 					[...$params, $cap],
 					'read'
 				) ?: [];
@@ -131,6 +131,7 @@ class File extends \Bdus\Controller
 					$ext     = $r['ext'] ?? '';
 					$files[] = [
 						'id'       => (int)$r['id'],
+						'uuid'     => $r['uuid'],
 						'ext'      => $ext,
 						'filename' => $r['filename'] ?? '',
 						'is_image' => in_array(strtolower($ext), $imageExts, true),
@@ -193,6 +194,7 @@ class File extends \Bdus\Controller
 				$ext     = $r['ext'] ?? '';
 				$files[] = [
 					'id'          => $id,
+					'uuid'        => $r['uuid'],
 					'ext'         => $ext,
 					'filename'    => $r['filename'] ?? '',
 					'description' => $r['description'],
@@ -244,11 +246,12 @@ class File extends \Bdus\Controller
 			return;
 		}
 
-		$rows = $this->db->query("SELECT id FROM bdus_files WHERE id = ?", [$fileId], 'read');
+		$rows = $this->db->query("SELECT id, uuid FROM bdus_files WHERE id = ?", [$fileId], 'read');
 		if (empty($rows)) {
 			$this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
 			return;
 		}
+		$uuid = (string) $rows[0]['uuid'];
 
 		if (array_key_exists('filename', $this->post) && trim((string) $this->post['filename']) === '') {
 			$this->returnJson(['status' => 'error', 'code' => 'filename_required']);
@@ -283,7 +286,7 @@ class File extends \Bdus\Controller
 
 		if ($ok) {
 			// Metadata (e.g. attribution) may feed derived versions: they die with their parent
-			\Image\Derivative::purgeFile(PROJ_DIR, $fileId);
+			\Image\Derivative::purgeFile(PROJ_DIR, $uuid);
 			$this->returnJson(['status' => 'success', 'code' => 'ok_file_updated']);
 		} else {
 			$this->returnJson(['status' => 'error', 'code' => 'error_file_updated']);
@@ -316,23 +319,24 @@ class File extends \Bdus\Controller
 			return;
 		}
 
-		$rows = $this->db->query("SELECT ext FROM bdus_files WHERE id = ?", [$fileId], 'read');
+		$rows = $this->db->query("SELECT uuid, ext FROM bdus_files WHERE id = ?", [$fileId], 'read');
 		if (empty($rows)) {
 			$this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
 			return;
 		}
-		$oldExt = $rows[0]['ext'];
+		$uuid   = (string) $rows[0]['uuid'];
+		$oldExt = (string) $rows[0]['ext'];
 
 		try {
 			$original = basename($_FILES['file']['name']);
 			$newExt   = strtolower(pathinfo($original, PATHINFO_EXTENSION));
 			$newName  = pathinfo($original, PATHINFO_FILENAME);
 
-			$destDir  = PROJ_DIR . 'files/';
-			$newPath  = $destDir . $fileId . '.' . $newExt;
+			// The uuid is kept: replacing the binary does not change the file's identity.
+			$newPath  = \File\Store::path(PROJ_DIR, $uuid, $newExt);
 
 			// The binary changes: derived versions die with their parent
-			\Image\Derivative::purgeFile(PROJ_DIR, $fileId);
+			\Image\Derivative::purgeFile(PROJ_DIR, $uuid);
 
 			if (!move_uploaded_file($_FILES['file']['tmp_name'], $newPath)) {
 				throw new \RuntimeException('move_uploaded_file failed');
@@ -340,7 +344,7 @@ class File extends \Bdus\Controller
 
 			// Delete old physical file if extension changed
 			if ($oldExt !== $newExt) {
-				$oldPath = $destDir . $fileId . '.' . $oldExt;
+				$oldPath = \File\Store::path(PROJ_DIR, $uuid, $oldExt);
 				if (file_exists($oldPath)) {
 					@unlink($oldPath);
 				}
@@ -382,7 +386,7 @@ class File extends \Bdus\Controller
 	/**
 	 * Serves a derived (resized) version of an image, creating it on first request.
 	 *
-	 * GET /{app}/api/file/{preset}/{id}.{ext}   — public, like the originals.
+	 * GET /{app}/api/file/{preset}/{uuid}.{ext}   — public, like the originals.
 	 *
 	 * Only names that match a defined preset are ever generated, so the set of
 	 * possible versions is finite. Every failure (unknown preset, missing file,
@@ -392,7 +396,7 @@ class File extends \Bdus\Controller
 	public function serveDerived(): void
 	{
 		$name = (string) ($this->get['preset'] ?? '');
-		$id   = (int) ($this->get['fileId'] ?? 0);
+		$uuid = strtolower((string) ($this->get['uuid'] ?? ''));
 		$ext  = strtolower((string) ($this->get['ext'] ?? ''));
 
 		$notFound = static function (): void {
@@ -406,12 +410,12 @@ class File extends \Bdus\Controller
 				\Image\Presets::resolve((array) ($this->cfg->get('main.imagePresets') ?? [])),
 				$name
 			);
-			if (!$preset || $id < 1 || $ext !== \Image\Presets::extension($preset)) {
+			if (!$preset || !\File\Store::isUuid($uuid) || $ext !== \Image\Presets::extension($preset)) {
 				$notFound();
 				return;
 			}
 
-			$rows = $this->db->query('SELECT ext, attribution FROM bdus_files WHERE id = ?', [$id], 'read');
+			$rows = $this->db->query('SELECT ext, attribution FROM bdus_files WHERE uuid = ?', [$uuid], 'read');
 			$src  = $rows ? strtolower((string) $rows[0]['ext']) : '';
 			$attribution = $rows ? ($rows[0]['attribution'] ?? null) : null;
 			if ($src === '' || !\Image\Derivative::isSupportedSource($src)) {
@@ -419,13 +423,13 @@ class File extends \Bdus\Controller
 				return;
 			}
 
-			$srcPath = PROJ_DIR . 'files/' . $id . '.' . $src;
+			$srcPath = \File\Store::path(PROJ_DIR, $uuid, $src);
 			if (!is_file($srcPath)) {
 				$notFound();
 				return;
 			}
 
-			$dest = \Image\Derivative::cachePath(PROJ_DIR, $preset['name'], $id, $ext);
+			$dest = \Image\Derivative::cachePath(PROJ_DIR, $preset['name'], $uuid, $ext);
 
 			// Regenerate when missing or older than the original (safety net for
 			// manual replacement outside the app).

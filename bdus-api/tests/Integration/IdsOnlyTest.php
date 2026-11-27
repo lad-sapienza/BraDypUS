@@ -99,7 +99,8 @@ class IdsOnlyTest extends BdusTestCase
         $this->assertFalse($res['truncated']);
         $this->assertSame([2, 1], array_column($res['files'], 'id'), 'same order as the list: id DESC');
         foreach ($res['files'] as $f) {
-            $this->assertSame(['id', 'ext', 'filename', 'is_image'], array_keys($f));
+            // the uuid is part of the minimal descriptor: Previous/Next builds the file URL from it
+            $this->assertSame(['id', 'uuid', 'ext', 'filename', 'is_image'], array_keys($f));
         }
     }
 

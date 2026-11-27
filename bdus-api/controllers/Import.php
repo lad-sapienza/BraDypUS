@@ -641,27 +641,22 @@ class Import extends \Bdus\Controller
                 );
                 if (!$rec) { $notFound++; continue; }
 
-                // Insert into system files table first — the auto-increment id
-                // IS the physical filename ({id}.{ext}, same convention as
-                // Record::uploadFile()/File.php). `filename` stores the clean
-                // original basename as metadata only, never used to build a
-                // path. Previously this wrote the physical file under a
-                // random-suffixed name *before* knowing the id, and stored
-                // that same suffixed name in `filename` — but every consumer
-                // (FileGallery.vue, FilesView.vue) builds the file URL as
-                // {id}.{ext}, so imported photos silently 404'd.
+                // Insert into the system files table first: the row gets a random
+                // uuid, which IS the physical filename ({uuid}.{ext}, same convention
+                // as Record::uploadFile(), see File\Store). `filename` stores the clean
+                // original basename as metadata only, never used to build a path.
                 $ext      = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
                 $baseName = pathinfo($filename, PATHINFO_FILENAME);
 
-                $fileId = $this->db->query(
-                    "INSERT INTO bdus_files (ext, filename, creator) VALUES (?, ?, ?)",
-                    [$ext, $baseName, 'import'],
-                    'id'
-                );
+                try {
+                    ['id' => $fileId, 'uuid' => $uuid] = \File\Store::create($this->db, 'import', $ext, $baseName);
+                } catch (\InvalidArgumentException) {
+                    $notFound++; // unusable extension: nothing was inserted
+                    continue;
+                }
                 if (!$fileId) { $notFound++; continue; }
 
-                \Image\Derivative::purgeFile(PROJ_DIR, (int) $fileId);
-                $destPath = $filesDir . $fileId . '.' . $ext;
+                $destPath = \File\Store::path(PROJ_DIR, $uuid, $ext);
                 file_put_contents($destPath, $zip->getFromIndex($zipIdx));
 
                 // Resize / convert format if configured — same as a normal

@@ -14,7 +14,7 @@ use Intervention\Image\Encoders\WebpEncoder;
 
 /**
  * Derived versions of an uploaded image, generated on demand from a preset
- * (see Presets) and cached as projects/{app}/cache/{preset}/{id}.{ext}.
+ * (see Presets) and cached as projects/{app}/cache/{preset}/{uuid}.{ext} (the file's `bdus_files.uuid`).
  *
  * The cache is a rebuildable mirror of the originals: nothing here ever
  * touches the original file. Its lifecycle is tied to the parent file —
@@ -39,9 +39,12 @@ final class Derivative
         return rtrim($projDir, '/') . '/cache/' . $preset;
     }
 
-    public static function cachePath(string $projDir, string $preset, int $id, string $ext): string
+    public static function cachePath(string $projDir, string $preset, string $uuid, string $ext): string
     {
-        return self::cacheDir($projDir, $preset) . '/' . $id . '.' . $ext;
+        if (!\File\Store::isUuid($uuid)) {
+            throw new \InvalidArgumentException('invalid file uuid');
+        }
+        return self::cacheDir($projDir, $preset) . '/' . $uuid . '.' . $ext;
     }
 
     /**
@@ -118,14 +121,18 @@ final class Derivative
     }
 
     /**
-     * Removes every cached version of file $id (all presets).
+     * Removes every cached version of the file with $uuid (all presets).
+     * A value that is not a canonical UUID removes nothing (it would end up in a glob pattern).
      *
      * @return int Number of files removed.
      */
-    public static function purgeFile(string $projDir, int $id): int
+    public static function purgeFile(string $projDir, string $uuid): int
     {
+        if (!\File\Store::isUuid($uuid)) {
+            return 0;
+        }
         $n = 0;
-        foreach (glob(rtrim($projDir, '/') . '/cache/*/' . $id . '.*') ?: [] as $f) {
+        foreach (glob(rtrim($projDir, '/') . '/cache/*/' . $uuid . '.*') ?: [] as $f) {
             if (is_file($f) && @unlink($f)) {
                 $n++;
             }

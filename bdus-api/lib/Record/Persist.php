@@ -579,7 +579,7 @@ class Persist
             //     the orphaned file entry and physical file can be cleaned up.
             // Physical file deletion happens after commit (cannot roll back unlink).
             $linkedFiles = $this->db->query(
-                "SELECT f.id, f.ext
+                "SELECT f.id, f.uuid, f.ext
                  FROM bdus_files f
                  INNER JOIN bdus_file_links fl ON fl.file_id = f.id
                  WHERE fl.table_name = ? AND fl.record_id = ?",
@@ -604,7 +604,7 @@ class Persist
                         [$fileId],
                         'boolean'
                     );
-                    $toDeletePhysically[] = ['id' => $fileId, 'ext' => $file['ext']];
+                    $toDeletePhysically[] = ['id' => $fileId, 'uuid' => (string) $file['uuid'], 'ext' => (string) $file['ext']];
                 }
             }
 
@@ -625,11 +625,7 @@ class Persist
         // transaction so a missing file never causes a rollback.
         if (defined('PROJ_DIR')) {
             foreach ($toDeletePhysically as $file) {
-                \Image\Derivative::purgeFile(PROJ_DIR, (int) $file['id']);
-                $path = PROJ_DIR . 'files/' . $file['id'] . '.' . $file['ext'];
-                if (file_exists($path)) {
-                    @unlink($path);
-                }
+                \File\Store::remove(PROJ_DIR, $file['uuid'], $file['ext']);
             }
         }
 

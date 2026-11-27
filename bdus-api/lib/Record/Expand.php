@@ -260,7 +260,7 @@ final class Expand
     }
 
     /** Columns of bdus_files a client may ask for through `files.col`. */
-    private const FILE_PARTS = ['ext', 'filename', 'description', 'keywords', 'attribution', 'printable'];
+    private const FILE_PARTS = ['uuid', 'ext', 'filename', 'description', 'keywords', 'attribution', 'printable'];
 
     private function addFiles(string $sel, string $key, array $own): void
     {

@@ -316,8 +316,9 @@ class RecordCtrlFieldsExpandTest extends BdusTestCase
 
     private function seedFiles(): void
     {
-        static::$db->exec("INSERT INTO bdus_files (id, creator, ext, filename, attribution) VALUES
-            (960, 1, 'jpg', 'front', 'Photo A'), (961, 1, 'png', 'back', NULL), (962, 1, 'jpg', 'other', NULL)");
+        $u = fn(int $i) => static::fileUuid($i);
+        static::$db->exec("INSERT INTO bdus_files (id, uuid, creator, ext, filename, attribution) VALUES
+            (960, '{$u(960)}', 1, 'jpg', 'front', 'Photo A'), (961, '{$u(961)}', 1, 'png', 'back', NULL), (962, '{$u(962)}', 1, 'jpg', 'other', NULL)");
         // 961 comes first on item 1 (sort 1); 962 is linked to a *category* #1, not to item 1
         static::$db->exec("INSERT INTO bdus_file_links (file_id, table_name, record_id, sort) VALUES
             (960, 'items', 1, 2), (961, 'items', 1, 1), (960, 'items', 2, 1), (962, 'categories', 1, 1)");
@@ -353,6 +354,19 @@ class RecordCtrlFieldsExpandTest extends BdusTestCase
         $this->assertEqualsCanonicalizing(['id', 'ext'], array_keys($rows[1]['pics'][0]));
         $this->assertEqualsCanonicalizing(['id', 'filename'], array_keys($rows[1]['files'][0]));
         $this->assertContains('jpg', array_column($rows[2]['pics'], 'ext'));
+    }
+
+    public function testFilesCanAskForTheUuidAndAllPartsIncludeIt(): void
+    {
+        $this->seedFiles();
+
+        $one = $this->byId($this->list(['fields' => 'files.uuid']));
+        $byId = array_column($one[1]['files'], null, 'id');
+        $this->assertSame(static::fileUuid(960), $byId[960]['uuid']);
+        $this->assertEqualsCanonicalizing(['id', 'uuid'], array_keys($byId[960]));
+
+        $all = $this->byId($this->list(['fields' => 'files']));
+        $this->assertArrayHasKey('uuid', array_column($all[1]['files'], null, 'id')[961]);
     }
 
     public function testFilesRefusesAnUnknownPart(): void

@@ -112,40 +112,41 @@ class ConfigImagePresetsTest extends BdusTestCase
             $ctrl = $this->makeController('Bdus\\Controllers\\Config', [], ['imagePresets' => $presets]);
             return $this->callController($ctrl, 'save_app_properties');
         };
-        $serve = function (int $id): string {
-            $ctrl = $this->makeController('Bdus\\Controllers\\File', ['preset' => 'wmp', 'fileId' => $id, 'ext' => 'jpg'], []);
+        $serve = function (string $uuid): string {
+            $ctrl = $this->makeController('Bdus\\Controllers\\File', ['preset' => 'wmp', 'uuid' => $uuid, 'ext' => 'jpg'], []);
             ob_start();
             $ctrl->serveDerived();
             return ob_get_clean();
         };
 
-        $id  = 301;
-        $src = PROJ_DIR . "files/{$id}.png";
+        $id   = 301;
+        $uuid = static::fileUuid($id);
+        $src  = PROJ_DIR . "files/{$uuid}.png";
         $im  = imagecreatetruecolor(400, 300);
         imagefill($im, 0, 0, imagecolorallocate($im, 100, 149, 237));
         imagepng($im, $src);
         imagedestroy($im);
-        static::$db->query("INSERT INTO bdus_files (id, ext, filename, creator, attribution) VALUES ({$id}, 'png', 'w', 'test', 'Alpha')", [], 'boolean');
+        static::$db->query("INSERT INTO bdus_files (id, uuid, ext, filename, creator, attribution) VALUES ({$id}, '{$uuid}', 'png', 'w', 'test', 'Alpha')", [], 'boolean');
 
         $srcHash = md5_file($src);
         $base = ['name' => 'wmp', 'width' => 400, 'height' => 300, 'fit' => 'inside', 'format' => 'jpg', 'quality' => 95];
         $this->assertSame('success', $save([$base + ['watermark' => ['text' => '© {{attribution}}']]])['status']);
-        $cached = \Image\Derivative::cachePath(PROJ_DIR, 'wmp', $id, 'jpg');
+        $cached = \Image\Derivative::cachePath(PROJ_DIR, 'wmp', $uuid, 'jpg');
 
-        $first = $serve($id);
+        $first = $serve($uuid);
         $this->assertFileExists($cached);
 
         // Attribution edited: the cached version is purged and rebuilt with the new text
         $upd = $this->makeController('Bdus\\Controllers\\File', ['fileId' => $id], ['attribution' => 'Beta, a longer credit']);
         $this->assertSame('success', $this->callController($upd, 'updateFile')['status']);
         $this->assertFileDoesNotExist($cached);
-        $second = $serve($id);
+        $second = $serve($uuid);
         $this->assertNotSame(md5($first), md5($second));
 
         // Preset watermark edited: the preset folder is purged
         $this->assertSame('success', $save([$base + ['watermark' => ['text' => '© {{attribution}}', 'position' => 'top-left']]])['status']);
         $this->assertFileDoesNotExist($cached);
-        $third = $serve($id);
+        $third = $serve($uuid);
         $this->assertNotSame(md5($second), md5($third));
 
         // Watermark removed: the version is plain again; the original never changed
@@ -153,7 +154,7 @@ class ConfigImagePresetsTest extends BdusTestCase
         $this->assertFileDoesNotExist($cached);
         $this->assertSame($srcHash, md5_file($src), 'the original is never modified');
 
-        \Image\Derivative::purgeFile(PROJ_DIR, $id);
+        \Image\Derivative::purgeFile(PROJ_DIR, $uuid);
         @unlink($src);
         $this->assertSame('success', $save([])['status']);
     }

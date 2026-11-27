@@ -11,9 +11,9 @@ use Image\Derivative;
  */
 class DerivedServeTest extends BdusTestCase
 {
-    private function serve(int $id): array
+    private function serve(string $uuid): array
     {
-        $ctrl = $this->makeController('Bdus\\Controllers\\File', ['preset' => 'thumb', 'fileId' => $id, 'ext' => 'webp'], []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\File', ['preset' => 'thumb', 'uuid' => $uuid, 'ext' => 'webp'], []);
         ob_start();
         $ctrl->serveDerived();
         $body = ob_get_clean();
@@ -30,31 +30,47 @@ class DerivedServeTest extends BdusTestCase
 
     public function testFailedGenerationIsRememberedUntilTheSourceChanges(): void
     {
-        $id = 201;
-        static::$db->query("INSERT INTO bdus_files (id, ext, filename, creator) VALUES ({$id}, 'png', 'bad', 'test')", [], 'boolean');
-        $src    = PROJ_DIR . "files/{$id}.png";
-        $marker = Derivative::cachePath(PROJ_DIR, 'thumb', $id, 'webp') . '.fail';
+        $id   = 201;
+        $uuid = static::insertFile($id, 'png', 'bad');
+        $src    = PROJ_DIR . "files/{$uuid}.png";
+        $marker = Derivative::cachePath(PROJ_DIR, 'thumb', $uuid, 'webp') . '.fail';
         file_put_contents($src, 'not an image at all');
         touch($src, time() - 100);
 
-        $this->assertSame(404, $this->serve($id)['code']);
+        $this->assertSame(404, $this->serve($uuid)['code']);
         $this->assertFileExists($marker, 'the failure is remembered');
 
         // The file becomes valid but keeps its old mtime: the marker still wins (no retry)
         $this->realPng($src);
         touch($src, time() - 100);
-        $this->assertSame(404, $this->serve($id)['code'], 'not retried while the source is unchanged');
+        $this->assertSame(404, $this->serve($uuid)['code'], 'not retried while the source is unchanged');
 
         // A newer source is tried again, succeeds and clears the marker
         touch($src, time() + 5);   // mtimes have 1 s granularity: be clearly newer than the marker
         clearstatcache();
-        $res = $this->serve($id);
+        $res = $this->serve($uuid);
         $this->assertNotSame('Not found', $res['body'], 'the image is served');
         $this->assertStringStartsWith('RIFF', $res['body']);
         $this->assertFileDoesNotExist($marker);
-        $this->assertFileExists(Derivative::cachePath(PROJ_DIR, 'thumb', $id, 'webp'));
+        $this->assertFileExists(Derivative::cachePath(PROJ_DIR, 'thumb', $uuid, 'webp'));
 
-        Derivative::purgeFile(PROJ_DIR, $id);
+        Derivative::purgeFile(PROJ_DIR, $uuid);
+        @unlink($src);
+    }
+
+    public function testOnlyACanonicalUuidIsServed(): void
+    {
+        $id   = 203;
+        $uuid = static::insertFile($id, 'png', 'ok');
+        $src  = PROJ_DIR . "files/{$uuid}.png";
+        $this->realPng($src);
+
+        $this->assertNotSame('Not found', $this->serve($uuid)['body'], 'the uuid works');
+        $this->assertSame(404, $this->serve((string) $id)['code'], 'the integer id is not an address');
+        $this->assertSame(404, $this->serve('../' . $uuid)['code'], 'no path tricks');
+        $this->assertSame(404, $this->serve(static::fileUuid(999999))['code'], 'an unknown uuid');
+
+        Derivative::purgeFile(PROJ_DIR, $uuid);
         @unlink($src);
     }
 
@@ -62,13 +78,14 @@ class DerivedServeTest extends BdusTestCase
     {
         $dir = Derivative::cacheDir(PROJ_DIR, 'thumb');
         @mkdir($dir, 0775, true);
-        file_put_contents($dir . '/202.webp.fail', '');
-        file_put_contents($dir . '/2020.webp.fail', '');
+        $uuid = static::fileUuid(202);
+        file_put_contents($dir . "/{$uuid}.webp.fail", '');
+        file_put_contents($dir . "/{$uuid}x.webp.fail", '');
 
-        Derivative::purgeFile(PROJ_DIR, 202);
+        Derivative::purgeFile(PROJ_DIR, $uuid);
 
-        $this->assertFileDoesNotExist($dir . '/202.webp.fail');
-        $this->assertFileExists($dir . '/2020.webp.fail', 'ids sharing a prefix are untouched');
-        @unlink($dir . '/2020.webp.fail');
+        $this->assertFileDoesNotExist($dir . "/{$uuid}.webp.fail");
+        $this->assertFileExists($dir . "/{$uuid}x.webp.fail", 'names sharing a prefix are untouched');
+        @unlink($dir . "/{$uuid}x.webp.fail");
     }
 }

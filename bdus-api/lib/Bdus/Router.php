@@ -519,7 +519,7 @@ class Router
             $r->addRoute('PATCH',  '/api/file/{fileId:\d+}',              ['Bdus\\Controllers\\File',   'updateFile']);
             $r->addRoute('POST',   '/api/file/{fileId:\d+}/replace',      ['Bdus\\Controllers\\File',   'replaceFile']);
             $r->addRoute('POST',   '/api/files/sort',                     ['Bdus\\Controllers\\File',   'sortFiles']);
-            $r->addRoute('GET',    '/api/file/{preset:[a-z0-9][a-z0-9_-]*}/{fileId:\d+}.{ext:[a-z0-9]+}', ['Bdus\\Controllers\\File', 'serveDerived']);
+            $r->addRoute('GET',    '/api/file/{preset:[a-z0-9][a-z0-9_-]*}/{uuid:[0-9a-f-]+}.{ext:[a-z0-9]+}', ['Bdus\\Controllers\\File', 'serveDerived']);
 
             // ── Stratigraphic Relations (RS) ──────────────────────────────────
             $r->addRoute('POST',   '/api/record/{tb}/rs', ['Bdus\\Controllers\\Record', 'addRs']);

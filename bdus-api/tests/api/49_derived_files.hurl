@@ -1,8 +1,9 @@
 # ════════════════════════════════════════════════════════════════════
-# Phase 49 — Derived files: GET /{app}/api/file/{preset}/{id}.{ext}
+# Phase 49 — Derived files: GET /{app}/api/file/{preset}/{uuid}.{ext}
 #
 # Public route (no Authorization header), like the originals served from
-# files/. A version is created on first request and only for a defined
+# files/. The address is the file's random uuid, never its integer id.
+# A version is created on first request and only for a defined
 # preset; every failure is a plain 404 with no fallback to the original.
 # Generation, purge and edge cases are covered by ImageDerivativeTest.
 # ════════════════════════════════════════════════════════════════════
@@ -28,12 +29,14 @@ HTTP 200
 [Asserts]
 jsonpath "$.status"  == "success"
 jsonpath "$.file.id" isInteger
+jsonpath "$.file.uuid" matches /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 [Captures]
 file_49: jsonpath "$.file.id"
+file_49_uuid: jsonpath "$.file.uuid"
 
 
 # ── 49b. System preset `thumb`, anonymous: WebP created on demand ────
-GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49}}.webp
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.webp
 HTTP 200
 Content-Type: image/webp
 [Captures]
@@ -44,22 +47,30 @@ bytes startsWith hex,52494646;
 
 
 # ── 49c. Revalidation: same ETag → 304 ───────────────────────────────
-GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49}}.webp
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.webp
 If-None-Match: {{etag_49}}
 HTTP 304
 
 
 # ── 49d. Unknown preset → 404, nothing created ───────────────────────
-GET {{base_url}}/{{app_name}}/api/file/nopreset/{{file_49}}.webp
+GET {{base_url}}/{{app_name}}/api/file/nopreset/{{file_49_uuid}}.webp
 HTTP 404
 
 
 # ── 49e. Extension not matching the preset format → 404 ──────────────
-GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49}}.jpg
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.jpg
 HTTP 404
 
 
-# ── 49f. Missing file → 404 ──────────────────────────────────────────
+# ── 49f. Unknown file → 404 ───────────────────────────────────────────
+GET {{base_url}}/{{app_name}}/api/file/thumb/00000000-0000-4000-8000-000000000000.webp
+HTTP 404
+
+
+# ── 49f1. The integer id is not an address (derived versions never by id) ─
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49}}.webp
+HTTP 404
+
 GET {{base_url}}/{{app_name}}/api/file/thumb/99999999.webp
 HTTP 404
 
@@ -74,7 +85,7 @@ HTTP 200
 jsonpath "$.status" == "success"
 
 
-GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49}}.webp
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.webp
 HTTP 200
 Content-Type: image/webp
 
@@ -89,7 +100,7 @@ HTTP 200
 jsonpath "$.status" == "success"
 
 
-GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49}}.webp
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.webp
 HTTP 200
 [Asserts]
 header "ETag" != "{{etag_49}}"
@@ -105,9 +116,10 @@ HTTP 200
 jsonpath "$.status" == "success"
 [Captures]
 file_49_csv: jsonpath "$.file.id"
+file_49_csv_uuid: jsonpath "$.file.uuid"
 
 
-GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_csv}}.webp
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_csv_uuid}}.webp
 HTTP 404
 
 
@@ -122,9 +134,10 @@ HTTP 200
 jsonpath "$.status" == "success"
 [Captures]
 file_49_bad: jsonpath "$.file.id"
+file_49_bad_uuid: jsonpath "$.file.uuid"
 
 
-GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_bad}}.webp
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_bad_uuid}}.webp
 HTTP 404
 
 
@@ -158,7 +171,7 @@ jsonpath "$.status"  == "success"
 jsonpath "$.removed" == 0
 
 # the version is rebuilt on the next request
-GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49}}.webp
+GET {{base_url}}/{{app_name}}/api/file/thumb/{{file_49_uuid}}.webp
 HTTP 200
 Content-Type: image/webp
 

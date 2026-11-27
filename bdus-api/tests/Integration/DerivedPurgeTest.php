@@ -27,23 +27,24 @@ class DerivedPurgeTest extends BdusTestCase
         parent::tearDown();
     }
 
-    private function cache(int $id, string $preset = 'thumb'): string
+    /** A cached derived version of the file with $uuid. */
+    private function cache(string $uuid, string $preset = 'thumb'): string
     {
         $dir = Derivative::cacheDir(PROJ_DIR, $preset);
         @mkdir($dir, 0775, true);
-        $path = $dir . "/{$id}.webp";
+        $path = $dir . "/{$uuid}.webp";
         file_put_contents($path, 'x');
         return $path;
     }
 
     public function testDeletingAFilePurgesItsDerivedVersions(): void
     {
-        static::$db->query(
-            "INSERT INTO bdus_files (id, ext, filename, creator) VALUES (100, 'jpg', 'own', 'test')", [], 'boolean'
-        );
-        $mine  = $this->cache(100);
-        $other = $this->cache(2);
-        $big   = $this->cache(100, 'large');
+        $uuid  = static::insertFile(100, 'jpg', 'own');
+        $mine  = $this->cache($uuid);
+        $other = $this->cache(static::fileUuid(2));
+        $big   = $this->cache($uuid, 'large');
+        $bin   = PROJ_DIR . "files/{$uuid}.jpg";
+        file_put_contents($bin, 'x');
 
         $ctrl = $this->makeController('Bdus\\Controllers\\Record', [], ['fileId' => 100]);
         $res  = $this->callController($ctrl, 'deleteFile');
@@ -51,13 +52,14 @@ class DerivedPurgeTest extends BdusTestCase
         $this->assertSame('ok_file_deleted', $res['code']);
         $this->assertFileDoesNotExist($mine);
         $this->assertFileDoesNotExist($big, 'every preset of the file');
+        $this->assertFileDoesNotExist($bin, 'the binary named by the uuid goes with the file');
         $this->assertFileExists($other, 'other files are untouched');
         @unlink($other);
     }
 
     public function testErasingARecordPurgesVersionsOfItsExclusiveFiles(): void
     {
-        $b = $this->cache(2);
+        $b = $this->cache(static::fileUuid(2));
 
         $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'items', 'id' => 1], []);
         $res  = $this->callController($ctrl, 'erase');
@@ -88,11 +90,9 @@ class DerivedPurgeTest extends BdusTestCase
 
     public function testReplacingTheBinaryPurgesDerivedVersions(): void
     {
-        static::$db->query(
-            "INSERT INTO bdus_files (id, ext, filename, creator) VALUES (101, 'png', 'rep', 'test')", [], 'boolean'
-        );
-        $this->png(PROJ_DIR . 'files/101.png');
-        $stale = $this->cache(101);
+        $uuid = static::insertFile(101, 'png', 'rep');
+        $this->png(PROJ_DIR . "files/{$uuid}.png");
+        $stale = $this->cache($uuid);
         $this->upload($this->png(sys_get_temp_dir() . '/bdus_rep_' . uniqid() . '.png', 80, 20), 'new.png');
 
         $ctrl = $this->makeController('Bdus\\Controllers\\File', ['fileId' => 101], []);
@@ -101,13 +101,14 @@ class DerivedPurgeTest extends BdusTestCase
 
         $this->assertSame('ok_file_replaced', $res['code'], json_encode($res));
         $this->assertFileDoesNotExist($stale);
-        @unlink(PROJ_DIR . 'files/101.png');
+        $this->assertSame($uuid, \File\Store::uuidOf(static::$db, 101), 'replacing the binary keeps the identity');
+        $this->assertFileExists(PROJ_DIR . "files/{$uuid}.png");
+        @unlink(PROJ_DIR . "files/{$uuid}.png");
     }
 
-    public function testUploadOverAReusedIdDropsStaleVersions(): void
+    public function testUploadStoresTheBinaryUnderTheUuidNotTheId(): void
     {
-        $id    = $this->nextFileId();
-        $stale = $this->cache($id);
+        $id = $this->nextFileId();
         $this->upload($this->png(sys_get_temp_dir() . '/bdus_up_' . uniqid() . '.png'), 'up.png');
 
         $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'items', 'id' => 1], []);
@@ -116,18 +117,21 @@ class DerivedPurgeTest extends BdusTestCase
 
         $this->assertSame('ok_file_uploaded', $res['code'], json_encode($res));
         $this->assertSame($id, (int) $res['file']['id']);
-        $this->assertFileDoesNotExist($stale, 'a new file must not inherit a stale version');
-        @unlink(PROJ_DIR . 'files/' . $id . '.png');
+        $uuid = $res['file']['uuid'];
+        $this->assertTrue(\File\Store::isUuid($uuid), 'the response carries a canonical uuid');
+        $this->assertSame($uuid, \File\Store::uuidOf(static::$db, $id), 'and it is the one stored');
+        $this->assertFileExists(PROJ_DIR . "files/{$uuid}.png");
+        $this->assertFileDoesNotExist(PROJ_DIR . "files/{$id}.png", 'the integer id is never a file name');
+        @unlink(PROJ_DIR . "files/{$uuid}.png");
     }
 
-    public function testPhotoImportOverAReusedIdDropsStaleVersions(): void
+    public function testPhotoImportStoresTheBinaryUnderTheUuidNotTheId(): void
     {
         // items 1 may be gone (the record-erase test shares this database): use an own record
         $rec    = (int) static::$db->query(
             "INSERT INTO items (creator, name, description, status) VALUES ('test', 'imp', 'd', 'draft')", [], 'id'
         );
         $id     = $this->nextFileId();
-        $stale  = $this->cache($id);
         $tempId = 'derivedtest' . uniqid();
         $png    = $this->png(sys_get_temp_dir() . '/bdus_imp_' . uniqid() . '.png');
 
@@ -142,8 +146,11 @@ class DerivedPurgeTest extends BdusTestCase
 
         $this->assertSame('success', $res['status'], json_encode($res));
         $this->assertSame(1, (int) $res['linked'], json_encode($res));
-        $this->assertFileDoesNotExist($stale);
-        @unlink(PROJ_DIR . 'files/' . $id . '.png');
+        $uuid = \File\Store::uuidOf(static::$db, $id);
+        $this->assertNotNull($uuid);
+        $this->assertFileExists(PROJ_DIR . "files/{$uuid}.png");
+        $this->assertFileDoesNotExist(PROJ_DIR . "files/{$id}.png");
+        @unlink(PROJ_DIR . "files/{$uuid}.png");
         @unlink($png);
         @unlink(sys_get_temp_dir() . "/bdus_import_{$tempId}.zip");
         @unlink(sys_get_temp_dir() . "/bdus_import_{$tempId}.csv");

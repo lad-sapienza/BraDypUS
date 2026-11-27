@@ -978,19 +978,13 @@ class Record extends \Bdus\Controller
       $creator  = \Auth\CurrentUser::id() ?? 'anonymous';
       $appName  = $this->cfg->get('main.name') ?? '';
 
-      // Insert file record to obtain the auto-increment id
-      $fileId = $this->db->query(
-        "INSERT INTO bdus_files (creator, ext, filename) VALUES (?, ?, ?)",
-        [$creator, $ext, $filename],
-        'id'
-      );
+      // Insert the file record: it gets an auto-increment id (internal key) and a random
+      // uuid, which is the name of the binary on disk and in every URL.
+      ['id' => $fileId, 'uuid' => $uuid] = \File\Store::create($this->db, $creator, $ext, $filename);
 
-      // A reused id (e.g. SQLite after deleting the last row) must not inherit stale derived versions
-      \Image\Derivative::purgeFile(PROJ_DIR, (int) $fileId);
-
-      // Move file to projects/{app}/files/{id}.{ext}
-      $destDir  = PROJ_DIR . 'files/';
-      $destFile = $destDir . $fileId . '.' . $ext;
+      // Move file to projects/{app}/files/{uuid}.{ext}
+      $destDir  = \File\Store::dir(PROJ_DIR);
+      $destFile = \File\Store::path(PROJ_DIR, $uuid, $ext);
 
       if (!is_dir($destDir)) {
         mkdir($destDir, 0755, true);
@@ -1031,6 +1025,7 @@ class Record extends \Bdus\Controller
         'code'   => 'ok_file_uploaded',
         'file'   => [
           'id'          => (int)$fileId,
+          'uuid'        => $uuid,
           'ext'         => $ext,
           'filename'    => $filename,
           'description' => null,
@@ -1081,13 +1076,14 @@ class Record extends \Bdus\Controller
     $appName = $this->cfg->get('main.name') ?? '';
 
     try {
-      // Fetch file metadata (need ext to locate physical file)
-      $rows = $this->db->query("SELECT ext FROM bdus_files WHERE id = ?", [$fileId]);
+      // Fetch file metadata (need uuid and ext to locate the physical file)
+      $rows = $this->db->query("SELECT uuid, ext FROM bdus_files WHERE id = ?", [$fileId]);
       if (empty($rows)) {
         $this->returnJson(['status' => 'error', 'code' => 'record_not_found']);
         return;
       }
-      $ext = $rows[0]['ext'];
+      $uuid = (string) $rows[0]['uuid'];
+      $ext  = (string) $rows[0]['ext'];
 
       // Remove all file_links that reference this file
       $this->db->query(
@@ -1098,14 +1094,8 @@ class Record extends \Bdus\Controller
       // Delete the file record
       $this->db->query("DELETE FROM bdus_files WHERE id = ?", [$fileId]);
 
-      // Derived versions die with their parent
-      \Image\Derivative::purgeFile(PROJ_DIR, (int) $fileId);
-
-      // Delete physical file (best-effort: ignore if already missing)
-      $physicalPath = PROJ_DIR . 'files/' . $fileId . '.' . $ext;
-      if (file_exists($physicalPath)) {
-        @unlink($physicalPath);
-      }
+      // Physical file and derived versions (best-effort: ignore if already missing)
+      \File\Store::remove(PROJ_DIR, $uuid, $ext);
 
       $this->returnJson(['status' => 'success', 'code' => 'ok_file_deleted']);
 
@@ -1168,6 +1158,7 @@ class Record extends \Bdus\Controller
         'code'   => 'ok_file_linked',
         'file'   => [
           'id'          => (int)$fileId,
+          'uuid'        => $f['uuid'] ?? null,
           'link_id'     => (int)$linkId,
           'ext'         => $ext,
           'filename'    => $f['filename'] ?? '',

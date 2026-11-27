@@ -39,6 +39,8 @@ class FileCtrlTest extends BdusTestCase
         $this->assertCount(2, $res['files']);
         $file = $res['files'][0];
         $this->assertArrayHasKey('id',          $file);
+        $this->assertArrayHasKey('uuid',        $file);
+        $this->assertTrue(\File\Store::isUuid($file['uuid']), 'every listed file carries its canonical uuid');
         $this->assertArrayHasKey('ext',         $file);
         $this->assertArrayHasKey('filename',    $file);
         $this->assertArrayHasKey('description', $file);
@@ -56,9 +58,7 @@ class FileCtrlTest extends BdusTestCase
     public function testGetFilesOrphansOnlyReturnsOnlyUnlinked(): void
     {
         // Insert an orphan file (no file_link row)
-        static::$db->execInTransaction(
-            "INSERT INTO bdus_files (id, creator, ext, filename) VALUES (99, 'admin', 'txt', 'orphan')"
-        );
+        static::insertFile(99, 'txt', 'orphan', 'admin');
 
         $ctrl = $this->makeController('Bdus\\Controllers\\File', ['orphans_only' => '1'], []);
         $res  = $this->callController($ctrl, 'getFiles');
@@ -128,9 +128,7 @@ class FileCtrlTest extends BdusTestCase
 
     public function testGetFilesSearchCombinesWithOrphansOnly(): void
     {
-        static::$db->execInTransaction(
-            "INSERT INTO bdus_files (id, creator, ext, filename) VALUES (98, 'admin', 'txt', 'photo_orphan')"
-        );
+        static::insertFile(98, 'txt', 'photo_orphan', 'admin');
 
         $ctrl = $this->makeController('Bdus\\Controllers\\File', ['search' => 'photo', 'orphans_only' => '1'], []);
         $res  = $this->callController($ctrl, 'getFiles');
@@ -204,8 +202,8 @@ class FileCtrlTest extends BdusTestCase
     {
         $dir = \Image\Derivative::cacheDir(PROJ_DIR, 'thumb');
         @mkdir($dir, 0775, true);
-        $mine  = $dir . '/1.webp';
-        $other = $dir . '/2.webp';
+        $mine  = $dir . '/' . static::fileUuid(1) . '.webp';
+        $other = $dir . '/' . static::fileUuid(2) . '.webp';
         file_put_contents($mine, 'x');
         file_put_contents($other, 'x');
 

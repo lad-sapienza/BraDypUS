@@ -24,10 +24,12 @@ HTTP 200
 jsonpath "$.status"        == "success"
 jsonpath "$.code"          == "ok_file_uploaded"
 jsonpath "$.file.id"       isInteger
+jsonpath "$.file.uuid"     matches /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 jsonpath "$.file.ext"      == "png"
 jsonpath "$.file.is_image" == true
 [Captures]
 file_id_34: jsonpath "$.file.id"
+file_uuid_34: jsonpath "$.file.uuid"
 
 
 # ── 34b. GET /api/files — our file appears in the list ──────────────
@@ -41,6 +43,9 @@ jsonpath "$.total"    > 0
 jsonpath "$.page"     == 1
 jsonpath "$.per_page" isInteger
 jsonpath "$.files"    isCollection
+# every listed file carries its uuid; ours is there under its integer id
+jsonpath "$.files[0].uuid" matches /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+jsonpath "$.files[?(@.id == {{file_id_34}})].uuid" == "{{file_uuid_34}}"
 
 
 # ── 34c. PATCH /api/file/{id} — update description and keywords ──────
@@ -118,6 +123,14 @@ jsonpath "$.code"     == "ok_file_replaced"
 jsonpath "$.ext"      isString
 jsonpath "$.filename" isString
 jsonpath "$.is_image" == true
+
+
+# ── 34f1. Replacing the binary keeps the file's identity (same uuid) ──
+GET {{base_url}}/{{app_name}}/api/files
+Authorization: Bearer {{jwt}}
+HTTP 200
+[Asserts]
+jsonpath "$.files[?(@.id == {{file_id_34}})].uuid" == "{{file_uuid_34}}"
 
 
 # ── 34g. Negative: PATCH non-existent file → record_not_found ────────

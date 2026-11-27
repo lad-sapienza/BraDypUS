@@ -2116,7 +2116,7 @@ paths:
             enum: [0, 1]
             default: 0
           description: |
-            When 1, return a minimal descriptor (`id`, `ext`, `filename`,
+            When 1, return a minimal descriptor (`id`, `uuid`, `ext`, `filename`,
             `is_image`) of **every** matching file instead of one page
             (`page` / `per_page` are ignored). Same filter and order as the
             list; capped at 5000 — `truncated` is true when more match. Used by
@@ -2146,7 +2146,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/FileItem'
-                    description: With `ids_only=1` only `id`, `ext`, `filename` and `is_image` are present
+                    description: With `ids_only=1` only `id`, `uuid`, `ext`, `filename` and `is_image` are present
         '403':
           $ref: '#/components/responses/Forbidden'
 
@@ -2155,6 +2155,10 @@ paths:
       operationId: postRecordFileByTbAndId
       tags: [files]
       summary: Upload a file and attach it to a record
+      description: >
+        The new file gets an integer `id` (internal key) and a random `uuid`, returned in
+        `file.uuid`: the binary is stored as `projects/{app}/files/{uuid}.{ext}` and its
+        derived versions are addressed by the uuid.
       parameters:
         - $ref: '#/components/parameters/tb'
         - $ref: '#/components/parameters/id'
@@ -2301,13 +2305,15 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
-  /api/file/{preset}/{fileId}.{ext}:
+  /api/file/{preset}/{uuid}.{ext}:
     get:
-      operationId: getFileByPresetAndFileIdAndExt
+      operationId: getFileByPresetAndUuidAndExt
       tags: [files]
       summary: Derived (resized) version of an image, created on first request
       description: >
-        Public, like the original files. `preset` must match a preset defined in
+        Public, like the original files. The file is addressed by its random `uuid`
+        (`bdus_files.uuid`), never by its integer id: the integer id is not an
+        address and always answers `404`. `preset` must match a preset defined in
         the app settings (the system preset `thumb` always exists) and `ext` must be
         the preset's output format (`webp` or `jpg`). The version is generated on the
         first request and cached under `projects/{app}/cache/{preset}/`; it is
@@ -2326,11 +2332,14 @@ paths:
           schema:
             type: string
             pattern: '^[a-z0-9][a-z0-9_-]*$'
-        - name: fileId
+        - name: uuid
           in: path
           required: true
+          description: The file's `uuid` (lower-case, 8-4-4-4-12 hex digits)
           schema:
-            type: integer
+            type: string
+            format: uuid
+            pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
         - name: ext
           in: path
           required: true
@@ -7844,6 +7853,13 @@ components:
       properties:
         id:
           type: integer
+        uuid:
+          type: string
+          format: uuid
+          description: >
+            Random public identifier of the file. It is the name of the binary on disk
+            (`projects/{app}/files/{uuid}.{ext}`) and the address of its derived versions;
+            the integer `id` is only the internal key (links, PATCH/DELETE).
         ext:
           type: string
         filename:
@@ -7879,6 +7895,13 @@ components:
         id:
           type: integer
           description: File ID (bdus_files.id)
+        uuid:
+          type: string
+          format: uuid
+          description: >
+            Random public identifier of the file. It is the name of the binary on disk
+            (`projects/{app}/files/{uuid}.{ext}`) and the address of its derived versions;
+            the integer `id` is only the internal key (links, PATCH/DELETE).
         link_id:
           type: integer
           description: Junction row ID (bdus_file_links.id) — pass to DELETE /api/file-link/{linkId} to unlink

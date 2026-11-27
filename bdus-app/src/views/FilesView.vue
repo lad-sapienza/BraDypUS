@@ -183,7 +183,7 @@ import { RouterLink, useRoute }     from 'vue-router'
 import { useToast, useConfirm } from '@/composables/useNotify'
 import AppLayout    from '@/components/AppLayout.vue'
 import { Table as ATable, Button as AButton, Input as AInput, Modal as AModal } from 'ant-design-vue'
-import { api, assetUrl } from '@/api'
+import { api, apiUrl } from '@/api'
 import { useI18n }       from '@/i18n'
 import { useAuthStore }  from '@/stores/auth'
 
@@ -457,8 +457,8 @@ import { originalPath } from '@/utils/filePaths'
 
 // ── Helpers ─────────────────────────────────────────────────────────
 function fileUrl(f) {
-  const path = originalPath(appName.value, f)
-  return path ? assetUrl(path) : ''
+  const path = originalPath(f)
+  return path ? apiUrl(path) : ''
 }
 
 function fileIcon(ext) {

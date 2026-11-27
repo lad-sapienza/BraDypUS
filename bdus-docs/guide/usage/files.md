@@ -40,6 +40,34 @@ closes the preview at any time.
 With more than **5000** matching files, the navigation stops at the 5000th
 and the counter shows it (**‹ 12 / 5000+ ›**).
 
+## Who can see and change a file <Badge type="tip" text="files rework" />
+
+A file is reached in two ways, and **either is enough to read it**:
+
+- through the **records it is attached to**: if you can read one of them, you can read the file;
+- directly, through a [group rule](../setup/groups) on the table **Files** (with the usual row filter,
+  for instance "only files whose keywords contain *public*").
+
+To **change or delete** a file you need a rule on **Files**, or **every** record it is attached to
+must be one you may change: changing the file changes what each of those records shows. A **lock** on
+any of those records freezes the file. A file attached to nothing (an *orphan*) can only be reached
+through a rule on **Files**; its creator has no special right. Administrators and the levels Writer and
+Reader work as usual, and rules on *all tables* include Files.
+
+You also need to be able to **read a file to attach it** to a record.
+
+An address that you may not read answers exactly like one that does not exist, so nobody can learn
+that a file is there.
+
+### Where a file is read from
+
+Files are addressed by a random **uuid**: `GET /{app}/api/file/{uuid}` (derived versions:
+`/{app}/api/file/{preset}/{uuid}.{ext}`). The request must be authenticated, with the usual token or API
+key, or, in a browser, with the [session cookie](./authentication#session-cookie-files-in-the-browser) set at login,
+which is accepted for this and nothing else. Images, PDF, plain text, audio and video are shown by the
+browser; any other type (HTML, scripts, archives, office documents…) is sent as a download, never
+interpreted as a page of the application.
+
 ## Filtering and searching
 
 Toggle **Orphans only** in the toolbar to show only files that are not linked
@@ -112,12 +140,12 @@ e.g. /myapp/api/file/thumb/42.webp
 
 The gallery and this page show the `thumb` version; clicking an image opens the original.
 
-::: warning Files are still reachable by anyone who knows the address
-Originals (`projects/{app}/files/{uuid}.{ext}`) and derived versions are served without
-authentication. Since 5.30 the address contains a random **uuid** instead of the sequential
-id, so it cannot be guessed by counting, but anyone who has the address can read the file.
-Do not upload material that must stay private. Access control for files is the next step of
-the files rework (`bdus-docs/dev/files-as-table-plan`).
+::: warning Old direct addresses are still open (for now)
+Until the files folder is closed to direct web access (the last step of the files rework), the
+binaries are also reachable at `projects/{app}/files/{uuid}.{ext}` **without** authentication by anyone
+who knows the uuid. The uuid is random, so it cannot be guessed by counting, but it is not a protection
+against someone who has the address. Use the authenticated address above for everything that matters,
+and do not rely on the direct one.
 :::
 
 ::: tip Upgrading: file addresses changed

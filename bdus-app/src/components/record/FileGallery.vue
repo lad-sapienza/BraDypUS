@@ -185,9 +185,8 @@ import { ref, computed, watch, onUnmounted, nextTick } from 'vue'
 import Sortable   from 'sortablejs'
 import { Table as ATable, Image as AImage, Button as AButton, Modal as AModal, Input as AInput } from 'ant-design-vue'
 import { useToast, useConfirm } from '@/composables/useNotify'
-import { api, assetUrl } from '@/api'
+import { api, apiUrl } from '@/api'
 import { useI18n }       from '@/i18n'
-import { useAuthStore }  from '@/stores/auth'
 
 // Wraps the thumbnails so the full-screen viewer can step through them (arrows, ← →)
 const AImagePreviewGroup = AImage.PreviewGroup
@@ -195,15 +194,14 @@ const AImagePreviewGroup = AImage.PreviewGroup
 const { t }   = useI18n()
 const toast   = useToast()
 const confirm = useConfirm()
-const auth    = useAuthStore()
 
 import { thumbUrl } from '@/utils/thumbUrl'
 import { originalPath } from '@/utils/filePaths'
 
 /** Resolve a file object to its full URL. */
 function fileUrl(f) {
-  const path = originalPath(auth.user?.app, f)
-  return path ? assetUrl(path) : ''
+  const path = originalPath(f)
+  return path ? apiUrl(path) : ''
 }
 
 const props = defineProps({

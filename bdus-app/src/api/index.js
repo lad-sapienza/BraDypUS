@@ -2,7 +2,12 @@
  * BraDypUS API client — stateless, JWT-based.
  *
  * Every request carries  Authorization: Bearer <token>.
- * No cookies / credentials are sent.
+ *
+ * The server also sets a session cookie at login (HttpOnly, SameSite) that it accepts ONLY for
+ * reading a file (GET /api/file/{uuid}): that is what lets <img src>, <a href> and PDF viewers
+ * show protected files, where no header can be attached. It never authenticates anything else.
+ * When the backend is on another origin (VITE_API_BASE) requests are sent with credentials so
+ * that cookie can be set and returned.
  *
  * Proactive refresh: if the token has < 30 min left, the client silently
  * calls /api/auth/refresh before the actual request so the user never
@@ -23,6 +28,20 @@ import { getToken, setToken, clearToken, needsRefresh } from '@/token'
  * In production with a separate backend, set VITE_API_BASE=https://api.example.com
  */
 const API_BASE = import.meta.env.VITE_API_BASE ?? ''
+
+/**
+ * Same origin: the browser sends the cookie by itself. Another origin: it must be asked to
+ * (and the backend must list this origin in BRADYPUS_CORS_ORIGIN and use SameSite=None).
+ */
+const CREDENTIALS = (() => {
+  try {
+    return API_BASE && new URL(API_BASE, window.location.origin).origin !== window.location.origin
+      ? 'include'
+      : 'same-origin'
+  } catch {
+    return 'same-origin'
+  }
+})()
 
 /**
  * Resolve a backend-relative asset path to a full URL.
@@ -112,6 +131,7 @@ async function _doRefresh() {
       const url = new URL(API_BASE + scopedPath('/api/auth/refresh'), window.location.origin)
       const res = await fetch(url, {
         headers: { Accept: 'application/json', ..._bearer() },
+        credentials: CREDENTIALS,
       })
       if (res.ok) {
         const data = await res.json()
@@ -166,7 +186,7 @@ async function _guardRefresh() {
  */
 async function _fetch(url, httpMethod, bodyData, label, signal) {
   const headers = { Accept: 'application/json', ..._bearer() }
-  const opts    = { method: httpMethod, headers }
+  const opts    = { method: httpMethod, headers, credentials: CREDENTIALS }
   if (signal) opts.signal = signal
 
   if (httpMethod !== 'GET' && bodyData && Object.keys(bodyData).length > 0) {
@@ -244,6 +264,7 @@ async function upload(path, file, field = 'file') {
     method:  'POST',
     headers: { Accept: 'application/json', ..._bearer() },
     body:    fd,
+    credentials: CREDENTIALS,
   })
   if (res.status === 401) { _handle401(); throw new Error('Unauthenticated') }
   if (!res.ok) {
@@ -276,6 +297,7 @@ async function uploadMulti(path, files = {}, data = {}) {
     method:  'POST',
     headers: { Accept: 'application/json', ..._bearer() },
     body:    fd,
+    credentials: CREDENTIALS,
   })
   if (res.status === 401) { _handle401(); throw new Error('Unauthenticated') }
   if (!res.ok) {
@@ -299,7 +321,7 @@ async function uploadMulti(path, files = {}, data = {}) {
  */
 async function download(path, fallbackName = 'download') {
   await _guardRefresh()
-  const res = await fetch(apiUrl(path), { headers: { ..._bearer() } })
+  const res = await fetch(apiUrl(path), { headers: { ..._bearer() }, credentials: CREDENTIALS })
   if (res.status === 401) { _handle401(); throw new Error('Unauthenticated') }
   if (!res.ok) {
     let body = null

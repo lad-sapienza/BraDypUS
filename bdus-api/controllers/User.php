@@ -317,6 +317,7 @@ class User extends \Bdus\Controller
 				if ($passwordChanged && $isOwnUser) {
 					$rows = $this->db->query('SELECT * FROM bdus_users WHERE id = ?', [(int) $data['id']], 'read');
 					$extra['token'] = \JWT\JwtManager::generate($rows[0], APP);
+					\Auth\SessionCookie::issue(APP, $extra['token']);
 				}
 				$this->returnJson(['status' => 'success', 'code' => 'user_data_saved', ...$extra]);
 			} else {

@@ -43,7 +43,8 @@ Set these in `docker-compose.prod.yml` or via a `.env` file:
 |---|---|---|
 | `BRADYPUS_DEBUG` | `0` | Set to `1` only for debugging |
 | `BRADYPUS_ALLOW_NEW_APP` | `0` | Set to `1` temporarily to create the first app |
-| `BRADYPUS_CORS_ORIGIN` | — | Space-separated allowed origins for cross-origin API access |
+| `BRADYPUS_CORS_ORIGIN` | — | Space-separated allowed origins for cross-origin API access (credentials are allowed for exactly these origins, never `*`) |
+| `BRADYPUS_COOKIE_SAMESITE` | `Lax` | `SameSite` of the session cookie that lets the browser show protected files: `Lax`, `Strict`, or `None` for a front-end on another site (needs HTTPS and `BRADYPUS_CORS_ORIGIN`; over plain HTTP it falls back to `Lax`). Behind a TLS-terminating proxy list the proxy in `BRADYPUS_TRUSTED_PROXIES` so `X-Forwarded-Proto: https` is believed |
 | `BRADYPUS_TRUSTED_PROXIES` | private ranges in the Compose files (`10.0.0.0/8,172.16.0.0/12,192.168.0.0/16`); unset otherwise | Comma-separated IPs/IPv4 CIDRs of the proxies in front of the API. Only then `X-Forwarded-For` is read, to tell clients apart for rate limits |
 | `BRADYPUS_ACCENT_INSENSITIVE` | `0` | Set to `1` to ignore accents in text search (`Σερηνε` finds `Σερῆνε`, `perche` finds `perché`). SQLite needs PHP `intl` (in the official image), PostgreSQL the `unaccent` extension; see [Accents, case and indexes](/guide/setup/text-search) |
 | `BRADYPUS_RATE_KEY_WRITE` | `60` | API-key writes per key per minute (`0` = off) |

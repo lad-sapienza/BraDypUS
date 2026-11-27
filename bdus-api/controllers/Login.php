@@ -112,8 +112,11 @@ class Login extends \Bdus\Controller
 
 	public function out(): void
 	{
-		// JWT logout is client-side (clear sessionStorage).
-		// This endpoint exists solely for server-side logging.
+		// JWT logout is client-side (clear sessionStorage). The server drops the session
+		// cookie and logs the event.
+		if (defined('APP')) {
+			\Auth\SessionCookie::clear(APP);
+		}
 		$user_id = \Auth\CurrentUser::id();
 		if ($user_id) {
 			$this->log->info("User {$user_id} logged out");
@@ -134,6 +137,7 @@ class Login extends \Bdus\Controller
 			return;
 		}
 		$token = \JWT\JwtManager::generate(\Auth\CurrentUser::get(), APP);
+		\Auth\SessionCookie::issue(APP, $token);
 		$this->returnJson(['status' => 'success', 'code' => 'ok', 'token' => $token]);
 	}
 
@@ -166,6 +170,7 @@ class Login extends \Bdus\Controller
 					// Admin: issue token and signal that a minor upgrade is pending.
 					// Migrations run only via POST /api/upgrade/minor (single migration point).
 					$token = \JWT\JwtManager::generate($user, APP);
+					\Auth\SessionCookie::issue(APP, $token);
 					$this->log->info("User {$user['id']} logged into " . APP . " (minor upgrade pending)");
 					$this->returnJson([
 						'status'  => 'success',
@@ -186,6 +191,7 @@ class Login extends \Bdus\Controller
 			try { \DB\System\Migrate::run($this->db, $this->log); } catch (\Throwable $ignored) {}
 			$this->log->info("User {$user['id']} logged into " . APP);
 			$token = \JWT\JwtManager::generate($user, APP);
+			\Auth\SessionCookie::issue(APP, $token);
 			$this->returnJson(['status' => 'success', 'code' => 'ok', 'token' => $token]);
 		} catch (\Exception $e) {
 			// Expected auth outcomes (wrong credentials, missing input, unknown

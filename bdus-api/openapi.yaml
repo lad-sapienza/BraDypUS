@@ -2310,6 +2310,9 @@ paths:
       operationId: getFileByUuid
       tags: [files]
       summary: Download the original binary of a file
+      security:
+        - bearerAuth: []
+        - cookieAuth: []
       description: >
         Sends the file stored as `projects/{app}/files/{uuid}.{ext}`. The principal (Bearer
         token, API key, or the session cookie set at login, which is accepted **only** on this
@@ -7700,6 +7703,16 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT obtained from POST /api/auth/login. Valid for 2 hours; refresh via GET /api/auth/refresh.
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: bdus_s_{app}
+      description: >
+        Session cookie set at login (`HttpOnly`, `SameSite=Lax` by default, `Secure` over HTTPS) for people in a
+        browser. It carries the same signed token as `bearerAuth`, and is accepted **only for `GET` requests
+        that read a file** (`GET /{app}/api/file/{uuid}`): so that `<img>`, links and PDF viewers can load
+        protected files, where no header can be attached. It never authenticates anything else, and ends
+        with the token (expiry, sign-out, password change, revoked sessions).
 
   parameters:
     tb:

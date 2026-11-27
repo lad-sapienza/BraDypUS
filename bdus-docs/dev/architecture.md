@@ -277,7 +277,8 @@ Leave it unset when frontend and backend share the same origin.
 | Variable | Default | Effect |
 |---|---|---|
 | `BRADYPUS_DEBUG` | `0` | `1` enables verbose errors and file logging (`logs/error.log`) |
-| `BRADYPUS_CORS_ORIGIN` | `''` | Space-separated list of allowed origins |
+| `BRADYPUS_CORS_ORIGIN` | `''` | Space-separated list of allowed origins (sent with `Access-Control-Allow-Credentials: true`; methods `GET, POST, PUT, PATCH, DELETE, OPTIONS`) |
+| `BRADYPUS_COOKIE_SAMESITE` | `Lax` | `SameSite` of the session cookie (`Auth\SessionCookie`): `Lax`, `Strict`, `None` (HTTPS only, else `Lax`) |
 | `BRADYPUS_ALLOW_NEW_APP` | `0` | `1` enables the "Create new application" wizard |
 | `BRADYPUS_TRUSTED_PROXIES` | `''` (Compose files: private ranges) | Comma-separated IPs / IPv4 CIDRs of reverse proxies; only then `X-Forwarded-For` is read (`Auth\ClientIp`) |
 | `BRADYPUS_RATE_KEY_WRITE`, `_KEY_READ`, `_KEY_IP`, `_BAD_KEY_IP`, `_LOGIN_IP`, `_MCP_WRITE_ROWS` | `60`, `300`, `120`, `60`, `30`, `500` | Limits per minute (login: per 15 min; MCP rows: per hour); `0` switches one off. See `Auth\RateLimiter::DEFAULTS` |

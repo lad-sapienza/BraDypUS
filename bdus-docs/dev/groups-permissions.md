@@ -289,8 +289,9 @@ User guide: [Record layouts per group](/guide/setup/record-layouts).
   and plugins hang off the table name) are tracked in the views plan (#53). **Reopen only from
   a concrete case that views cannot cover** (typically: different groups editing different
   fields of the *same* table with a shared history), and start by listing the readers above.
-- **Files are not filtered** (`bdus_files` is not a configured table); the *link*
-  between a file and a record follows the record.
+- **Files** are governed by `Auth\FileAccess` (below), on top of `Access`/`WriteGate`: `bdus_files`
+  is a configured table (migration M061 adds it to existing apps), so rules, row filters and locks
+  apply to it like to any table, and a file can also be reached through the records it is attached to.
 - **Plugin tables** are read through their record; read on their own (a chart, an
   analysis) they need a rule of their own.
 - **`checkUnique`** answers a bare boolean over every row: it must reflect the real
@@ -305,3 +306,29 @@ User guide: [Record layouts per group](/guide/setup/record-layouts).
 - A Directus-v11-style policy layer — too much for this use.
 - A single `locked_when` option in the table config — enough for the freeze, but a
   second mechanism that does not solve the reviewer case.
+
+
+## Files: `Auth\FileAccess` <Badge type="tip" text="files rework" />
+
+The single place that decides who may read or change a file; nothing else judges a file on its own.
+A file is reached **directly** (a rule, or a tier, that grants the action on the table `bdus_files`,
+with its row filter, locks and the app status: `Access` / `Authorization` applied to the files table
+like to any table; rules on all tables (`*`) and the levels include it) or **through the data**.
+
+| Action | Allowed when |
+|---|---|
+| **read** (list, download, metadata) | direct read **or** at least one attached record is readable (`FileAccess::readCondition()` is the SQL used by the list; `mayRead()` for one file) |
+| **update** (metadata, replace the binary), **delete** | direct `update` / `delete`, **or** the file is attached to at least one record **and every** attached record is changeable (`WriteGate::mayChange('update', …)`) |
+| **any change** | refused when an attached record is **locked** (non-admins), whatever the direct rights |
+| **orphan** (no links) | direct rules only: nothing to inherit from; the creator has no special right |
+| **attach** (`linkFile`) | the record's update right **and** the file readable by the principal (attaching would otherwise hand a file over) |
+| **upload from a record**, **detach** | the record's update right (unchanged) |
+| **reorder a gallery** (`sortFiles`) | every link on a record the principal may change |
+| **standalone upload** | `FileAccess::mayCreate()` (a `create` grant on `bdus_files`) |
+
+`FileAccess::readableLinks()` keeps, in a file's list of links, only the records the principal may
+read. `Controller::fileAccess()` builds it; every file endpoint uses it, and
+`tests/Integration/FileAccessTest.php` is the matrix (explicit × inherited × orphan × locks × tiers ×
+`*`), `FileEndpointsAccessTest.php` the endpoints, hurl phase 62 the HTTP behaviour.
+
+A refusal on `GET /api/file/{uuid}` is a plain `404`, indistinguishable from an unknown address.

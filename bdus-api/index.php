@@ -9,7 +9,7 @@ if ($_cors_raw !== '') {
     if (in_array($_cors_origin, $_cors_allowed, true)) {
         header('Access-Control-Allow-Origin: '    . $_cors_origin);
         header('Access-Control-Allow-Credentials: true');
-        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+        header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
         header('Access-Control-Allow-Headers: Authorization, Content-Type, Accept');
         header('Vary: Origin');
     }

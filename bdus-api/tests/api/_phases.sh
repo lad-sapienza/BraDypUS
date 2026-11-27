@@ -538,6 +538,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "62"; then
+    header "Phase 62 — File access and session cookie"
+    run_phase "File access" "62_file_access.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

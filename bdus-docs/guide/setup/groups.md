@@ -289,8 +289,14 @@ API, search and export. See [Record layouts per group](./record-layouts).
 - **Links to records you cannot read are left out.** A user sees neither the
   records they cannot read nor the links, backlinks and relations that point at
   them.
-- **Files are not filtered.** The file manager lists all files; rules and locks
-  apply to the *link* between a file and a record, not to the file list itself.
+- **Files follow their records, or a rule of their own.** A file is readable when one of
+  the records it is attached to is readable, **or** when a rule grants *read* on the table
+  **Files** (`bdus_files`, with the usual row filter). To change or delete a file you need a
+  rule on **Files**, or **every** record it is attached to must be changeable; and a **lock** on
+  any of those records freezes the file. A file attached to nothing (an *orphan*) can only be
+  reached through a rule on **Files**: reading, editing or deleting records gives no access to it,
+  and its creator gets no special right. Rules on **all tables** and the levels Reader/Writer
+  include Files. See [Files](/guide/usage/files#who-can-see-and-change-a-file).
 - **Frozen application.** When the application status is *Frozen* nobody writes,
   groups or not.
 - **No field-level rules.** A rule covers whole rows. A [record layout](./record-layouts)

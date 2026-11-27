@@ -338,6 +338,21 @@ class Router
     ];
 
     /**
+     * Routes that accept the session cookie instead of the Authorization header, and only
+     * for GET requests: the ones that send a file to a browser tag (`<img>`, a link, a PDF
+     * viewer) which cannot add a header. Never list a route that changes anything: the cookie
+     * would make it forgeable from another site. See Auth\SessionCookie.
+     */
+    public const COOKIE_ROUTES = [
+        'Bdus\\Controllers\\File::download',
+    ];
+
+    public static function acceptsCookie(string $ctrl, string $method): bool
+    {
+        return in_array($ctrl . '::' . $method, self::COOKIE_ROUTES, true);
+    }
+
+    /**
      * Can an API key with this tier (and optional group) pass the route gate for
      * $ctrl::$method? The tier decides first; failing that, a key with a group
      * reaches the GROUP_KEY_ROUTES whose level is 'read' or 'edit', and the

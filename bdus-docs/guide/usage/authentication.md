@@ -88,6 +88,23 @@ privilege level (see [Users & privileges](/guide/setup/users#privilege-levels))
 — it has no access to anything until an administrator reviews it and raises
 the privilege. Both you and every admin get a confirmation email.
 
+## Session cookie (files in the browser) <Badge type="tip" text="files rework" />
+
+A browser cannot attach an `Authorization` header to an `<img>`, a link or a PDF viewer, so signing in
+also sets a **session cookie** (`bdus_s_{app}`: `HttpOnly`, `Secure` on HTTPS, `SameSite=Lax`). The server
+accepts it **only for reading a file** (`GET /{app}/api/file/{uuid}`) and for nothing else: every other
+request, and every request that changes anything, still needs the `Authorization` header, which another
+website cannot make your browser send. The cookie carries the same signed token, so it ends when the token
+expires, when you sign out, when your password changes and when an administrator revokes your sessions.
+
+API keys and the MCP endpoint keep using the header; the cookie is for people in a browser.
+
+If the front-end is served from **another site** than the API (a separate domain), set
+`BRADYPUS_CORS_ORIGIN` to that site (a space-separated allow-list, never `*`) and
+`BRADYPUS_COOKIE_SAMESITE=None`: the cookie is then sent cross-site, which browsers only accept over
+**HTTPS** (on plain HTTP the server falls back to `Lax` rather than issue a cookie that would be dropped).
+See the [deploy guide](../deploy/#environment-variables).
+
 ## Too many failed attempts <Badge type="tip" text="v5.5.0" />
 
 After 5 consecutive failed login attempts, an account is locked for 15

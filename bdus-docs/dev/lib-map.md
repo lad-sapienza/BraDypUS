@@ -282,6 +282,15 @@ lower-case uuid, an extension of letters and digits) because the result is a fil
 `Store::create()` inserts the `bdus_files` row and returns `{id, uuid}`; `Store::remove()` deletes
 the binary and its derived versions (best effort). Nothing else builds a file path.
 
+**Who may do what: `Auth\FileAccess`** (see [groups & permissions](./groups-permissions#files-auth-fileaccess)),
+**how a file is sent: `File\Delivery`** (content type, `inline` only for plain media, `nosniff`, sandbox
+CSP, safe `Content-Disposition`; HTML and anything that could run is only ever downloaded) and
+`File::download` (`GET /api/file/{uuid}`, plain `404` for anything unreadable, `ETag` revalidation,
+`Cache-Control: private, no-cache`). **Cookie: `Auth\SessionCookie`**, accepted by `Dispatcher` only for
+the GET routes listed in `Router::COOKIE_ROUTES` (today: the file download), carrying the same signed token
+as the header so revocation (`token_version`) applies. `File\ConfigSeed` seeds the configuration of the
+files table.
+
 **Serving and lifecycle.** `File::serveDerived` (`GET /api/file/{preset}/{uuid}.{ext}`, public; the integer id is not an address)
 looks the preset up, generates on first request into `cache/{preset}/{uuid}.{ext}` and answers
 with `ETag` revalidation. A failure is a plain 404; a source that failed leaves

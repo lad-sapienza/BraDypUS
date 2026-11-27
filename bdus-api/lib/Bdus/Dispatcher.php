@@ -68,6 +68,12 @@ class Dispatcher
             // ── Auth gate ─────────────────────────────────────────────────────
 
             if ($required !== 'none') {
+                // A browser tag cannot send the header: for the read-only file routes the
+                // session cookie identifies the user (checked below like a header token).
+                if (!\Auth\CurrentUser::isAuthenticated() && defined('APP') && Router::acceptsCookie($obj, $method)) {
+                    \Auth\SessionCookie::authenticate(APP);
+                }
+
                 if (!\Auth\CurrentUser::isAuthenticated() && $this->db) {
                     $ip = \Auth\ClientIp::get();
                     // An address that keeps presenting bad credentials is refused

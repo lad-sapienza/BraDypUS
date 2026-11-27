@@ -186,9 +186,12 @@ POST {base}/{app}/api/import/data
   `thumb`, 200×200 inside WebP, always exists) in the app settings (super-admin: `GET`/`PUT /api/config/app`, send the
   whole `imagePresets` array; a preset may add `watermark` `{text, position, color, background, opacity, margin, size}` — text ≤ 200 chars, only `{{attribution}}` as placeholder, drawn on derived versions only, no protection for the public original). Each image is then served, generated on first request and
   cached, at the public URL `GET /{app}/api/file/{preset}/{file_uuid}.{webp|jpg}` (`uuid` is returned with every file; the integer id is not an address); unknown preset,
-  wrong extension or non-image is a plain 404. Originals and derived files are public and
-  reachable by their uuid address (no access control yet): tell the user before loading
-  anything private. Ask which sizes the frontend needs *before* the photo import.
+  wrong extension or non-image is a plain 404. Derived files are public. Originals are read with
+  `GET /{app}/api/file/{file_uuid}` (Bearer token or key) by principals who may read the file
+  (a readable attached record, or a group rule on `bdus_files`; changing or deleting needs a rule on
+  `bdus_files` or every attached record changeable; orphans only via a rule on `bdus_files`), but until
+  the direct `projects/{app}/files/{uuid}.{ext}` address is closed it also serves them to anyone who
+  knows the random uuid: tell the user before loading anything private. Ask which sizes the frontend needs *before* the photo import.
 - Needs editor privilege or higher.
 
 Then check, do not assume: counts per table against the source, a few records opened in

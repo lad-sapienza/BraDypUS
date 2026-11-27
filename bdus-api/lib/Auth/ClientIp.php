@@ -36,6 +36,14 @@ class ClientIp
         return $remote;
     }
 
+    /** Is $remote (the address that connected to us) one of the trusted reverse proxies? */
+    public static function isTrustedProxy(string $remote, ?string $trusted = null): bool
+    {
+        $trusted ??= (string) (getenv('BRADYPUS_TRUSTED_PROXIES') ?: '');
+        $list      = array_values(array_filter(array_map('trim', explode(',', $trusted))));
+        return $list !== [] && self::isTrusted($remote, $list);
+    }
+
     private static function isTrusted(string $ip, array $list): bool
     {
         foreach ($list as $entry) {

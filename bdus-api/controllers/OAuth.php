@@ -173,6 +173,7 @@ class OAuth extends \Bdus\Controller
             }
 
             $token = \JWT\JwtManager::generate($user, APP);
+            \Auth\SessionCookie::issue(APP, $token);
             $this->log->info("OAuth2 login via {$provider} for user {$user['id']}");
 
             $this->redirectSuccess($token, APP, $origin);
@@ -237,6 +238,7 @@ class OAuth extends \Bdus\Controller
         }
 
         $token = \JWT\JwtManager::generate($user, APP);
+        \Auth\SessionCookie::issue(APP, $token);
         $this->log->info("OAuth2 identity ({$identity['provider']}) linked to user {$user['id']}");
         $this->returnJson(['status' => 'success', 'code' => 'ok', 'token' => $token]);
     }

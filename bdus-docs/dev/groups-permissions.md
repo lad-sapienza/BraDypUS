@@ -308,7 +308,7 @@ User guide: [Record layouts per group](/guide/setup/record-layouts).
   second mechanism that does not solve the reviewer case.
 
 
-## Files: `Auth\FileAccess` <Badge type="tip" text="files rework" />
+## Files: `Auth\FileAccess` <Badge type="tip" text="v5.30.0" />
 
 The single place that decides who may read or change a file; nothing else judges a file on its own.
 A file is reached **directly** (a rule, or a tier, that grants the action on the table `bdus_files`,

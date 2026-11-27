@@ -379,7 +379,7 @@ Further reading: `lib/Record/DataStructure.md` in the API repository describes
 the model fields in detail.
 
 
-## Files in the record layer <Badge type="tip" text="files rework" />
+## Files in the record layer <Badge type="tip" text="v5.30.0" />
 
 `bdus_files` is a configured table (`File\ConfigSeed`, M061), so the generic read path works on it: `Access` reads
 it through its own rules **or** the records its files are attached to (`Access::fileReadCondition()`), and

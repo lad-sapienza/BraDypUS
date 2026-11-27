@@ -88,7 +88,7 @@ privilege level (see [Users & privileges](/guide/setup/users#privilege-levels))
 — it has no access to anything until an administrator reviews it and raises
 the privilege. Both you and every admin get a confirmation email.
 
-## Session cookie (files in the browser) <Badge type="tip" text="files rework" />
+## Session cookie (files in the browser) <Badge type="tip" text="v5.30.0" />
 
 A browser cannot attach an `Authorization` header to an `<img>`, a link or a PDF viewer, so signing in
 also sets a **session cookie** (`bdus_s_{app}`: `HttpOnly`, `Secure` on HTTPS, `SameSite=Lax`). The server

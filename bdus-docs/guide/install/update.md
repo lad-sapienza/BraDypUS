@@ -78,7 +78,7 @@ docker compose exec -u www-data api php bin/upgrade-app.php --all             # 
 If you deploy with the *bdus-ops* toolbox, `bdus update` does this after each
 instance is healthy again, and `bdus app upgrade <instance>` does it on demand.
 
-## Upgrading to uuid file addresses <Badge type="tip" text="files rework" />
+## Upgrading to uuid file addresses <Badge type="tip" text="v5.30.0" />
 
 This release gives every file a random **uuid** and **renames the files on disk** from
 `projects/{app}/files/{id}.{ext}` to `projects/{app}/files/{uuid}.{ext}` (migration M060); the cache of resized

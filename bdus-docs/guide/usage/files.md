@@ -40,7 +40,7 @@ closes the preview at any time.
 With more than **5000** matching files, the navigation stops at the 5000th
 and the counter shows it (**‹ 12 / 5000+ ›**).
 
-## Who can see and change a file <Badge type="tip" text="files rework" />
+## Who can see and change a file <Badge type="tip" text="v5.30.0" />
 
 A file is reached in two ways, and **either is enough to read it**:
 
@@ -68,7 +68,7 @@ which is accepted for this and nothing else. Images, PDF, plain text, audio and 
 browser; any other type (HTML, scripts, archives, office documents…) is sent as a download, never
 interpreted as a page of the application.
 
-## Custom fields <Badge type="tip" text="files rework" />
+## Custom fields <Badge type="tip" text="v5.30.0" />
 
 The table **Files** is configured like any other: in *System configuration → Tables* it appears as a
 **system** table. Its structure is fixed (the table itself, and its system fields `filename`, `description`,
@@ -83,7 +83,7 @@ and kept in the file's history like any record change), travel in the API (`GET 
 binary (`uuid`, `ext`, `creator`, `id`) are never written from a request. A file cannot be created or
 deleted as a record of the table: it is created by uploading it and deleted with the file actions.
 
-## Table and cards views <Badge type="tip" text="files rework" />
+## Table and cards views <Badge type="tip" text="v5.30.0" />
 
 The files page has two views, switched with the buttons at the top left and remembered for you (the first time you see **cards**):
 
@@ -124,7 +124,7 @@ existing file. The original description, keywords, attribution, and all record l
 preserved. If the new file has a different extension, the old physical file is
 deleted.
 
-## Deleting a record: its files <Badge type="tip" text="files rework" />
+## Deleting a record: its files <Badge type="tip" text="v5.30.0" />
 
 When you delete a record, the files **only it uses** are not deleted by surprise: the delete dialog asks, for
 each one, to *keep* it (an orphan) or *delete* it with the record. Over the API, `DELETE /api/record/{tb}/{id}`

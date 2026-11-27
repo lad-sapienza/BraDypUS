@@ -1716,6 +1716,7 @@
   "preset_delete_confirm": "Eliminare il preset \"%s\"? Viene rimosso quando salvi, insieme alle sue versioni in cache.",
   "preset_delete_confirm_unnamed": "Eliminare questo preset?",
   "ok_preset_cache_purged": "Cache svuotata",
+  "preset_cache_purge_failed": "Impossibile rimuovere alcuni file della cache (controlla i permessi della cartella cache)",
   "preset_cache_removed": "%s file rimossi",
   "preset_watermark": "Filigrana",
   "wm_text": "Testo ({{attribution}} = l'attribuzione del file)",

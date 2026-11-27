@@ -136,10 +136,13 @@ final class Derivative
     /**
      * Removes the whole cache folder of one preset.
      *
+     * @param  int $failed Set to the number of files that could not be removed
+     *                     (typically a permissions problem on the cache folder).
      * @return int Number of files removed.
      */
-    public static function purgePreset(string $projDir, string $preset): int
+    public static function purgePreset(string $projDir, string $preset, int &$failed = 0): int
     {
+        $failed = 0;
         // The name ends up in a path: refuse anything that is not a valid preset name.
         if (!Presets::isValidName($preset)) {
             return 0;
@@ -150,8 +153,13 @@ final class Derivative
         }
         $n = 0;
         foreach (glob($dir . '/{,.}*', GLOB_BRACE) ?: [] as $f) {
-            if (is_file($f) && @unlink($f)) {
+            if (!is_file($f)) {
+                continue;
+            }
+            if (@unlink($f)) {
                 $n++;
+            } else {
+                $failed++;
             }
         }
         @rmdir($dir);

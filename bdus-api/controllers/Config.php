@@ -1556,7 +1556,14 @@ class Config extends \Bdus\Controller
       $this->returnJson(['status' => 'error', 'code' => 'parameter_invalid']);
       return;
     }
-    $removed = \Image\Derivative::purgePreset(PROJ_DIR, $name);
+    $failed  = 0;
+    $removed = \Image\Derivative::purgePreset(PROJ_DIR, $name, $failed);
+    if ($failed > 0) {
+      // Never report success while stale versions are still being served.
+      $this->log->error("preset cache purge '{$name}': {$failed} file(s) could not be removed (check permissions of " . PROJ_DIR . "cache/{$name})");
+      $this->returnJson(['status' => 'error', 'code' => 'preset_cache_purge_failed', 'removed' => $removed, 'failed' => $failed]);
+      return;
+    }
     $this->returnJson(['status' => 'success', 'code' => 'ok_preset_cache_purged', 'removed' => $removed]);
   }
 

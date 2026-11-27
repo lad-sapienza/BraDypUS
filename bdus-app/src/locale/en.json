@@ -1716,6 +1716,7 @@
   "preset_delete_confirm": "Delete the preset \"%s\"? It is removed when you save, together with its cached versions.",
   "preset_delete_confirm_unnamed": "Delete this preset?",
   "ok_preset_cache_purged": "Cache emptied",
+  "preset_cache_purge_failed": "Some cache files could not be removed (check the cache folder permissions)",
   "preset_cache_removed": "%s files removed",
   "preset_watermark": "Watermark",
   "wm_text": "Text ({{attribution}} = the file's attribution)",

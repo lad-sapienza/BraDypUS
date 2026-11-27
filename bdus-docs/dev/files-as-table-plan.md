@@ -292,7 +292,7 @@ Each step ends with: its tests written and the **existing tests it affects fixed
 affects updated, the full `bdus-api/test.sh` read to the end, then a commit (one concern per
 commit).
 
-1. **uuid**: M060, `uuid` + `public` columns, upload/import/replace/delete by uuid, derived path by
+1. **uuid** ✅ *done 2026-11-27 (commits aafd9cad…841c4adf; PHPUnit on 3 engines, hurl 71 phases on 3 engines, seed).* M060, `uuid` + `public` columns, upload/import/replace/delete by uuid, derived path by
    uuid, verifier, rename of files on disk; the frontend moves to the new URLs in the same step.
 2. **Serving through PHP**: `GET /api/file/{uuid}` and the derived route by uuid, Bearer auth.
 3. **Cookie** (GET/HEAD file routes only), cross-origin support, frontend `<img src>`.
@@ -304,6 +304,18 @@ commit).
 8. **`public` field + preset `access`/`enabled`** + admin UI (thumb always listed).
 9. **Docs, assistants, changelog, release notes** (§7), then **block direct static access**
    (`.htaccess`, nginx/Caddy snippets, `bdus-ops`, docker) behind an explicit go.
+
+Notes on step 1 (deviations from §3, to finish later):
+
+- The preset `access` backfill (existing presets → `public`, §3.5) cannot live in M060: the field
+  does not exist yet. It goes in the migration of step 8.
+- The **report-only scan for old URLs** inside text/markdown fields, templates and the welcome
+  text (§3.6) is **not done yet**; the verifier already checks uuid and binary names.
+- Rows inserted by tools that bypass the API (e.g. the Directus migrator) have `uuid = NULL`
+  and cannot be served: the verifier reports them (`file_uuids`), but a repair command
+  (assign uuid + rename) is still to be written.
+- Frontend: unit tests and the build of the pure helpers pass; the gallery and Files page were
+  **not exercised in a browser** yet.
 
 ## 9a. Definition of done (every line verified, none assumed)
 

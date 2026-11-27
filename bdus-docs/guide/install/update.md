@@ -86,6 +86,11 @@ images is emptied and rebuilt on demand, and existing presets and files are made
 published disappears (M062). **Take a backup first.** The migration can be repeated: if it stops (a rename that
 fails for permissions), fix the cause and run it again; it only does what is missing and never overwrites.
 
+**Breaking: the `files/` folder is no longer served by the web server.** The old address
+`projects/{app}/files/…` (the 5.29.4 hotfix left only `files/` and `geodata/` open) now answers 404; files go
+through the authenticated API. Links to it from other sites stop working, and if you have your own proxy in
+front of BraDypUS that forwards `/projects/`, restrict it to `/projects/{app}/geodata/` too.
+
 Two read/repair commands help around it (run them as the web user, one application at a time):
 
 ```bash

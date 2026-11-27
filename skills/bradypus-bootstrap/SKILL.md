@@ -189,9 +189,9 @@ POST {base}/{app}/api/import/data
   wrong extension or non-image is a plain 404. Derived versions are sent without login only when the preset is `access: "public"` AND the file is marked `public` (new files start private; presets default to `inherit`, i.e. whoever may read the original; a preset can be `enabled: false`, and the built-in `thumb` is always on); otherwise they need a principal who may read the file. Originals are read with
   `GET /{app}/api/file/{file_uuid}` (Bearer token or key) by principals who may read the file
   (a readable attached record, or a group rule on `bdus_files`; changing or deleting needs a rule on
-  `bdus_files` or every attached record changeable; orphans only via a rule on `bdus_files`), but until
-  the direct `projects/{app}/files/{uuid}.{ext}` address is closed it also serves them to anyone who
-  knows the random uuid: tell the user before loading anything private. Ask which sizes the frontend needs *before* the photo import.
+  `bdus_files` or every attached record changeable; orphans only via a rule on `bdus_files`), ; the direct
+  `projects/{app}/files/…` address is closed (404, web server level; an outer proxy of the user's own must
+  apply the same rule). Ask which sizes the frontend needs *before* the photo import.
 - Needs editor privilege or higher.
 
 Then check, do not assume: counts per table against the source, a few records opened in

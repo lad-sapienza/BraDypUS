@@ -91,11 +91,11 @@ server {
         proxy_set_header   X-Forwarded-Proto $bdus_forwarded_proto;
     }
 
-    # Only what a browser must fetch by address is passed to the backend: the uploaded files (until
-    # they are served through the API) and the map layers in geodata/. Everything else under
-    # /projects/ (the SQLite database in db/, backups/, export/, the derived-image cache/ …) and the
-    # root /cache/ answer 404 here and never reach the backend.
-    location ~ ^/projects/[^/]+/(files|geodata)/ {
+    # Only the map layers in geodata/ are passed to the backend by address. Uploaded files are served
+    # through the API (/api/file/{uuid}, with an access check). Everything else under /projects/ (the
+    # SQLite database in db/, backups/, export/, files/, the derived-image cache/ …) and the root
+    # /cache/ answer 404 here and never reach the backend.
+    location ~ ^/projects/[^/]+/geodata/ {
         proxy_pass         ${API_PROXY_TARGET};
         proxy_set_header   Host              $host;
         proxy_set_header   X-Real-IP         $remote_addr;

@@ -80,8 +80,9 @@ Two things the rules do **not** hide:
   group that reads a [SQL view](./views) without it, not the table.
   A hidden field in a [record layout](./record-layouts) is a convenience for forms,
   never protection.
-- **Files** are served without authentication, by their address ([Files](../usage/files)).
-  MCP neither reads nor uploads files, but nothing protects an address someone already has.
+- **Files** are read through the API with an access check, never by a bare address
+  ([Files](../usage/files)); only derived images of files marked *public*, with a public preset, go to
+  anyone. MCP neither reads nor uploads files.
 
 ## Setting it up
 

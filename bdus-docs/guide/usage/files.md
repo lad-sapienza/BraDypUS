@@ -192,12 +192,12 @@ Mark the files you want to publish **public** (one by one, or select several on 
 Nothing else is reachable without a login.
 :::
 
-::: warning Old direct addresses are still open (for now)
-Until the files folder is closed to direct web access (the last step of the files rework), the
-binaries are also reachable at `projects/{app}/files/{uuid}.{ext}` **without** authentication by anyone
-who knows the uuid. The uuid is random, so it cannot be guessed by counting, but it is not a protection
-against someone who has the address. Use the authenticated address above for everything that matters,
-and do not rely on the direct one.
+::: warning The direct address `projects/{app}/files/…` is closed
+The web server no longer serves the `files/` folder: `projects/{app}/files/{uuid}.{ext}` answers **404**
+(Apache `.htaccess` and the bundled Nginx template; only `geodata/` is still passed through). Files are
+read only through `GET /api/file/{uuid}` and the derived-image address, which check who is asking. If you
+proxy `/projects/` yourself (outer Nginx/Caddy), apply the same rule there, otherwise your proxy keeps
+serving the files without a login.
 :::
 
 ::: tip Upgrading: file addresses changed

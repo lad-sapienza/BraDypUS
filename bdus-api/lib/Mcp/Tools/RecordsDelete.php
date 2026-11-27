@@ -34,7 +34,7 @@ class RecordsDelete extends Base
     {
         return [
             'title'       => 'Delete records',
-            'description' => 'Deletes records of one table by id, with their plugin rows, links and relations. '
+            'description' => 'Deletes records of one table by id, with their plugin rows, links and relations. Files attached only to them are kept as orphans unless files="delete". '
                 . 'Call it only after the user has explicitly confirmed which records to delete. All are deleted '
                 . 'or none is. An administrator can restore a deleted record from the history.',
             'inputSchema' => [
@@ -42,6 +42,8 @@ class RecordsDelete extends Base
                 'properties' => [
                     'table' => ['type' => 'string'],
                     'ids'   => ['type' => 'array', 'items' => ['type' => 'integer', 'minimum' => 1], 'minItems' => 1, 'maxItems' => self::MAX_IDS],
+                    'files' => ['type' => 'string', 'enum' => ['keep', 'delete'], 'default' => 'keep',
+                                'description' => 'What to do with a file attached ONLY to the deleted records: "keep" (default) leaves it as an orphan, "delete" removes it too. A file shared with other records is never deleted.'],
                 ],
                 'required'             => ['table', 'ids'],
                 'additionalProperties' => false,
@@ -66,12 +68,17 @@ class RecordsDelete extends Base
 
         $this->budgetRows(count($ids));
 
+        $files = $args['files'] ?? Delete::FILE_KEEP;
+        if (!in_array($files, [Delete::FILE_KEEP, Delete::FILE_DELETE], true)) {
+            throw new ToolError('invalid_parameters', 'files');
+        }
+
         $deleter = new Delete($ctx->db, $ctx->cfg, $ctx->access);
 
         $ctx->db->beginTransaction();
         try {
             foreach ($ids as $id) {
-                $outcome = $deleter->delete($tb, $id);
+                $outcome = $deleter->delete($tb, $id, [], $files);
                 if ($outcome !== Delete::DELETED) {
                     $ctx->db->rollBack();
                     throw new ToolError('delete_refused', ['id' => $id, 'code' => $outcome, 'note' => 'Nothing was deleted.']);
@@ -88,6 +95,9 @@ class RecordsDelete extends Base
             throw new ToolError('delete_refused', ['code' => 'db_error', 'note' => 'Nothing was deleted.']);
         }
 
-        return ['table' => $tb, 'deleted' => count($ids), 'ids' => $ids];
+        return [
+            'table' => $tb, 'deleted' => count($ids), 'ids' => $ids,
+            'orphaned_files' => $deleter->orphanedFiles, 'deleted_files' => $deleter->deletedFiles,
+        ];
     }
 }

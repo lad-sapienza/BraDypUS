@@ -512,7 +512,8 @@ class Persist
      *  3. All userlinks entries referencing this record
      *  4. All rs entries referencing this record (via the rs field configured in cfg)
      *
-     * File deletion is NOT handled here — that is the controller's responsibility.
+     * Files: the links go with the record; a file used only by it is deleted or left as an orphan
+     * according to the caller's choice (`_files_on_delete` in the model; default: keep).
      *
      * @return array  ['deleted' => 1]
      */
@@ -587,6 +588,7 @@ class Persist
             ) ?: [];
 
             $toDeletePhysically = [];
+            $orphaned           = [];
             foreach ($linkedFiles as $file) {
                 $fileId = (int) $file['id'];
                 $rows   = $this->db->query(
@@ -597,14 +599,22 @@ class Persist
                 $otherLinks = (int) ($rows[0]['cnt'] ?? 0);
 
                 if ($otherLinks === 0) {
-                    // Exclusively linked here — purge the bdus_files row.
-                    // The link itself is removed in the bulk DELETE below.
-                    $this->db->query(
-                        "DELETE FROM bdus_files WHERE id = ?",
-                        [$fileId],
-                        'boolean'
-                    );
-                    $toDeletePhysically[] = ['id' => $fileId, 'uuid' => (string) $file['uuid'], 'ext' => (string) $file['ext']];
+                    // Linked only here. What happens to it is the caller's choice: `delete`
+                    // purges the bdus_files row and (after commit) the binary; `keep` leaves it
+                    // as an orphan. Default: keep (never lose a file without being asked).
+                    // The link itself is removed in the bulk DELETE below either way.
+                    $on       = $this->model['_files_on_delete'] ?? [];
+                    $decision = ($on['choices'][$fileId] ?? $on['default'] ?? 'keep') === 'delete' ? 'delete' : 'keep';
+                    if ($decision === 'delete') {
+                        $this->db->query(
+                            "DELETE FROM bdus_files WHERE id = ?",
+                            [$fileId],
+                            'boolean'
+                        );
+                        $toDeletePhysically[] = ['id' => $fileId, 'uuid' => (string) $file['uuid'], 'ext' => (string) $file['ext']];
+                    } else {
+                        $orphaned[] = $fileId;
+                    }
                 }
             }
 
@@ -629,6 +639,10 @@ class Persist
             }
         }
 
-        return ['deleted' => 1];
+        return [
+            'deleted'        => 1,
+            'deleted_files'  => array_column($toDeletePhysically, 'id'),
+            'orphaned_files' => $orphaned,
+        ];
     }
 }

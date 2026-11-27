@@ -1850,6 +1850,11 @@ class Record extends \Bdus\Controller
     // from the same $tb).
     $deleter = new \Record\Delete($this->db, $this->cfg, $this->access());
 
+    // What to do with the files only these records use: `files` is "delete" or "keep" for all of
+    // them, or a map { fileId: "delete"|"keep" }. Without it they are KEPT (as orphans): a file is
+    // never lost without being asked. Files shared with other records are never deleted here.
+    [$fileChoices, $filesDefault] = $this->fileChoices($this->post['files'] ?? $this->get['files'] ?? null);
+
     $ok    = [];
     $error = [];
 
@@ -1857,7 +1862,7 @@ class Record extends \Bdus\Controller
       if (!$id) continue;
       try {
         // Existence, ownership, row scope, locks and the delete itself: \Record\Delete.
-        if ($deleter->delete($tb, $id) === \Record\Delete::DELETED) {
+        if ($deleter->delete($tb, $id, $fileChoices, $filesDefault) === \Record\Delete::DELETED) {
           $ok[] = $id;
         } else {
           $error[] = $id;
@@ -1877,7 +1882,72 @@ class Record extends \Bdus\Controller
                'deleted' => count($ok), 'failed' => count($error)];
     }
 
+    // The files this left behind, and the ones that went with the records
+    $data['orphaned_files'] = $deleter->orphanedFiles;
+    $data['deleted_files']  = $deleter->deletedFiles;
+
     $this->returnJson($data);
+  }
+
+  /**
+   * Normalises the `files` choice of a record deletion.
+   *
+   * @return array{0: array<int,string>, 1: string}  [per-file choices, default for the others]
+   */
+  private function fileChoices(mixed $raw): array
+  {
+    if ($raw === 'delete' || $raw === 'keep') {
+      return [[], $raw];
+    }
+    $choices = [];
+    if (is_array($raw)) {
+      foreach ($raw as $fileId => $what) {
+        if ((int) $fileId > 0) {
+          $choices[(int) $fileId] = $what === 'delete' ? 'delete' : 'keep';
+        }
+      }
+    }
+    return [$choices, 'keep'];
+  }
+
+  /**
+   * The files that deleting the given records would leave without any record: the ones the
+   * interface asks about ("delete the file too, or keep it?").
+   *
+   * GET /api/record/{tb}/files-before-delete?id=N   (or id[]=N&id[]=M)
+   *
+   * Response: { status, files: [ { id, uuid, ext, filename, is_image, record_ids } ] }
+   * Only files attached to nothing else are listed; a file shared with another record is not.
+   */
+  public function filesBeforeDelete(): void
+  {
+    $tb  = $this->get['tb'] ?? null;
+    $raw = $this->get['id'] ?? null;
+
+    if (!\Auth\Authorization::canOnSomeTable('edit')) {
+      $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+      return;
+    }
+    if (!$tb || !$raw || !is_string($tb) || !in_array($tb, $this->cfg->get('tables.*.name') ?: [], true)) {
+      $this->returnJson(['status' => 'error', 'code' => 'parameter_missing']);
+      return;
+    }
+
+    $ids = array_values(array_unique(array_filter(array_map('intval', is_array($raw) ? $raw : [$raw]))));
+    foreach ($ids as $id) {
+      if (!$this->mayChange('delete', $tb, $id)) {
+        $this->returnJson(['status' => 'error', 'code' => 'not_enough_privilege']);
+        return;
+      }
+    }
+
+    $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'bmp', 'ico', 'tif', 'tiff', 'svg'];
+    $files = array_map(
+      fn(array $f) => $f + ['is_image' => in_array(strtolower($f['ext']), $imageExts, true)],
+      \Record\Delete::exclusiveFiles($this->db, $tb, $ids)
+    );
+
+    $this->returnJson(['status' => 'success', 'files' => $files]);
   }
 
   // ── Deleted records ────────────────────────────────────────────────────────

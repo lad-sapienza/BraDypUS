@@ -228,9 +228,13 @@ can reference it.
    - All plugin rows (`id_link = id`)
    - All `bdus_userlinks` entries in both directions
    - All `bdus_rs` entries referencing this record's RS field value
-   - `bdus_files` rows with no other links + `bdus_file_links` entries
-3. Physical file deletion runs **after** the transaction commit (best-effort;
-   `unlink()` is not rolled back on failure).
+   - the `bdus_file_links` entries of the record; and, for each file linked **only** to it, the caller's
+     choice (`Edit::delete($fileChoices, $filesDefault)` → `_files_on_delete` in the model): `delete` removes
+     the `bdus_files` row, `keep` (the default) leaves an orphan. A file with other links is never touched.
+3. Physical file deletion (binary and derived versions, `File\Store::remove()`) runs **after** the transaction
+   commit, only for the files chosen for deletion (best-effort; `unlink()` is not rolled back on failure).
+   `Record\Delete` exposes the outcome (`orphanedFiles`, `deletedFiles`) and `Delete::exclusiveFiles()` lists
+   the files a deletion would leave without records (behind `GET /api/record/{tb}/files-before-delete`).
 
 ### `persistPlugins(): array`
 

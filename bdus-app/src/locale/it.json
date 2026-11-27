@@ -1799,5 +1799,12 @@
   "files_table_cfg_note": "Questa è la tabella dei file caricati. La sua struttura è fissa (i file, i loro indirizzi e i tipi sono gestiti dall'applicazione), ma puoi aggiungere campi tuoi per descriverli (una licenza, un autore, una campagna…) dall'elenco dei Campi: compaiono nella pagina dei file e si possono cercare come ogni altro campo.",
   "files_are_uploaded": "Un file si crea caricandolo.",
   "files_are_deleted_as_files": "I file si eliminano dalla pagina dei file o da una scheda, non come record di una tabella.",
-  "system_field_not_renamable": "Un campo di sistema non si può rinominare."
+  "system_field_not_renamable": "Un campo di sistema non si può rinominare.",
+  "confirm_delete_record_files": "Questa scheda è l'unica che usa questi file. Cosa ne facciamo?",
+  "files_keep_all": "Tieni tutti",
+  "files_delete_all": "Elimina tutti",
+  "file_keep": "Tieni",
+  "file_delete": "Elimina",
+  "files_keep_hint": "Un file che tieni resta nella pagina dei file senza alcuna scheda (orfano): potrai collegarlo o eliminarlo in seguito. I file condivisi con altre schede non vengono mai eliminati.",
+  "files_left_orphans": "File tenuti senza scheda"
 }

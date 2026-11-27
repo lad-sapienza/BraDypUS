@@ -73,12 +73,21 @@ class Edit
      * Marks main record for deletion
      * Sets model.core.id._delete to true
      *
+     * @param array<int,string> $fileChoices  fileId => 'delete'|'keep', for the files only this record uses
+     * @param string            $filesDefault what to do with such a file that has no explicit choice
+     *
      * @return object   Main object
      */
-    public function delete() : self
+    public function delete(array $fileChoices = [], string $filesDefault = 'keep') : self
     {
         if( isset($this->model['core']['id']) ) {
             $this->model['core']['id']['_delete'] = true;
+            // What happens to the files only this record uses (see Record\Persist::deleteAll()):
+            // `delete` removes the file with the record, `keep` leaves it as an orphan.
+            $this->model['_files_on_delete'] = [
+                'choices' => $fileChoices,
+                'default' => $filesDefault === 'delete' ? 'delete' : 'keep',
+            ];
         } else {
             $this->addLog("model.core.id is not set: ignoring delete");
         }

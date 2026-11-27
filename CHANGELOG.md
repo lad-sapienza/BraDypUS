@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Deleting a record no longer deletes its files by surprise.** Until now the files attached **only** to a deleted record were removed with it, silently. Now the delete dialog asks, **for each such file**, whether to *keep* it (it becomes an orphan) or *delete* it (with *Keep all* / *Delete all*), and the **default is keep**. `DELETE /api/record/{tb}/{id}` takes `files` (`"keep"`, `"delete"`, or a map `{fileId: "delete"|"keep"}`) and answers with `orphaned_files` and `deleted_files`; the new `GET /api/record/{tb}/files-before-delete` lists the files the question is about; the MCP tool `records_delete` takes `files` (default `keep`). A file shared with a record that stays is never deleted. **Behaviour change for API clients** that relied on the automatic purge: send `files: "delete"`.
+
 ### Added
 
 - **Custom fields on files** (files rework, step 5). The files table (`bdus_files`) is now a configured table: it appears in *System configuration → Tables* as a **system** table (structure fixed: it cannot be renamed, deactivated or deleted, and its system fields cannot be removed, renamed or retyped) and you add your own fields to it from its *Fields* list, with the usual types, checks and vocabularies. They travel in `GET /api/files` (which now returns every configured field, plus `can_update` / `can_delete` for the caller), are written by `PATCH /api/file/{id}` (validated, and **kept in the file's history**, through `Record\Save`), and are searched by the search box. `uuid`, `ext`, `creator` and `id` are never written from a request. The generic record endpoints work on the table too and follow the same access rule; a file row cannot be created (`files_are_uploaded`) nor erased (`files_are_deleted_as_files`) as a record. New error codes `files_are_uploaded`, `files_are_deleted_as_files`, `system_field_not_renamable`; `rename_tb` now refuses every system table.

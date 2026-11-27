@@ -39,7 +39,7 @@ field names are yours: the assistant learns them from your configuration.
 | `records_write` | Creates and updates records, with their plugin rows (radiocarbon, osteology…), their Zotero links (the `bibliography` section: add, edit, remove) and their manual links to other records (the `links` section: add, remove) |
 | `rs_validate` | **Dry run** of stratigraphic relations to add and to remove: does the table have them, are the codes and records valid, may the key change both records, is the fact already there |
 | `rs_write` | Adds and removes stratigraphic relations |
-| `records_delete` | Deletes records |
+| `records_delete` | Deletes records (files only they use are kept as orphans unless `files` is `"delete"`) |
 
 The three that write (`records_write`, `rs_write`) or delete (`records_delete`) are off
 until you switch them on: writing covers records and relations, deleting only records.

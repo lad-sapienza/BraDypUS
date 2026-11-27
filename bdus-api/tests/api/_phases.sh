@@ -550,6 +550,12 @@ run_tests() {
       --variable "jwt=${JWT}"
   fi
 
+  if should_run "64"; then
+    header "Phase 64 — Deleting a record: its files"
+    run_phase "Record delete: files" "64_record_delete_files.hurl" \
+      --variable "jwt=${JWT}"
+  fi
+
   # Phase 10 always runs: drops crud_test tables and logs out
   header "Phase 10 — Cleanup"
   run_phase "Cleanup" "10_cleanup.hurl" \

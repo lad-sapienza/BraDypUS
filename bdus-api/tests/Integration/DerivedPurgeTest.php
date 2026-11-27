@@ -57,15 +57,16 @@ class DerivedPurgeTest extends BdusTestCase
         @unlink($other);
     }
 
-    public function testErasingARecordPurgesVersionsOfItsExclusiveFiles(): void
+    public function testErasingARecordAndItsFilesPurgesTheirVersions(): void
     {
         $b = $this->cache(static::fileUuid(2));
 
-        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'items', 'id' => 1], []);
+        $ctrl = $this->makeController('Bdus\\Controllers\\Record', ['tb' => 'items', 'id' => 1], ['files' => 'delete']);
         $res  = $this->callController($ctrl, 'erase');
 
         $this->assertSame('success', $res['status'], json_encode($res));
         $this->assertFileDoesNotExist($b);
+        $this->assertContains(2, $res['deleted_files']);
     }
 
     /** A real PNG on disk (GD), returns its path. */

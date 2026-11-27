@@ -109,6 +109,14 @@ existing file. The original description, keywords, attribution, and all record l
 preserved. If the new file has a different extension, the old physical file is
 deleted.
 
+## Deleting a record: its files <Badge type="tip" text="files rework" />
+
+When you delete a record, the files **only it uses** are not deleted by surprise: the delete dialog asks, for
+each one, to *keep* it (an orphan) or *delete* it with the record. Over the API, `DELETE /api/record/{tb}/{id}`
+takes `files` (`"keep"` — the default —, `"delete"`, or `{ "<fileId>": "delete" | "keep" }`) and answers with
+`orphaned_files` and `deleted_files`; `GET /api/record/{tb}/files-before-delete?id=N` lists the files the
+question is about. The MCP tool `records_delete` takes the same choice (`files`, default `keep`).
+
 ## Deleting a file
 
 Click the **trash** icon in the Actions column to permanently delete a file.

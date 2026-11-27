@@ -291,20 +291,43 @@
   >
     <div class="plugin-delete-body">
       <WarningOutlined class="plugin-delete-icon" />
-      <p>{{ t('confirm_delete_record_with_plugins') }}</p>
-      <ul class="plugin-delete-list">
-        <li v-for="plg in pluginDeleteDialog.plugins" :key="plg.tb">
-          <strong>{{ plg.label }}</strong>
-          <span class="plugin-delete-count">{{ plg.count }}</span>
-        </li>
-      </ul>
-      <p class="plugin-delete-hint">{{ t('confirm_delete_plugins_hint') }}</p>
+      <template v-if="pluginDeleteDialog.plugins.length">
+        <p>{{ t('confirm_delete_record_with_plugins') }}</p>
+        <ul class="plugin-delete-list">
+          <li v-for="plg in pluginDeleteDialog.plugins" :key="plg.tb">
+            <strong>{{ plg.label }}</strong>
+            <span class="plugin-delete-count">{{ plg.count }}</span>
+          </li>
+        </ul>
+        <p class="plugin-delete-hint">{{ t('confirm_delete_plugins_hint') }}</p>
+      </template>
+      <p v-else>{{ t('confirm_delete_record') }}</p>
+
+      <!-- Files only this record uses: delete them too, or keep them (they become orphans) -->
+      <div v-if="pluginDeleteDialog.files.length" class="delete-files" data-test="delete-files">
+        <p class="delete-files-title">{{ t('confirm_delete_record_files') }}</p>
+        <div class="delete-files-bulk">
+          <AButton size="small" @click="setAllChoices(pluginDeleteDialog.choices, 'keep')">{{ t('files_keep_all') }}</AButton>
+          <AButton size="small" danger @click="setAllChoices(pluginDeleteDialog.choices, 'delete')">{{ t('files_delete_all') }}</AButton>
+        </div>
+        <ul class="delete-files-list">
+          <li v-for="f in pluginDeleteDialog.files" :key="f.id">
+            <img v-if="f.is_image" :src="thumbUrl(f, '')" class="delete-files-thumb" alt="" />
+            <span class="delete-files-name" :title="`${f.filename}.${f.ext}`">{{ f.filename }}.{{ f.ext }}</span>
+            <ARadio.Group v-model:value="pluginDeleteDialog.choices[f.id]" size="small" button-style="solid">
+              <ARadio.Button value="keep">{{ t('file_keep') }}</ARadio.Button>
+              <ARadio.Button value="delete">{{ t('file_delete') }}</ARadio.Button>
+            </ARadio.Group>
+          </li>
+        </ul>
+        <p class="plugin-delete-hint">{{ t('files_keep_hint') }}</p>
+      </div>
     </div>
     <template #footer>
       <AButton type="text" @click="pluginDeleteDialog.visible = false">{{ t('cancel') }}</AButton>
       <AButton danger :loading="pluginDeleteDialog.deleting" @click="doDeleteWithPlugins">
         <template #icon><DeleteOutlined /></template>
-        {{ t('delete_plugins_and_record') }}
+        {{ pluginDeleteDialog.plugins.length ? t('delete_plugins_and_record') : t('delete') }}
       </AButton>
     </template>
   </AModal>
@@ -334,9 +357,12 @@ import {
   Tag as ATag,
   Alert as AAlert,
   Spin as ASpin,
-  Select as ASelect
+  Select as ASelect,
+  Radio as ARadio
 } from 'ant-design-vue'
 import { api }        from '@/api'
+import { thumbUrl }   from '@/utils/thumbUrl'
+import { choicesFor, setAll as setAllChoices, filesParam, summary as filesSummary } from '@/utils/deleteFiles'
 import { useI18n }    from '@/i18n'
 import { appStorage } from '@/utils/storage'
 import { useListNavigation } from '@/stores/listNavigation'
@@ -922,37 +948,44 @@ async function duplicateRecord() {
 const pluginDeleteDialog = reactive({
   visible:  false,
   plugins:  [],
+  files:    [],   // files only this record uses: the user decides for each one
+  choices:  {},   // fileId -> 'keep' | 'delete'
   deleting: false,
 })
 
 async function confirmDelete() {
+  const simpleConfirm = () => confirm.require({
+    message:  t('confirm_delete_record'),
+    header:   t('delete'),
+    icon:     'pi pi-exclamation-triangle',
+    severity: 'danger',
+    accept:   doDelete,
+  })
+
   try {
-    const res = await api.get(`/api/record/${tb.value}/check-plugins-before-delete`, { id: id.value })
+    // What would be left behind: plugin rows, and files only this record uses
+    const [res, filesRes] = await Promise.all([
+      api.get(`/api/record/${tb.value}/check-plugins-before-delete`, { id: id.value }),
+      api.get(`/api/record/${tb.value}/files-before-delete`, { id: id.value }).catch(() => null),
+    ])
     if (res.status !== 'success') throw new Error()
 
-    if (!res.plugins || res.plugins.length === 0) {
-      // No plugin data → simple confirm
-      confirm.require({
-        message:  t('confirm_delete_record'),
-        header:   t('delete'),
-        icon:     'pi pi-exclamation-triangle',
-        severity: 'danger',
-        accept:   doDelete,
-      })
+    const plugins = res.plugins ?? []
+    const files   = filesRes?.status === 'success' ? (filesRes.files ?? []) : []
+
+    if (plugins.length === 0 && files.length === 0) {
+      // Nothing hangs off it → simple confirm
+      simpleConfirm()
     } else {
-      // Plugin rows exist → open the enhanced dialog
-      pluginDeleteDialog.plugins = res.plugins
+      // Plugin rows and/or files → the enhanced dialog (files start on "keep")
+      pluginDeleteDialog.plugins = plugins
+      pluginDeleteDialog.files   = files
+      pluginDeleteDialog.choices = choicesFor(files)
       pluginDeleteDialog.visible = true
     }
   } catch {
-    // If the check fails, fall back to simple confirm
-    confirm.require({
-      message:  t('confirm_delete_record'),
-      header:   t('delete'),
-      icon:     'pi pi-exclamation-triangle',
-      severity: 'danger',
-      accept:   doDelete,
-    })
+    // If the check fails, fall back to simple confirm (files are then kept)
+    simpleConfirm()
   }
 }
 
@@ -973,16 +1006,23 @@ async function doDelete() {
 async function doDeleteWithPlugins() {
   pluginDeleteDialog.deleting = true
   try {
-    // 1. Delete all plugin rows
-    await api.delete(`/api/record/${tb.value}/${id.value}/plugins`)
-    // 2. Delete the main record
-    const res = await api.delete(`/api/record/${tb.value}/${id.value}`)
+    // 1. Delete all plugin rows (only when there are some)
+    if (pluginDeleteDialog.plugins.length) {
+      await api.delete(`/api/record/${tb.value}/${id.value}/plugins`)
+    }
+    // 2. Delete the main record, with the answer about its files
+    const res = await api.delete(`/api/record/${tb.value}/${id.value}`, {
+      files: filesParam(pluginDeleteDialog.files, pluginDeleteDialog.choices),
+    })
     pluginDeleteDialog.visible = false
     if (res.status === 'error') {
       toast.add({ severity: 'error', summary: t('generic_error'), detail: responseMessage(res, t), life: 5000 })
       return
     }
     toast.add({ severity: 'success', summary: t('delete'), detail: t('all_record_deleted'), life: 3000 })
+    if (res.orphaned_files?.length) {
+      toast.add({ severity: 'info', summary: t('files'), detail: `${t('files_left_orphans')}: ${res.orphaned_files.length}`, life: 6000 })
+    }
     router.push(backTarget.value)
   } catch (e) {
     toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
@@ -1328,4 +1368,34 @@ watch(() => route.params.id, fetchRecord)
   color: var(--p-text-muted-color);
   margin: 0;
 }
+.delete-files {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+.delete-files-title { margin: 0; font-weight: 600; }
+.delete-files-bulk { display: flex; gap: 0.5rem; }
+.delete-files-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.delete-files-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.5rem;
+  background: var(--p-content-hover-background);
+  border-radius: 4px;
+  font-size: 0.86rem;
+}
+.delete-files-thumb { width: 36px; height: 36px; object-fit: cover; border-radius: 3px; flex: none; }
+.delete-files-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 </style>

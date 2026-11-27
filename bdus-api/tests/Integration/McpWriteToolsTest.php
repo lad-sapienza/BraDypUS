@@ -362,6 +362,31 @@ class McpWriteToolsTest extends BdusTestCase
         $this->assertNotEmpty(static::$db->query('SELECT 1 FROM items WHERE id = 5'));
     }
 
+    public function testDeleteKeepsFilesOnlyThoseRecordsUseUnlessAskedToDeleteThem(): void
+    {
+        $a = (int) static::$db->query("INSERT INTO items (creator, name, description, status) VALUES ('t', 'mcp del A', 'd', 'draft')", [], 'id');
+        $b = (int) static::$db->query("INSERT INTO items (creator, name, description, status) VALUES ('t', 'mcp del B', 'd', 'draft')", [], 'id');
+        static::insertFile(951, 'png', 'only');
+        static::insertFile(952, 'png', 'shared');
+        static::$db->exec("INSERT INTO bdus_file_links (file_id, table_name, record_id, sort) VALUES (951, 'items', {$a}, 1), (952, 'items', {$a}, 2), (952, 'items', {$b}, 1)");
+
+        $kept = $this->tool('records_delete', ['table' => 'items', 'ids' => [$a]]);
+        $this->assertFalse($kept['__isError'], json_encode($kept));
+        $this->assertSame([951], $kept['orphaned_files'], 'default: keep, as an orphan');
+        $this->assertSame([], $kept['deleted_files']);
+        $this->assertSame(1, (int) static::$db->query('SELECT COUNT(*) AS n FROM bdus_files WHERE id = 951', [], 'read')[0]['n']);
+
+        $gone = $this->tool('records_delete', ['table' => 'items', 'ids' => [$b], 'files' => 'delete']);
+        $this->assertSame([952], $gone['deleted_files'], 'now only B uses the shared file');
+        $this->assertSame(0, (int) static::$db->query('SELECT COUNT(*) AS n FROM bdus_files WHERE id = 952', [], 'read')[0]['n']);
+
+        $bad = $this->tool('records_delete', ['table' => 'items', 'ids' => [999999], 'files' => 'burn']);
+        $this->assertSame('invalid_parameters', $bad['code']);
+
+        static::$db->exec('DELETE FROM bdus_file_links WHERE file_id IN (951, 952)');
+        static::$db->exec('DELETE FROM bdus_files WHERE id IN (951, 952)');
+    }
+
     public function testDeleteIsAllOrNothing(): void
     {
         $res = $this->tool('records_delete', ['table' => 'items', 'ids' => [5, 99999]]);

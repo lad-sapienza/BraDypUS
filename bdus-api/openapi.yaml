@@ -999,16 +999,53 @@ paths:
         An id that no longer exists is not counted as deleted. A single missing id gives
         `error` / `no_record_deleted`; in a batch it is counted in `failed`
         (`partially_deleted_with_count`).
+
+        **Files.** The links of the files attached to a record always go with it. A file attached
+        **only** to the deleted records is, by default, **kept** as an orphan (a file is never lost
+        without being asked); send `files: "delete"` to delete such files too (row, binary and derived
+        versions), or `files: { "<fileId>": "delete" | "keep" }` to choose file by file
+        (`GET /api/record/{tb}/files-before-delete` lists them). A file shared with a record that stays
+        is never deleted here. The response lists `orphaned_files` and `deleted_files` (file ids).
+        The files table itself cannot be erased this way: `files_are_deleted_as_files`.
       parameters:
         - $ref: '#/components/parameters/tb'
         - $ref: '#/components/parameters/id'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                files:
+                  description: '"keep" (default) or "delete" for every file used only by these records, or a map fileId → "delete"|"keep"'
+                  oneOf:
+                    - type: string
+                      enum: [keep, delete]
+                    - type: object
+                      additionalProperties:
+                        type: string
+                        enum: [keep, delete]
       responses:
         '200':
           description: Deletion result
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CodedResult'
+                allOf:
+                  - $ref: '#/components/schemas/CodedResult'
+                  - type: object
+                    properties:
+                      deleted:
+                        type: integer
+                      orphaned_files:
+                        type: array
+                        items: { type: integer }
+                        description: Files left attached to no record (kept)
+                      deleted_files:
+                        type: array
+                        items: { type: integer }
+                        description: Files deleted together with the records
         '403':
           $ref: '#/components/responses/Forbidden'
 
@@ -1854,6 +1891,55 @@ paths:
           $ref: '#/components/responses/Forbidden'
 
   # ── Deleted records ──────────────────────────────────────────────────────
+
+  /api/record/{tb}/files-before-delete:
+    get:
+      operationId: getRecordFilesBeforeDeleteByTb
+      tags: [records, files]
+      summary: Files that deleting records would leave without any record
+      description: |
+        The files attached **only** to the given records (a file shared with a record that stays is not
+        listed): the ones the interface asks about ("delete the file too, or keep it?") before
+        `DELETE /api/record/{tb}/{id}`, whose `files` parameter carries the answer.
+
+        Needs the right to delete each record; otherwise `not_enough_privilege`.
+      parameters:
+        - $ref: '#/components/parameters/tb'
+        - name: id
+          in: query
+          required: true
+          description: A record id, or `id[]` repeated for several
+          schema:
+            oneOf:
+              - type: integer
+              - type: array
+                items: { type: integer }
+      responses:
+        '200':
+          description: The files
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      files:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id: { type: integer }
+                            uuid: { type: string, format: uuid }
+                            ext: { type: string }
+                            filename: { type: string }
+                            is_image: { type: boolean }
+                            record_ids:
+                              type: array
+                              items: { type: integer }
+                              description: Which of the given records the file is attached to
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   /api/record/{tb}/check-plugins-before-delete:
     get:

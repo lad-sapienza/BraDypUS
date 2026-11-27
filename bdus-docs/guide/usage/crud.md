@@ -94,6 +94,12 @@ current values pre-filled. **Ctrl+S** / **Cmd+S** saves and keeps the form open.
 In RecordView, click the **Delete** button in the record header. A confirmation
 dialog prevents accidental deletion.
 
+If the record has **files that only it uses**, the dialog lists them and asks, **for each one**, whether to
+**keep** it (it stays in the files page without any record, as an *orphan*, and you can attach or delete it
+later) or **delete** it together with the record; *Keep all* / *Delete all* set them at once. The default is
+*keep*: a file is never lost without being asked. A file that is also attached to another record is not
+listed and is never deleted: only the link to the deleted record goes.
+
 Deleted records are soft-deleted and can be recovered from
 [Deleted records](/guide/usage/deleted-records) for a configurable retention period.
 

@@ -282,6 +282,12 @@ lower-case uuid, an extension of letters and digits) because the result is a fil
 `Store::create()` inserts the `bdus_files` row and returns `{id, uuid}`; `Store::remove()` deletes
 the binary and its derived versions (best effort). Nothing else builds a file path.
 
+**Repair and checks.** `File\UuidBackfill` (assign missing uuids, rename binaries named by id, drop the id-keyed
+cache; `plan()` is the dry run) is the work of M060 and of `bin/files-backfill-uuid.php`; `File\LegacyUrls`
+finds old-style addresses (`projects/{app}/files/{id}.ext`, `/api/file/{preset}/{id}.webp`) in text fields,
+templates and the welcome text, read-only (`--scan-urls`); the migration verifier reports files without a uuid
+or whose binary is still named by id (`file_uuids`).
+
 **Presets (`Image\Presets`)** carry `access` (`public` | `inherit`, default `inherit`) and `enabled`
 (default true; the system `thumb` is always enabled). `File::serveDerived` serves anonymously only when the
 preset is public **and** `bdus_files.public = 1`; otherwise it needs a principal who may read the file

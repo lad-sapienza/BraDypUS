@@ -9,5 +9,13 @@ RewriteEngine On
 # Caddy equivalent:
 #   try_files {path} /index.php
 
+# Nothing under projects/ is served as a file, except what a browser must fetch by address: the
+# uploaded files (until they are served through the API) and the map layers in geodata/. Everything
+# else there (the SQLite database in db/, backups/, export/, templates/, migrations/, the derived-image
+# cache/ …) must never be reachable without logging in. Same for the root cache/.
+# (A 404, not a 403: a path that is not served looks like one that does not exist.)
+RewriteRule ^projects/[^/]+/(files|geodata)/ - [L]
+RewriteRule ^(projects|cache)(/|$) - [R=404,L]
+
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ index.php [L]

@@ -279,7 +279,7 @@ bdus_cfg_templates     — Print templates (JSON, one row per table + name)
 bdus_assemblage_analyses — Saved assemblage analyses
 bdus_charts            — User-defined charts
 bdus_file_links        — File ↔ record associations
-bdus_files             — Uploaded file metadata
+bdus_files             — Uploaded file metadata (integer id = internal key; uuid = disk name and URLs; public flag)
 bdus_group_rules       — Per-group, per-table CRUD grants (optional JSON row filter, optional `enforce` map of accepted values)
 bdus_mcp_prompts       — Prompt templates offered to MCP clients (name, title, description, arguments JSON, template, sort)
 bdus_groups            — User groups (optional JSON `attrs`, read by rules as `$GROUP.<key>`)

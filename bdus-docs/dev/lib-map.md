@@ -271,15 +271,21 @@ FreeType, both present in the image).
 **`Image\Derivative`** builds one version of one file: `generate($src, $dest, $preset, $attribution)`
 decodes, crops (`cover`) or scales down (`inside`), encodes WebP/JPG into a hidden temp file
 and renames it into place. It refuses unreadable sources, unsupported types and sources over
-100 megapixels. `purgeFile($projDir, $id)` removes every version of a file
-(`projects/{app}/cache/*/{id}.*`, failure markers included); `purgePreset()` empties a
+100 megapixels. `purgeFile($projDir, $uuid)` removes every version of a file
+(`projects/{app}/cache/*/{uuid}.*`, failure markers included); `purgePreset()` empties a
 preset's folder.
 
-**Serving and lifecycle.** `File::serveDerived` (`GET /api/file/{preset}/{id}.{ext}`, public)
-looks the preset up, generates on first request into `cache/{preset}/{id}.{ext}` and answers
+**Naming: `File\Store`.** The single source of truth for where a binary lives:
+`projects/{app}/files/{uuid}.{ext}`, with `bdus_files.uuid` a random v4 value (`Store::newUuid()`)
+and the integer `id` only the internal key. `Store::path()` validates both parts (a canonical
+lower-case uuid, an extension of letters and digits) because the result is a filesystem path;
+`Store::create()` inserts the `bdus_files` row and returns `{id, uuid}`; `Store::remove()` deletes
+the binary and its derived versions (best effort). Nothing else builds a file path.
+
+**Serving and lifecycle.** `File::serveDerived` (`GET /api/file/{preset}/{uuid}.{ext}`, public; the integer id is not an address)
+looks the preset up, generates on first request into `cache/{preset}/{uuid}.{ext}` and answers
 with `ETag` revalidation. A failure is a plain 404; a source that failed leaves
-`{id}.{ext}.fail` and is not retried until it changes. The versions are a rebuildable mirror:
+`{uuid}.{ext}.fail` and is not retried until it changes. The versions are a rebuildable mirror:
 `purgeFile` is called wherever a file or its metadata changes (`File::replaceFile`,
-`File::updateFile`, `Record::deleteFile`, `Persist` record delete, and the id-reuse guard in
-`Record::uploadFile` and `Import::importPhotos`), and `Config::save_app_properties` purges the
+`File::updateFile`, `Record::deleteFile`, `Persist` record delete; all of them name the file by its uuid through `File\Store`), and `Config::save_app_properties` purges the
 folder of a preset that was changed or removed. `cache/` is excluded from `docker-backup.sh`.

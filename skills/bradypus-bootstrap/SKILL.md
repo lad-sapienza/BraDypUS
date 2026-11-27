@@ -185,9 +185,9 @@ POST {base}/{app}/api/import/data
   default when both given) or `inside` (whole image, never enlarged), `format` `webp`|`jpg`, `quality` 1–100, max 20;
   `thumb`, 200×200 inside WebP, always exists) in the app settings (super-admin: `GET`/`PUT /api/config/app`, send the
   whole `imagePresets` array; a preset may add `watermark` `{text, position, color, background, opacity, margin, size}` — text ≤ 200 chars, only `{{attribution}}` as placeholder, drawn on derived versions only, no protection for the public original). Each image is then served, generated on first request and
-  cached, at the public URL `GET /{app}/api/file/{preset}/{file_id}.{webp|jpg}`; unknown preset,
+  cached, at the public URL `GET /{app}/api/file/{preset}/{file_uuid}.{webp|jpg}` (`uuid` is returned with every file; the integer id is not an address); unknown preset,
   wrong extension or non-image is a plain 404. Originals and derived files are public and
-  reachable by sequential id (no access control yet): tell the user before loading
+  reachable by their uuid address (no access control yet): tell the user before loading
   anything private. Ask which sizes the frontend needs *before* the photo import.
 - Needs editor privilege or higher.
 

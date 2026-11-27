@@ -170,7 +170,9 @@ Key behaviours:
   `app_mismatch` (the URL app and the JWT app disagree), the token is cleared
   and the browser is redirected to `/login` (full reload).
 - **Asset URLs** — `assetUrl(path)` prepends `VITE_API_BASE` for uploaded
-  files and images (e.g. `assetUrl('projects/myapp/files/42.jpg')`); asset
+  files and images (e.g. `assetUrl('projects/myapp/files/3f2b8c1e-5d4a-4b7e-9a10-6c2d8e4f1a77.jpg')`). File paths are built with
+  `originalPath()` / `thumbPath()` from `utils/filePaths.js`, from the file's `uuid`, never from the
+  integer id; asset
   trees already carry the app in the path and are **not** rewritten.
 - **`apiUrl(path)`** — absolute, app-scoped URL for browser-native navigations
   (`window.open` CSV export, backup download) where no `fetch` (and no auth

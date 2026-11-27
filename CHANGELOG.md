@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Files are addressed by a random `uuid`, not by their integer id** (first step of making files a first-class table, plan in `bdus-docs/dev/files-as-table-plan.md`). `bdus_files` gets a `uuid` column (random v4, unique) and a `public` flag; the binary is stored as `projects/{app}/files/{uuid}.{ext}` and its derived versions are cached and served by uuid: `GET /{app}/api/file/{preset}/{uuid}.{ext}` (the integer id is no longer an address and answers `404`). The integer `id` stays the internal key (links, `PATCH`/`DELETE /api/file/{id}`, sorting). File objects returned by the API (`GET /api/files`, record `files`, upload, link, `ids_only`, `fields=files.uuid`) carry `uuid`. Migration **M060** adds the columns, gives every file its uuid, **renames the files on disk**, empties the derived-image cache (rebuilt on demand) and marks the existing files `public = 1`, so nothing published today disappears; it is idempotent and resumable, and it needs a backup first. **Breaking:** any link to `projects/{app}/files/{id}.{ext}` or to `/api/file/thumb/{id}.webp` outside BraDypUS stops working; take the uuid from the API.
+
 ## [5.29.4] - 2026-11-27
 
 ### Security

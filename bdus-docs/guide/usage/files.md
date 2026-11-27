@@ -112,10 +112,20 @@ e.g. /myapp/api/file/thumb/42.webp
 
 The gallery and this page show the `thumb` version; clicking an image opens the original.
 
-::: warning Files are publicly reachable by id
-Originals (`projects/{app}/files/{id}.{ext}`) and derived versions are served without
-authentication, and ids are sequential. Do not upload material that must stay private.
-Access control for files is a separate, future feature.
+::: warning Files are still reachable by anyone who knows the address
+Originals (`projects/{app}/files/{uuid}.{ext}`) and derived versions are served without
+authentication. Since 5.30 the address contains a random **uuid** instead of the sequential
+id, so it cannot be guessed by counting, but anyone who has the address can read the file.
+Do not upload material that must stay private. Access control for files is the next step of
+the files rework (`bdus-docs/dev/files-as-table-plan`).
+:::
+
+::: tip Upgrading: file addresses changed
+The upgrade (migration M060) gives every file a uuid and **renames the files on disk** from
+`{id}.{ext}` to `{uuid}.{ext}`; the derived-image cache is emptied and rebuilt on demand.
+A link to `projects/{app}/files/42.jpg` or to `/api/file/thumb/42.webp` placed outside
+BraDypUS (another website, a document) stops working: take the new address from the API
+(`uuid` in `GET /api/files` or in the record's `files`). Take a backup first.
 :::
 
 ## File actions in RecordView

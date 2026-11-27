@@ -34,6 +34,9 @@ Click **Preview** to continue.
   existing records. If a record with that value already exists it is updated
   (upsert); otherwise a new record is inserted.
 
+An **empty cell** imported into a numeric, boolean or date column is stored as `NULL`
+<Badge type="tip" text="v5.29.3" /> (an empty cell in a text column stays an empty text).
+
 **Step 3 — Result:** A summary shows how many records were inserted, updated,
 and how many rows could not be matched.
 

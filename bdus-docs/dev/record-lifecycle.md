@@ -324,10 +324,16 @@ goes through it and gets the same rules, in this order:
 4. the values a group rule pins — `Access::enforceValues()`;
 5. validation — `Record\Validator::validatePayload()`: `required`, `int`,
    `real`, `email`, `min` / `max`, `max_length`, `pattern`, `no_dupl`,
-   `valid_wkt`, and the existence of a lookup target (`fk_not_found`);
+   `valid_wkt`, and the existence of a lookup target (`fk_not_found`); an empty value
+   for a numeric / boolean / date column whose database column is `NOT NULL` without a
+   default is `required` too;
 6. the write: `Record\Edit` → `persist()` for an update; for a **new** record
    the model is built directly (`rec_id => null`) and written with
    `Record\Persist::all()`. Radiocarbon plugin rows are calibrated server-side.
+   Every value goes through `Record\ColumnValue::forColumn()`: an empty value for a
+   numeric, boolean, date or timestamp column (by the field's `db_type`) is written as
+   `NULL`, because PostgreSQL refuses `''` there; text columns keep it. The CSV import
+   applies the same rule.
 
 `Record\Validator` never writes. `Record\Save::check()` runs steps 1–5 without
 step 6 — a dry run — and returns the values as they would be written and the

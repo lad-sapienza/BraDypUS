@@ -1097,6 +1097,9 @@ paths:
         that is not a plain value (`invalid_type`), a lookup id that does not exist
         in the table it points to (`fk_not_found`), and, **on create**, a required
         field (`required` / `not_empty`) left out altogether, plugin rows included.
+        An empty value (`''`) for a numeric, boolean, date or timestamp field is stored
+        as `NULL` (since 5.29.3); when the database column cannot be `NULL` and has no
+        default, the empty value is a `required` error for that field.
         A new plugin row is always linked to the record being saved: an `id_link`
         sent by the client is ignored. If a step after the record itself fails on
         create, the record is removed again.

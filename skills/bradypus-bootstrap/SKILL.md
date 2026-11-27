@@ -171,6 +171,9 @@ POST {base}/{app}/api/import/data
   value is **inserted**. Re-running an import is therefore safe and idempotent.
 - The import is **one transaction**: any bad row rolls everything back and writes
   nothing. Fix the file and run it again.
+- An empty cell is stored as `NULL` in numeric, boolean and date columns and as an empty
+  string in text columns (BraDypUS ≥ 5.29.3; before, PostgreSQL refused `''` in an integer
+  column). A column that is `NOT NULL` without a default cannot take an empty value.
 - GeoJSON replaces the geometry of records already present (the table needs
   `bdus:geodata=1`): `POST /api/import/preview-file` with multipart `type=geojson`,
   `tb=<table>`, `file=@features.geojson` → `temp_id`, `geo_props`; then

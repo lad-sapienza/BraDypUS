@@ -112,17 +112,12 @@ class Persist
     // ── Public single-section methods ────────────────────────────────────────
 
     /**
-     * Value as it must reach the column: an empty value (`''`, blank text) in a DATE or REAL
-     * column is stored as NULL, because PostgreSQL and MySQL refuse `''` there.
-     * Columns of any other type are left as they are.
+     * Value as it must reach the column: an empty value in a numeric, boolean, date or timestamp
+     * column is stored as NULL (see Record\ColumnValue). Other types are left as they are.
      */
     private function forColumn(string $tb, string $fld, mixed $val): mixed
     {
-        if (!is_string($val) || trim($val) !== '') {
-            return $val;
-        }
-        $type = strtoupper((string) $this->cfg->get("tables.{$tb}.fields.{$fld}.db_type"));
-        return in_array($type, ['DATE', 'REAL'], true) ? null : $val;
+        return ColumnValue::forColumn($this->cfg, $tb, $fld, $val);
     }
 
     /**

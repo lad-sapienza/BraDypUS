@@ -255,6 +255,44 @@ class Validator
     return $this->columnLengths[$tb][$fld] ?? null;
   }
 
+  /** @var array<string,array<string,bool>> table => column => cannot be NULL and has no default */
+  private array $columnRequired = [];
+
+  /** True when the physical column is NOT NULL without a default (an omitted or empty value cannot be stored). */
+  private function columnIsRequired(string $tb, string $fld): bool
+  {
+    if (!isset($this->columnRequired[$tb])) {
+      $this->columnRequired[$tb] = [];
+      $engine = $this->db->getEngine();
+      try {
+        if ($engine === 'sqlite') {
+          $rows = $this->db->query("PRAGMA table_info('" . str_replace("'", "''", $tb) . "')", [], 'read') ?: [];
+          foreach ($rows as $r) {
+            $this->columnRequired[$tb][(string) $r['name']] = (int) $r['notnull'] === 1
+              && $r['dflt_value'] === null && (int) $r['pk'] === 0;
+          }
+        } else {
+          $schema = $engine === 'mysql' ? 'DATABASE()' : 'current_schema()';
+          $rows = $this->db->query(
+            "SELECT column_name AS c, is_nullable AS n, column_default AS d"
+              . ($engine === 'mysql' ? ", extra AS x" : "")
+              . " FROM information_schema.columns WHERE table_schema = {$schema} AND table_name = ?",
+            [$tb],
+            'read'
+          ) ?: [];
+          foreach ($rows as $r) {
+            $auto = stripos((string) ($r['x'] ?? ''), 'auto_increment') !== false;
+            $this->columnRequired[$tb][(string) $r['c']] = strtoupper((string) $r['n']) === 'NO'
+              && $r['d'] === null && !$auto;
+          }
+        }
+      } catch (\Throwable) {
+        // introspection is a courtesy: the database itself stays the last guard
+      }
+    }
+    return $this->columnRequired[$tb][$fld] ?? false;
+  }
+
   /**
    * Validates a single field value against its config rules.
    * Returns an array of error objects (empty = valid).
@@ -282,6 +320,15 @@ class Validator
 
     // required / not_empty
     if ((in_array('required', $check, true) || in_array('not_empty', $check, true)) && $isEmpty) {
+      $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'required'];
+    }
+
+    // An empty value is stored as NULL in a numeric/boolean/date column (Record\ColumnValue):
+    // where the column cannot hold NULL, say so as a required field, not as a database error.
+    if ($isEmpty && !in_array($fldName, ['id', 'creator', 'id_link'], true)
+        && !(in_array('required', $check, true) || in_array('not_empty', $check, true))
+        && \Record\ColumnValue::emptyIsNull($cfg['db_type'] ?? null)
+        && $this->columnIsRequired($tb, $fldName)) {
       $errors[] = ['field' => $fldName, 'label' => $label, 'rule' => 'required'];
     }
 

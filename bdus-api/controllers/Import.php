@@ -332,6 +332,11 @@ class Import extends \Bdus\Controller
                 }
                 if (empty($data)) continue;
 
+                // An empty cell in a numeric/boolean/date column means NULL (PostgreSQL refuses '').
+                foreach ($data as $f => $v) {
+                    $data[$f] = \Record\ColumnValue::forColumn($this->cfg, $tb, (string) $f, $v);
+                }
+
                 $existing = $this->db->query(
                     "SELECT id FROM {$tb} WHERE {$keyField} = ?",
                     [$keyValue],

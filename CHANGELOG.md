@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.29.3] - 2026-11-27
+
 ### Fixed
 
 - **PostgreSQL: a record with an empty integer field could not be saved** (`invalid input syntax for type integer: ""`, shown as "Database error"). An empty value in a numeric (`INTEGER`, `BIGINT`, `SMALLINT`, `NUMERIC`, `DECIMAL`, …), boolean, date or timestamp column is now stored as NULL, as it already was for `DATE` and `REAL`; text columns keep the empty string. It applies to the record form, the REST API, MCP writes (all through `Record\Persist`) and to the CSV import, which wrote empty cells as `''`. When the column cannot be NULL and has no default, the save answers a clear `required` validation error for that field instead of a database error. Documented in the field-types guide, the import guide, the record-lifecycle developer page, `openapi.yaml` and the bootstrap skill.

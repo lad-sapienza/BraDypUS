@@ -11,11 +11,14 @@
         <img v-if="file.is_image" :src="thumbUrl(file, '')" :alt="file.filename" class="drawer-thumb" />
         <component v-else :is="fileIcon(file.ext)" class="drawer-icon" />
       </div>
+      <div v-if="file.can_update" class="drawer-replace">
+        <AButton data-test="file-details-replace" @click="$emit('replace', file)"><SyncOutlined /> {{ t('replace_file') }}</AButton>
+      </div>
 
       <AAlert v-if="!file.can_update" type="info" show-icon :closable="false" :message="t('files_read_only_note')" class="drawer-note" />
 
       <form class="drawer-form" data-test="file-details-form" @submit.prevent="save">
-        <div v-for="f in formFields" :key="f.name" class="drawer-field">
+        <div v-for="f in formFields" :key="f.name" class="drawer-field" :class="{ 'drawer-field-inline': f.type === 'boolean' }">
           <label :for="`fd-${f.name}`">{{ f.label }}</label>
 
           <ASwitch v-if="f.type === 'boolean'" :id="`fd-${f.name}`" :checked="!!form[f.name]" :disabled="!file.can_update"
@@ -54,6 +57,7 @@ import { Drawer as ADrawer, Button as AButton, Input as AInput, Switch as ASwitc
 import { useI18n } from '@/i18n'
 import { thumbUrl } from '@/utils/thumbUrl'
 import { changedFields, editableNames, snapshotOf, stripExt } from '@/utils/filesList'
+import { SyncOutlined } from '@ant-design/icons-vue'
 import { fileIcon } from './fileIcon'
 
 const ATextarea = AInput.TextArea
@@ -65,7 +69,7 @@ const props = defineProps({
   appName: { type: String,  default: '' },
   saving:  { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:open', 'save'])
+const emit = defineEmits(['update:open', 'save', 'replace'])
 const { t } = useI18n()
 
 const form = reactive({})
@@ -96,6 +100,8 @@ function save() {
 .drawer-media { display: flex; justify-content: center; margin-bottom: 1rem; }
 .drawer-thumb { max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid var(--p-content-border-color); }
 .drawer-icon { font-size: 4rem; color: var(--p-text-muted-color); }
+.drawer-replace { display: flex; justify-content: center; margin-bottom: 1rem; }
+.drawer-field-inline { flex-direction: row; align-items: center; gap: 0.6rem; }
 .drawer-note { margin-bottom: 0.8rem; }
 .drawer-form { display: flex; flex-direction: column; gap: 0.8rem; }
 .drawer-field { display: flex; flex-direction: column; gap: 0.25rem; }

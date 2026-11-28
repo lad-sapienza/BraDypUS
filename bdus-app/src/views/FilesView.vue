@@ -201,6 +201,7 @@
       :app-name="appName"
       :saving="detailsSaving"
       @save="onDetailsSave"
+      @replace="startReplace"
     />
 
     <!-- File preview Dialog -->

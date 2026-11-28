@@ -124,6 +124,7 @@ In RecordView (edit mode), the file gallery panel allows:
 | **Upload** | Click *Upload file* or drag & drop a file anywhere on the drop zone |
 | **Link existing** | Click *Link existing file* to pick a file already in the library — no re-upload needed |
 | **Reorder** | Drag the grip handle to change the display order |
+| **Edit** <Badge type="tip" text="v5.31.0" /> | Click the pencil icon to open the file's details (description, keywords, custom fields, *public*, replace the binary) in a side panel, without leaving the record; your unsaved edits of the record are kept. Only for files you may change |
 | **Unlink** | Click the chain icon (🔗) to remove the file from *this record only* — the file is kept in the library |
 | **Delete** | Click the trash icon to permanently delete the file from the whole application |
 

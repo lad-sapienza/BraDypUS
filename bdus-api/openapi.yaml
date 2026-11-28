@@ -2195,6 +2195,11 @@ paths:
             enum: [0, 1]
             default: 0
           description: When 1, return only files not linked to any record
+        - name: ids
+          in: query
+          schema:
+            type: string
+          description: Comma-separated file ids (at most 100); only these files (and only the ones the caller may read) are returned
         - name: search
           in: query
           schema:

@@ -108,6 +108,15 @@ class FileCustomFieldsTest extends BdusTestCase
         $this->assertEqualsCanonicalizing(['Archive', 'Museum'], array_column($res['options'], 'value'));
     }
 
+    public function testTheListCanBeLimitedToTheGivenIds(): void
+    {
+        $ids = fn(string $v) => array_column($this->fileCall('getFiles', ['ids' => $v])['files'], 'id');
+
+        $this->assertSame([801], $ids('801'));
+        $this->assertEqualsCanonicalizing([801, 802], $ids('801,802,abc'));
+        $this->assertSame([], $ids('abc'), 'nothing valid: nothing, not everything');
+    }
+
     public function testBooleansAreReturnedAsBooleans(): void
     {
         static::$db->exec('UPDATE bdus_files SET public = 1 WHERE id = 801');

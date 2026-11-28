@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **File details drawer (#90).** It now offers **Replace file** (for the files you may change), and the *Public* switch keeps its natural size next to its label instead of filling the width.
 
+- **Edit a file from the record (#89).** In a record's edit mode each file has an **Edit** button that opens the same details drawer as the Files page (all fields, *public*, replace the binary) without leaving the record or losing its unsaved edits. `GET /api/files` accepts `ids` (comma-separated) to fetch exactly those files.
 - **Custom fields of files in the details drawer.** The drawer edited every custom field as plain text: a `combo_select`, `select`, vocabulary, lookup or date field showed a bare input. It now uses the same editor as the record form (`GET /api/files` describes each field with its options source, checks and help).
 
 ### Removed

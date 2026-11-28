@@ -118,6 +118,7 @@
             @file-uploaded="onFileUploaded"
             @file-deleted="onFileDeleted"
             @files-reordered="onFilesReordered"
+            @file-updated="onFileUpdated"
           />
         </fieldset>
 
@@ -1048,6 +1049,16 @@ function onFileUploaded(newFile) {
 function onFileDeleted(fileId) {
   if (record.value) {
     record.value.files = (record.value.files ?? []).filter(f => f.id !== fileId)
+  }
+}
+
+/**
+ * The metadata (or binary) of a file was edited in the drawer: merge it into the local file, so the
+ * gallery shows it without a reload. Unsaved edits of the record itself are left alone.
+ */
+function onFileUpdated({ id, changes }) {
+  if (record.value) {
+    record.value.files = (record.value.files ?? []).map(f => (f.id === id ? { ...f, ...changes } : f))
   }
 }
 

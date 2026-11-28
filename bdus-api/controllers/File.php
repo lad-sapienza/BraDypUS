@@ -88,6 +88,17 @@ class File extends \Bdus\Controller
 				$params = array_merge($params, $searchVal);
 			}
 
+			// ids=1,2,3: exactly these files (the ones of a record, one to open in a drawer)
+			if (isset($this->get['ids']) && is_string($this->get['ids']) && $this->get['ids'] !== '') {
+				$ids = array_values(array_unique(array_map('intval', array_filter(explode(',', $this->get['ids']), 'ctype_digit'))));
+				$ids = array_slice($ids, 0, 100);
+				if (!$ids) {
+					$conditions[] = '1 = 0';
+				} else {
+					$conditions[] = 'f.id IN (' . implode(',', $ids) . ')';
+				}
+			}
+
 			// public=1 / public=0: files that public presets may / may not show
 			$publicFilter = $this->get['public'] ?? null;
 			if ($publicFilter === '1' || $publicFilter === '0' || $publicFilter === 1 || $publicFilter === 0) {

@@ -38,6 +38,15 @@
             <DownloadOutlined />
           </a>
           <button
+            class="file-action file-edit-btn"
+            :title="t('files_details')"
+            data-test="file-edit"
+            :disabled="openingId === f.id"
+            @click="openDetails(f)"
+          >
+            <EditOutlined />
+          </button>
+          <button
             class="file-action file-unlink-btn"
             :title="t('unlink_file')"
             @click="confirmUnlinkFile(f)"
@@ -54,6 +63,18 @@
         </div>
       </div>
       </AImagePreviewGroup>
+
+      <!-- The Files page's drawer, in place: the record's own unsaved edits are untouched -->
+      <FileDetailsDrawer
+        v-model:open="detailsOpen"
+        :file="detailsFile"
+        :fields="detailsFields"
+        :app-name="appName"
+        :saving="detailsSaving"
+        @save="onDetailsSave"
+        @replace="startReplace"
+      />
+      <input ref="replaceInput" type="file" style="display: none" @change="onReplaceFileSelected" />
 
       <!-- sort feedback -->
       <div v-if="sortSaving" class="sort-saving">
@@ -197,6 +218,14 @@ const confirm = useConfirm()
 
 import { thumbUrl } from '@/utils/thumbUrl'
 import { originalPath } from '@/utils/filePaths'
+import { useRoute } from 'vue-router'
+import FileDetailsDrawer from '@/components/files/FileDetailsDrawer.vue'
+import { stripExt } from '@/utils/filesList'
+import { useAuthStore } from '@/stores/auth'
+
+const route   = useRoute()
+const auth    = useAuthStore()
+const appName = computed(() => auth.user?.app ?? route.params.app)
 
 /** Resolve a file object to its full URL. */
 function fileUrl(f) {
@@ -226,11 +255,82 @@ const emit = defineEmits([
   'file-deleted',
   /** Emitted after a successful sort. Payload: new ordered file array. */
   'files-reordered',
+  /** Emitted after the metadata or the binary of a file changed. Payload: { id, changes }. */
+  'file-updated',
 ])
 
 // ── Local copy for sort manipulation ───────────────────────────────
 const localFiles = ref([...props.files])
 watch(() => props.files, files => { localFiles.value = [...files] }, { deep: true })
+
+// ── Details drawer (same component as the Files page) ──────────────
+const detailsOpen   = ref(false)
+const detailsFile   = ref(null)
+const detailsFields = ref([])
+const detailsSaving = ref(false)
+const openingId     = ref(null)
+
+/** The record's file object has no permissions or custom fields: ask for the full one. */
+async function openDetails(f) {
+  openingId.value = f.id
+  try {
+    const res = await api.get('/api/files', { ids: String(f.id), per_page: 5 })
+    const full = res?.files?.[0]
+    if (res?.status === 'error' || !full) {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res?.code ?? 'file_not_found'), life: 4000 })
+      return
+    }
+    detailsFields.value = res.fields ?? []
+    detailsFile.value   = { ...full, filename: stripExt(full.filename, full.ext) }
+    detailsOpen.value   = true
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 4000 })
+  } finally {
+    openingId.value = null
+  }
+}
+
+async function onDetailsSave({ file, changes }) {
+  detailsSaving.value = true
+  try {
+    const res = await api.patch(`/api/file/${file.id}`, changes)
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 4000 })
+      return
+    }
+    toast.add({ severity: 'success', summary: t('files_details'), detail: t('ok_file_updated'), life: 2500 })
+    detailsOpen.value = false
+    emit('file-updated', { id: file.id, changes })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 4000 })
+  } finally {
+    detailsSaving.value = false
+  }
+}
+
+// ── Replace the binary (from the drawer) ────────────────────────────
+const replaceInput = ref(null)
+function startReplace() { replaceInput.value?.click() }
+
+async function onReplaceFileSelected(evt) {
+  const picked = evt.target.files?.[0]
+  evt.target.value = ''
+  const target = detailsFile.value
+  if (!picked || !target) return
+  try {
+    const res = await api.upload(`/api/file/${target.id}/replace`, picked, 'file')
+    if (res.status === 'error') {
+      toast.add({ severity: 'error', summary: t('generic_error'), detail: t(res.code), life: 5000 })
+      return
+    }
+    toast.add({ severity: 'success', summary: t('replace_file'), detail: t('ok_file_replaced'), life: 3000 })
+    const changes = { ext: res.ext, filename: stripExt(res.filename, res.ext), is_image: res.is_image }
+    Object.assign(target, changes)
+    emit('file-updated', { id: target.id, changes })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: t('generic_error'), detail: e.message, life: 5000 })
+  }
+}
 
 // ── View-mode computed partitions ───────────────────────────────────
 const images = computed(() => (props.files ?? []).filter(f => f.is_image))

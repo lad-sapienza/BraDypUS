@@ -217,6 +217,7 @@ per-record file operations:
 |---|---|
 | **Upload** | Upload a new file and attach it to this record |
 | **Link existing** | Pick a file already in the library and attach it without re-uploading |
+| **Edit** (pencil icon) | Open the file's details in a side panel, the same as on the Files page |
 | **Unlink** (chain icon) | Remove the file from this record only — the file remains in the library |
 | **Delete** (trash icon) | Permanently delete the file from the whole application |
 | **Reorder** | Drag the grip handle to change the display order within this record |

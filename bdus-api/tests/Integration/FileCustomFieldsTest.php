@@ -81,6 +81,33 @@ class FileCustomFieldsTest extends BdusTestCase
         }
     }
 
+    public function testASelfReferencingComboSelectIsDescribedAndItsValuesAreOffered(): void
+    {
+        if (!in_array('source', array_column((new \DB\Inspect(static::$db))->tableColumns(self::TB), 'fld'), true)) {
+            $res = $this->cfgCall('add_new_fld', ['tb' => self::TB], [
+                'name' => 'source', 'label' => 'Source', 'type' => 'combo_select', 'db_type' => 'TEXT',
+                'get_values_from_tb' => 'bdus_files:source',
+            ]);
+            $this->assertSame('ok_cfg_data_updated', $res['code'], json_encode($res));
+        }
+        static::$db->exec("UPDATE bdus_files SET source = 'Museum' WHERE id = 801");
+        static::$db->exec("UPDATE bdus_files SET source = 'Archive' WHERE id = 802");
+
+        // The description carries what the form needs to draw the right widget
+        $fields = array_column($this->fileCall('getFiles')['fields'], null, 'name');
+        $this->assertSame('combo_select', $fields['source']['type']);
+        $this->assertSame(['type' => 'db', 'ref' => 'bdus_files:source'], $fields['source']['options_source']);
+        $this->assertTrue($fields['source']['editable']);
+
+        // ... and the values of the column are offered, like on any other table
+        $res = $this->callController(
+            $this->makeController(\Bdus\Controllers\Record::class, ['tb' => self::TB, 'fld' => 'source']),
+            'getFieldOptions'
+        );
+        $this->assertSame('success', $res['status'], json_encode($res));
+        $this->assertEqualsCanonicalizing(['Archive', 'Museum'], array_column($res['options'], 'value'));
+    }
+
     public function testBooleansAreReturnedAsBooleans(): void
     {
         static::$db->exec('UPDATE bdus_files SET public = 1 WHERE id = 801');
@@ -137,7 +164,9 @@ class FileCustomFieldsTest extends BdusTestCase
 
         $fields = array_column($this->fileCall('getFiles')['fields'], null, 'name');
 
-        $this->assertSame(['name', 'label', 'type', 'editable', 'system'], array_keys($fields['licence']));
+        foreach (['name', 'label', 'type', 'options_source', 'check', 'editable', 'system'] as $k) {
+            $this->assertArrayHasKey($k, $fields['licence'], $k);
+        }
         $this->assertTrue($fields['licence']['editable']);
         $this->assertFalse($fields['licence']['system'], 'a custom field');
         $this->assertTrue($fields['description']['system']);

@@ -18,16 +18,16 @@
       <AAlert v-if="!file.can_update" type="info" show-icon :closable="false" :message="t('files_read_only_note')" class="drawer-note" />
 
       <form class="drawer-form" data-test="file-details-form" @submit.prevent="save">
-        <div v-for="f in formFields" :key="f.name" class="drawer-field" :class="{ 'drawer-field-inline': f.type === 'boolean' }">
-          <label :for="`fd-${f.name}`">{{ f.label }}</label>
-
-          <ASwitch v-if="f.type === 'boolean'" :id="`fd-${f.name}`" :checked="!!form[f.name]" :disabled="!file.can_update"
-                   @update:checked="v => form[f.name] = v" />
-          <ATextarea v-else-if="f.type === 'long_text' || f.type === 'md'" :id="`fd-${f.name}`" :value="form[f.name] ?? ''"
-                     :rows="4" :disabled="!file.can_update" @update:value="v => form[f.name] = v || null" />
-          <AInput v-else :id="`fd-${f.name}`" :value="form[f.name] ?? ''" :disabled="!file.can_update"
-                  @update:value="v => form[f.name] = v === '' ? null : v" />
-        </div>
+        <!-- The same editor as the record form: every field type, vocabulary and lookup of the configuration -->
+        <FieldEditor
+          v-for="f in formFields"
+          :key="f.name"
+          :schema="schemaOf(f)"
+          :model-value="form[f.name] ?? null"
+          :tb="FILES_TB"
+          :record-id="file.id"
+          @update:model-value="v => setValue(f, v)"
+        />
 
         <div class="drawer-facts">
           <div><span>{{ t('files_col_links') }}</span>
@@ -53,14 +53,15 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { Drawer as ADrawer, Button as AButton, Input as AInput, Switch as ASwitch, Alert as AAlert } from 'ant-design-vue'
+import { Drawer as ADrawer, Button as AButton, Alert as AAlert } from 'ant-design-vue'
+import FieldEditor from '@/components/record/FieldEditor.vue'
 import { useI18n } from '@/i18n'
 import { thumbUrl } from '@/utils/thumbUrl'
 import { changedFields, editableNames, snapshotOf, stripExt } from '@/utils/filesList'
 import { SyncOutlined } from '@ant-design/icons-vue'
 import { fileIcon } from './fileIcon'
 
-const ATextarea = AInput.TextArea
+const FILES_TB = 'bdus_files'
 
 const props = defineProps({
   open:    { type: Boolean, default: false },
@@ -86,6 +87,18 @@ watch(() => [props.file, props.open], () => {
   snapshot = snapshotOf(base, props.fields)
 }, { immediate: true })
 
+// The system fields filename and description are read-only for the record form, but a file's
+// metadata is edited here: only the ones a request may write reach this form. Without
+// `can_update` the editor shows them as plain values.
+function schemaOf(f) {
+  return { ...f, hide: false, readonly: !props.file?.can_update }
+}
+
+function setValue(f, v) {
+  if (f.type === 'boolean') form[f.name] = v === '1' || v === 1 || v === true
+  else form[f.name] = v === '' || v === undefined ? null : v
+}
+
 const dirty = computed(() => Object.keys(changedFields(form, snapshot, props.fields)).length > 0)
 
 function save() {
@@ -101,11 +114,8 @@ function save() {
 .drawer-thumb { max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid var(--p-content-border-color); }
 .drawer-icon { font-size: 4rem; color: var(--p-text-muted-color); }
 .drawer-replace { display: flex; justify-content: center; margin-bottom: 1rem; }
-.drawer-field-inline { flex-direction: row; align-items: center; gap: 0.6rem; }
 .drawer-note { margin-bottom: 0.8rem; }
 .drawer-form { display: flex; flex-direction: column; gap: 0.8rem; }
-.drawer-field { display: flex; flex-direction: column; gap: 0.25rem; }
-.drawer-field label { font-size: 0.8rem; font-weight: 600; color: var(--p-text-muted-color); }
 .drawer-facts { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.8rem; margin-top: 0.5rem; padding-top: 0.6rem; border-top: 1px solid var(--p-content-border-color); }
 .drawer-facts span { display: inline-block; min-width: 4.5rem; color: var(--p-text-muted-color); font-weight: 600; }
 .drawer-facts code { font-size: 0.72rem; word-break: break-all; }

@@ -52,23 +52,22 @@ final class Fields
      * The fields as the interface needs them to build its columns and forms: name, label, type, whether
      * a request may write it, and whether it is a system field. In the configured order; `creator` is left out.
      *
-     * @return list<array{name: string, label: string, type: string, editable: bool, system: bool}>
+     * @return list<array<string, mixed>> name, label, type, options_source, check…, editable, system
      */
     public static function describe(Config $cfg): array
     {
         $out = [];
-        foreach ((array) ($cfg->get('tables.' . ConfigSeed::TABLE . '.fields') ?: []) as $fld) {
+        // The same description the record form is built from (type, options source, checks, help…),
+        // so that the interface draws the right widget for each field.
+        foreach ((new \Config\TableSchema($cfg))->fields(ConfigSeed::TABLE) as $fld) {
             $name = $fld['name'] ?? null;
             if (!is_string($name) || preg_match('/^[A-Za-z0-9_]+$/', $name) !== 1 || $name === 'creator') {
                 continue;
             }
-            $out[] = [
-                'name'     => $name,
-                'label'    => (string) (($fld['label'] ?? '') !== '' ? $fld['label'] : $name),
-                'type'     => (string) ($fld['type'] ?? 'text'),
-                'editable' => !in_array($name, self::PROTECTED, true),
-                'system'   => self::isSystem($name),
-            ];
+            $fld['label']    = (string) (($fld['label'] ?? '') !== '' ? $fld['label'] : $name);
+            $fld['editable'] = !in_array($name, self::PROTECTED, true);
+            $fld['system']   = self::isSystem($name);
+            $out[] = $fld;
         }
         return $out;
     }

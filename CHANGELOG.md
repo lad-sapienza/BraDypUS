@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.31.0] - 2026-11-28
+
 ### Fixed
 
 - **File details drawer (#90).** It now offers **Replace file** (for the files you may change), and the *Public* switch keeps its natural size next to its label instead of filling the width.

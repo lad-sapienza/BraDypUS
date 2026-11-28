@@ -5,6 +5,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.31.0] - 2026-11-28
+
+### Fixed
+
+- **File details drawer (#90).** It now offers **Replace file** (for the files you may change), and the *Public* switch keeps its natural size next to its label instead of filling the width.
+
+- **Edit a file from the record (#89).** In a record's edit mode each file has an **Edit** button that opens the same details drawer as the Files page (all fields, *public*, replace the binary) without leaving the record or losing its unsaved edits. `GET /api/files` accepts `ids` (comma-separated) to fetch exactly those files.
+- **Custom fields of files in the details drawer.** The drawer edited every custom field as plain text: a `combo_select`, `select`, vocabulary, lookup or date field showed a bare input. It now uses the same editor as the record form (`GET /api/files` describes each field with its options source, checks and help).
+
+### Removed
+
+- **`printable` field of the files table.** It was a fossil of `public` and nothing ever read it. Migration M063 drops the column and its field configuration; it disappears from `GET /api/files`, `fields=files` on records and `PATCH /api/file/{id}` (a request that still sends it simply has it ignored). Use `public` instead. Run `bdus update` (or `bin/upgrade-app.php`) to apply it.
+
 ## [5.30.1] - 2026-11-27
 
 ### Fixed

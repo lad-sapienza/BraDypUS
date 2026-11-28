@@ -71,6 +71,7 @@ use DB\System\Migrations\M059_RealignPostgresSequences;
 use DB\System\Migrations\M060_AddUuidToFiles;
 use DB\System\Migrations\M061_RegisterFilesTableConfig;
 use DB\System\Migrations\M062_AddAccessToImagePresets;
+use DB\System\Migrations\M063_DropPrintableFromFiles;
 use Monolog\Logger;
 
 /**
@@ -179,6 +180,7 @@ class Migrate
         M060_AddUuidToFiles::class,
         M061_RegisterFilesTableConfig::class,
         M062_AddAccessToImagePresets::class,
+        M063_DropPrintableFromFiles::class,
     ];
 
     /**

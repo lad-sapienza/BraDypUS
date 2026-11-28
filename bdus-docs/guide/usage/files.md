@@ -72,7 +72,7 @@ interpreted as a page of the application.
 
 The table **Files** is configured like any other: in *System configuration → Tables* it appears as a
 **system** table. Its structure is fixed (the table itself, and its system fields `filename`, `description`,
-`keywords`, `attribution`, `printable`, `public` and the technical ones cannot be removed, renamed or
+`keywords`, `attribution`, `public` and the technical ones cannot be removed, renamed or
 retyped; their labels and checks can change), but you can **add your own fields** from its *Fields* list: a
 licence, an author, a campaign, a vocabulary term, a link to another table, with the same field types,
 checks and vocabularies as anywhere else.
@@ -94,7 +94,7 @@ The files page has two views, switched with the buttons at the top left and reme
   *public*, how many records use it): the best way to browse photographs.
 
 In both, tick files to **select** them: a bar offers **Make public** / **Make not public** and **Delete** for the
-selected files you may change or delete (the others are left alone). The **Details** button opens every field,
+selected files you may change or delete (the others are left alone). The **Details** button opens every field (and, for the files you may change, the **Replace file** button),
 custom ones included, in a side panel. The filters are the search box, **Orphans only** and **Public** /
 **Not public**; Previous/Next in the preview follows the same filter and order.
 

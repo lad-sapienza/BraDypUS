@@ -38,7 +38,7 @@ class File extends \Bdus\Controller
 	 * file id exactly.
 	 *
 	 * Response: { status, total, page, per_page, files: [{ id, uuid, ext, filename,
-	 *   description, keywords, printable, is_image,
+	 *   description, keywords, is_image,
 	 *   links: [{ tb, record_id }] }] }
 	 */
 	public function getFiles(): void
@@ -221,7 +221,7 @@ class File extends \Bdus\Controller
 	}
 
 	/**
-	 * Updates file metadata (filename, description, keywords, attribution, printable).
+	 * Updates file metadata (filename, description, keywords, attribution).
 	 *
 	 * Renaming only ever touches this DB column — the physical file keeps
 	 * living at `{id}.{ext}` regardless of `filename` (see uploadFile()/
@@ -229,7 +229,7 @@ class File extends \Bdus\Controller
 	 * URL implications.
 	 *
 	 * PATCH /api/file/{fileId}
-	 * Body: { filename?, description?, keywords?, attribution?, printable? }
+	 * Body: { filename?, description?, keywords?, attribution? }
 	 *
 	 * Response: { status, code }
 	 */

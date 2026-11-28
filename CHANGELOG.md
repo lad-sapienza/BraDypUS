@@ -5,6 +5,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **File details drawer (#90).** It now offers **Replace file** (for the files you may change), and the *Public* switch keeps its natural size next to its label instead of filling the width.
+
+### Removed
+
+- **`printable` field of the files table.** It was a fossil of `public` and nothing ever read it. Migration M063 drops the column and its field configuration; it disappears from `GET /api/files`, `fields=files` on records and `PATCH /api/file/{id}` (a request that still sends it simply has it ignored). Use `public` instead. Run `bdus update` (or `bin/upgrade-app.php`) to apply it.
+
 ## [5.30.1] - 2026-11-27
 
 ### Fixed

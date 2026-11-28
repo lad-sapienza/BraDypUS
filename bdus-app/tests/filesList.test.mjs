@@ -14,7 +14,6 @@ const FIELDS = [
   f('description', 'long_text', { system: true }),
   f('keywords', 'text', { system: true }),
   f('attribution', 'text', { system: true }),
-  f('printable', 'boolean', { system: true }),
   f('public', 'boolean', { system: true }),
   f('licence', 'text'),
   f('campaign', 'select'),
@@ -37,7 +36,7 @@ test('a saved choice wins, in the configured order, and forgets removed fields',
 })
 
 test('only fields the server says are editable are ever sent', () => {
-  assert.deepEqual(editableNames(FIELDS), ['filename', 'description', 'keywords', 'attribution', 'printable', 'public', 'licence', 'campaign'])
+  assert.deepEqual(editableNames(FIELDS), ['filename', 'description', 'keywords', 'attribution', 'public', 'licence', 'campaign'])
   const file = { id: 1, uuid: 'u', ext: 'png', filename: 'a', licence: null }
   const snap = snapshotOf(file, FIELDS)
   assert.ok(!('uuid' in snap) && !('id' in snap) && !('ext' in snap))

@@ -208,7 +208,7 @@ const props = defineProps({
   /**
    * Array of file objects as returned by record_ctrl::getRecord().
    * Each: { id, link_id, link_sort, ext, filename, description,
-   *         keywords, attribution, printable, is_image }
+   *         keywords, attribution, is_image }
    */
   files:    { type: Array,           default: () => [] },
   /** When true, shows sort handles, delete buttons and upload button */

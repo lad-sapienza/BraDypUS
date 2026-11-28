@@ -76,17 +76,17 @@ class FileCustomFieldsTest extends BdusTestCase
 
         $this->assertSame('CC BY', $files[801]['licence']);
         $this->assertNull($files[802]['licence']);
-        foreach (['id', 'uuid', 'ext', 'filename', 'description', 'keywords', 'attribution', 'printable', 'public', 'links', 'is_image', 'can_update', 'can_delete'] as $k) {
+        foreach (['id', 'uuid', 'ext', 'filename', 'description', 'keywords', 'attribution', 'public', 'links', 'is_image', 'can_update', 'can_delete'] as $k) {
             $this->assertArrayHasKey($k, $files[801], $k);
         }
     }
 
     public function testBooleansAreReturnedAsBooleans(): void
     {
-        static::$db->exec('UPDATE bdus_files SET printable = 1, public = 0 WHERE id = 801');
+        static::$db->exec('UPDATE bdus_files SET public = 1 WHERE id = 801');
         $f = array_column($this->fileCall('getFiles')['files'], null, 'id')[801];
-        $this->assertTrue($f['printable']);
-        $this->assertFalse($f['public']);
+        $this->assertTrue($f['public']);
+        $this->assertArrayNotHasKey('printable', $f);
     }
 
     public function testUpdatingACustomFieldIsValidatedWrittenAndVersioned(): void

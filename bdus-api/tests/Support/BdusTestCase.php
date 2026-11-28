@@ -205,9 +205,9 @@ abstract class BdusTestCase extends TestCase
 
         // A file (image) and a document linked to item 1 via bdus_file_links
         static::$db->execInTransaction(
-            "INSERT INTO bdus_files (id, uuid, creator, ext, keywords, description, printable, filename)
-             VALUES (1, '" . static::fileUuid(1) . "', 'admin', 'jpg', 'photo', 'A photo', 1, 'photo'),
-                    (2, '" . static::fileUuid(2) . "', 'admin', 'pdf', 'doc',   'A document', 0, 'document')"
+            "INSERT INTO bdus_files (id, uuid, creator, ext, keywords, description, filename)
+             VALUES (1, '" . static::fileUuid(1) . "', 'admin', 'jpg', 'photo', 'A photo', 'photo'),
+                    (2, '" . static::fileUuid(2) . "', 'admin', 'pdf', 'doc',   'A document', 'document')"
         );
         static::$db->execInTransaction(
             "INSERT INTO bdus_file_links (file_id, table_name, record_id, sort)

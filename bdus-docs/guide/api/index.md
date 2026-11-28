@@ -226,7 +226,7 @@ as GeoJSON, `[]` when it has none. `geodata.geojson` or `geodata.geometry` retur
 follow the record, so a row you cannot read brings none.
 
 The pseudo-field **`files`** adds the files linked to the record, in the order of the record view:
-`fields=id,title,files` gives each record a list of `{id, ext, filename, description, keywords, attribution, printable}`;
+`fields=id,title,files` gives each record a list of `{id, ext, filename, description, keywords, attribution}`;
 `files.ext` (repeatable: `files.ext,files.filename`) returns only those parts, always with `id`; an alias works
 (`pics:files.ext`). `[]` when the record has none. With the `id` and `ext` of a file you build the image address
 ([Images in several sizes](#images-in-several-sizes)). The files follow the record: a row you cannot read brings none.

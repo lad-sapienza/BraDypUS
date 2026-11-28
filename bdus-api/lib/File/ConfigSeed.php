@@ -34,7 +34,6 @@ final class ConfigSeed
         ['name' => 'ext',         'label' => 'Extension',   'type' => 'text',      'db_type' => 'TEXT',    'readonly' => true, 'check' => ['not_empty']],
         ['name' => 'keywords',    'label' => 'Keywords',    'type' => 'text',      'db_type' => 'TEXT'],
         ['name' => 'description', 'label' => 'Description', 'type' => 'long_text', 'db_type' => 'TEXT'],
-        ['name' => 'printable',   'label' => 'Printable',   'type' => 'boolean',   'db_type' => 'INTEGER'],
         ['name' => 'attribution', 'label' => 'Attribution', 'type' => 'text',      'db_type' => 'TEXT'],
         ['name' => 'public',      'label' => 'Public',      'type' => 'boolean',   'db_type' => 'INTEGER'],
     ];

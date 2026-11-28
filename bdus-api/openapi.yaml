@@ -1485,7 +1485,7 @@ paths:
             answers `invalid_parameters`.
 
             The pseudo-field `files` (also `files.ext`, `files.filename`, `files.description`,
-            `files.keywords`, `files.attribution`, `files.printable`, or with an alias) adds the
+            `files.keywords`, `files.attribution`, or with an alias) adds the
             files linked to the record, in the order of the record view: a list of
             `{id, ext, …}` (`id` always; every part with `files` or `files.*`), `[]` when there
             are none. An unknown part answers `invalid_parameters`. The files follow the record.
@@ -2373,10 +2373,10 @@ paths:
     patch:
       operationId: patchFileByFileId
       tags: [files]
-      summary: Update file metadata (description, keywords, attribution, printable, public, and any custom field)
+      summary: Update file metadata (description, keywords, attribution, public, and any custom field)
       description: >
         Any configured field of the files table may be sent: the system ones (`filename`, `description`,
-        `keywords`, `attribution`, `printable`, `public`) and every custom field an administrator added
+        `keywords`, `attribution`, `public`) and every custom field an administrator added
         (see `POST /api/config/table/bdus_files/field`). The columns that belong to the binary (`id`, `uuid`,
         `ext`, `creator`) are never written from a request. The change is validated like on any table
         (`validation_failed` with `errors`), written through the record layer and recorded in the file's
@@ -2401,8 +2401,6 @@ paths:
                   type: [string, 'null']
                 attribution:
                   type: [string, 'null']
-                printable:
-                  type: [boolean, 'null']
                 public:
                   type: [boolean, 'null']
                   description: Whether public presets may show this file (see the image presets)
@@ -2556,7 +2554,7 @@ paths:
       summary: Replace a file's binary while preserving its metadata
       description: >
         Uploads a new file to replace the stored binary. The file's
-        `description`, `keywords`, `attribution`, and `printable` are kept unchanged.
+        `description`, `keywords`, `attribution`, and `public` are kept unchanged.
         If the new file has a different extension, the old physical file
         is deleted.
       parameters:
@@ -8075,8 +8073,6 @@ components:
           type: [string, 'null']
         attribution:
           type: [string, 'null']
-        printable:
-          type: [boolean, 'null']
         is_image:
           type: boolean
         links:
@@ -8120,8 +8116,6 @@ components:
           type: [string, 'null']
         attribution:
           type: [string, 'null']
-        printable:
-          type: [boolean, 'null']
         is_image:
           type: boolean
 

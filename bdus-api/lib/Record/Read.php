@@ -354,7 +354,6 @@ EOD;
      *    "keywords": (string)
      *    "attribution": (string|null)
      *    "description": (string)
-     *    "printable": (boolean)
      *    "filename": (string)
      * }
 

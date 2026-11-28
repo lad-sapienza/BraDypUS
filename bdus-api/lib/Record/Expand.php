@@ -36,7 +36,7 @@ use DB\DBInterface;
  *
  * The pseudo-field `files` (or `files.ext`, `files.filename`, …, `alias:files`) adds the files
  * linked to the record: a list ordered as in the record view, each `{id, ext, filename,
- * description, keywords, attribution, printable}` (all of them with `files` / `files.*`, only the
+ * description, keywords, attribution}` (all of them with `files` / `files.*`, only the
  * named ones with `files.col`; `id` is always there). It follows the record, like a plugin.
  *
  * Only one level of nesting is supported (`rel.sub.col` is refused).
@@ -260,7 +260,7 @@ final class Expand
     }
 
     /** Columns of bdus_files a client may ask for through `files.col`. */
-    private const FILE_PARTS = ['uuid', 'ext', 'filename', 'description', 'keywords', 'attribution', 'printable'];
+    private const FILE_PARTS = ['uuid', 'ext', 'filename', 'description', 'keywords', 'attribution'];
 
     private function addFiles(string $sel, string $key, array $own): void
     {
